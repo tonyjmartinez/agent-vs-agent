@@ -4,3 +4,4 @@ artifacts
 coverage
 playwright-report
 test-results
+dist-single

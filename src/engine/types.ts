@@ -33,6 +33,10 @@ export interface Rules {
   carrierCanEnterIntel: false;
   firstMoveNoBump: boolean;
   veterans: boolean;
+  /** Experimental: false → a shoved carrier keeps its intel (only burning drops it). Default true. */
+  dropOnBump: boolean;
+  /** Experimental: a team cannot re-grab intel it just dropped until after its next turn. */
+  fumble: boolean;
 }
 
 export interface GameState {
@@ -43,6 +47,8 @@ export interface GameState {
   intel: Cell[];
   scores: number[];
   winner: PlayerId | 'draw' | null;
+  /** Fumble locks: `player` may not pick up intel at `at` (only with rules.fumble). */
+  locks?: { at: Cell; player: PlayerId }[];
 }
 
 export type Action =

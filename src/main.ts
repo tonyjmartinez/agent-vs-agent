@@ -1,18 +1,54 @@
 import '@fontsource/fredoka/500.css';
 import '@fontsource/fredoka/700.css';
 import './ui/styles.css';
+import { BotClient } from './app/botClient';
 import { Controller } from './app/controller';
-import { parseConfig } from './app/config';
+import { parseConfig, type Seat } from './app/config';
 import { installHooks } from './app/testHooks';
 import { decode } from './engine/serialize';
 import { showGameOver } from './ui/gameOver';
 import { Hud } from './ui/hud';
+import { showMenu, showPause } from './ui/menu';
+import { load, save } from './ui/storage';
 import { PhaserBoardView } from './view/PhaserBoardView';
 
 const cfg = parseConfig(location.search);
 let controller: Controller | null = null;
 const view = new PhaserBoardView();
 const overlayRoot = document.getElementById('overlay-root')!;
+const bots = new BotClient();
+
+// ---------- first-game coach marks (shown once) ----------
+const COACH_KEY = 'ava.coach.v1';
+let coachDone = cfg.test || load(COACH_KEY, false);
+let lastTouch = matchMedia('(pointer: coarse)').matches;
+addEventListener('pointerdown', (e: PointerEvent) => (lastTouch = e.pointerType !== 'mouse'), {
+  capture: true,
+});
+
+function coach(c: Controller): void {
+  let el = document.getElementById('coach');
+  if (coachDone || !c.isHumanToMove() || document.querySelector('.overlay')) {
+    el?.remove();
+    return;
+  }
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'coach';
+    el.className = 'coach';
+    el.setAttribute('role', 'status');
+    document.body.append(el);
+  }
+  el.textContent = !c.sel.selected
+    ? lastTouch
+      ? 'Tap one of your spies'
+      : 'Click one of your spies'
+    : !c.sel.pending
+      ? lastTouch
+        ? 'Tap a dot to preview the move'
+        : 'Hover a dot to preview, click to move'
+      : 'Tap again to move';
+}
 
 async function boot(): Promise<void> {
   await Promise.all([
@@ -28,7 +64,11 @@ async function boot(): Promise<void> {
       document.getElementById('game-over')?.remove();
       controller?.undo();
     },
-    onMenu: () => newGame(),
+    onMenu: () =>
+      showPause(overlayRoot, {
+        restart: () => newGame(),
+        quit: () => toMenu(),
+      }),
   });
   controller = new Controller({
     view,
@@ -36,19 +76,39 @@ async function boot(): Promise<void> {
     seats: cfg.seats,
     speed: cfg.speed,
     confirmTouch: cfg.confirmTouch ?? true,
-    seed: cfg.seed,
-    onGameOver: (s) =>
+    seed: cfg.seed || Math.floor(Math.random() * 1e9),
+    chooseBot: (s, level, seed, history) => bots.choose(s, level, seed, history),
+    onGameOver: (s) => {
+      document.getElementById('coach')?.remove();
       showGameOver(overlayRoot, s, controller!.seats, {
         rematch: () => newGame(),
-        menu: () => newGame(),
-      }),
+        menu: () => toMenu(),
+      });
+    },
+    onAction: () => {
+      if (!coachDone && controller && controller.history.length > 1) {
+        coachDone = true;
+        save(COACH_KEY, true);
+      }
+    },
+    onRefresh: coach,
   });
-  controller.start(cfg.state ? decode(cfg.state) : undefined);
+  if (cfg.direct) controller.start(cfg.state ? decode(cfg.state) : undefined);
+  else {
+    controller.start();
+    toMenu();
+  }
 }
 
-function newGame(): void {
+function newGame(seats?: Seat[]): void {
   document.getElementById('game-over')?.remove();
-  controller?.start();
+  controller?.start(undefined, seats);
+}
+
+function toMenu(): void {
+  document.getElementById('game-over')?.remove();
+  document.getElementById('coach')?.remove();
+  showMenu(overlayRoot, ({ seats }) => newGame(seats));
 }
 
 const ready = boot();

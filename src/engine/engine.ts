@@ -55,6 +55,7 @@ export function legalActions(s: GameState): Action[] {
       const to = add(sp.pos, d);
       if (!inBounds(to, s.rules.size) || spyAt(s.spies, to)) continue;
       if (sp.carrying && hasIntel(s.intel, to)) continue;
+      if (s.locks?.some((l) => l.player === sp.owner && eq(l.at, to))) continue; // fumbled
       out.push({ kind: 'move', spyId: sp.id, to });
     }
   }
@@ -100,7 +101,13 @@ export function applyTrusted(s: GameState, a: Action): { state: GameState; event
   const scores = [...s.scores];
   const events: GameEvent[] = [];
   const emit = (phase: EventPhase, e: GameEventBody) => events.push({ ...e, phase } as GameEvent);
-  const takeIntel = (p: Cell) => (intel = intel.filter((i) => !eq(i, p)));
+  const takeIntel = (p: Cell) => {
+    intel = intel.filter((i) => !eq(i, p));
+    locks = locks.filter((l) => !eq(l.at, p));
+  };
+  let locks = (s.locks ?? []).map((l) => ({ at: { ...l.at }, player: l.player }));
+  const canTake = (owner: PlayerId, p: Cell) =>
+    hasIntel(intel, p) && !locks.some((l) => l.player === owner && eq(l.at, p));
 
   if (a.kind === 'pass') {
     emit(0, { t: 'passed', player: s.current });
@@ -112,7 +119,7 @@ export function applyTrusted(s: GameState, a: Action): { state: GameState; event
     else emit(0, { t: 'deployed', spyId: actor.id, to: dest });
     actor.pos = dest;
     // 2. Actor pickup
-    if (!actor.carrying && hasIntel(intel, dest)) {
+    if (!actor.carrying && canTake(actor.owner, dest)) {
       takeIntel(dest);
       actor.carrying = true;
       emit(0, { t: 'pickedUp', spyId: actor.id, at: dest });
@@ -130,13 +137,16 @@ export function applyTrusted(s: GameState, a: Action): { state: GameState; event
         if (!rules.bumpOwnSpies && victim.owner === actor.owner) continue;
         const t = add(n, d);
         const onBoard = inBounds(t, rules.size);
-        if (onBoard && occupiedPre(t)) {
+        // With dropOnBump off, a carrier keeps its intel, so it can't be shoved onto intel.
+        const keeps = !rules.dropOnBump && victim.carrying && onBoard;
+        if (onBoard && (occupiedPre(t) || (keeps && hasIntel(intel, t)))) {
           emit(1, { t: 'bumpBlocked', spyId: victim.id, at: n, dir: d });
           continue;
         }
-        if (victim.carrying) {
+        if (victim.carrying && !keeps) {
           victim.carrying = false;
           intel.push({ ...n });
+          if (rules.fumble) locks.push({ at: { ...n }, player: victim.owner });
           emit(1, { t: 'dropped', spyId: victim.id, at: n });
         }
         if (!onBoard) {
@@ -151,7 +161,7 @@ export function applyTrusted(s: GameState, a: Action): { state: GameState; event
     }
     // 4. Bumped spies pick up
     for (const v of landed) {
-      if (!v.carrying && v.pos && hasIntel(intel, v.pos)) {
+      if (!v.carrying && v.pos && canTake(v.owner, v.pos)) {
         takeIntel(v.pos);
         v.carrying = true;
         emit(2, { t: 'pickedUp', spyId: v.id, at: v.pos });
@@ -209,6 +219,9 @@ export function applyTrusted(s: GameState, a: Action): { state: GameState; event
     scores,
     winner,
   };
+  // A lock lasts through its player's next turn: drop the mover's own locks now.
+  const keep = locks.filter((l) => l.player !== s.current && hasIntel(intel, l.at));
+  if (keep.length) state.locks = keep;
   return { state, events };
 }
 
@@ -224,6 +237,7 @@ export function hash(s: GameState): string {
     s.scores.join(','),
     s.spies.map((x) => c(x.pos) + (x.carrying ? '*' : '')).join(','),
     s.intel.map(c).join(''),
+    (s.locks ?? []).map((l) => `${l.player}${c(l.at)}`).join(','),
     s.winner ?? '',
   ].join('|');
 }

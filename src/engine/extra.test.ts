@@ -72,3 +72,77 @@ describe('ffa preset', () => {
     ).toBe(false);
   });
 });
+
+describe('dropOnBump=false (experimental knob)', () => {
+  const opts = { rules: { dropOnBump: false } };
+  test('a shoved carrier keeps its intel', () => {
+    const s = board(
+      `
+      . . . . . .
+      . . . . . .
+      . R . T* . .
+      . . . . . .
+      . . . . . .
+      . . . . . .`,
+      opts,
+    );
+    const { state, events } = applyAction(s, { kind: 'move', spyId: 'p0a', to: { r: 2, c: 2 } });
+    expect(events.map((e) => e.t)).toEqual(['moved', 'bumped']);
+    expect(state.spies.find((x) => x.id === 'p1a')).toMatchObject({
+      pos: { r: 2, c: 4 },
+      carrying: true,
+    });
+  });
+  test('a burned carrier still drops; a carrier cannot be shoved onto intel', () => {
+    const s = board(
+      `
+      . . T* . . .
+      . . . . . .
+      . R . T* i .
+      . . . . . .
+      . . . . . .
+      . . . . . .`,
+      opts,
+    );
+    const { state, events } = applyAction(s, { kind: 'move', spyId: 'p0a', to: { r: 1, c: 2 } });
+    // (0,2) is burned and drops; (2,3) is shoved diagonally to (3,4) and keeps its intel.
+    expect(events.map((e) => e.t)).toEqual(['moved', 'dropped', 'burned', 'bumped']);
+    expect(state.intel).toContainEqual({ r: 0, c: 2 });
+    expect(state.spies.find((x) => x.id === 'p1b')).toMatchObject({
+      pos: { r: 3, c: 4 },
+      carrying: true,
+    });
+    const b = applyAction(s, { kind: 'move', spyId: 'p0a', to: { r: 2, c: 2 } });
+    expect(b.events.map((e) => e.t).slice(0, 2)).toEqual(['moved', 'bumpBlocked']);
+    expect(b.state.spies.find((x) => x.id === 'p1b')).toMatchObject({
+      pos: { r: 2, c: 3 },
+      carrying: true,
+    });
+  });
+});
+
+describe('fumble (experimental knob)', () => {
+  test('the team that dropped intel cannot re-grab it on its next turn; the other team can', () => {
+    const s = board(
+      `
+      . . . . . .
+      . . . . . .
+      . R . T* . .
+      . . . . . .
+      . . . . . T
+      . . . . . .`,
+      { rules: { fumble: true } },
+    );
+    const a = applyAction(s, { kind: 'move', spyId: 'p0a', to: { r: 2, c: 2 } });
+    expect(a.state.intel).toEqual([{ r: 2, c: 3 }]);
+    expect(a.state.locks).toEqual([{ at: { r: 2, c: 3 }, player: 1 }]);
+    // Teal's spy at (2,4) is adjacent but may not step back onto its fumbled folder.
+    const tealTargets = legalActions(a.state).filter((x) => x.kind === 'move' && x.spyId === 'p1a');
+    expect(tealTargets.some((x) => x.kind === 'move' && x.to.r === 2 && x.to.c === 3)).toBe(false);
+    // After teal's turn the lock is gone; red can grab it meanwhile.
+    const b = applyAction(a.state, { kind: 'move', spyId: 'p1b', to: { r: 4, c: 4 } });
+    expect(b.state.locks).toBeUndefined();
+    const c = applyAction(b.state, { kind: 'move', spyId: 'p0a', to: { r: 2, c: 3 } });
+    expect(c.events.map((e) => e.t)).toContain('pickedUp');
+  });
+});

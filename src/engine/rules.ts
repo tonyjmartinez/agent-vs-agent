@@ -73,6 +73,8 @@ export function duelRules(overrides: Partial<Rules> = {}): Rules {
     carrierCanEnterIntel: false,
     firstMoveNoBump: false,
     veterans: false,
+    dropOnBump: true,
+    fumble: false,
   };
   return { ...base, ...overrides };
 }

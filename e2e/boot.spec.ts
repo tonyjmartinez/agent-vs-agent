@@ -3,7 +3,7 @@ import { expectCanvasNotBlank, open, shot, trackErrors } from './helpers';
 
 test('boots with no errors, a non-blank canvas and no scroll', async ({ page }, info) => {
   const errors = trackErrors(page);
-  await open(page);
+  await open(page, 'p0=human&p1=human');
   await expectCanvasNotBlank(page);
   const scroll = await page.evaluate(() => ({
     sw: document.documentElement.scrollWidth,

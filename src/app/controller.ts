@@ -14,7 +14,12 @@ import {
   type Selection,
 } from './interaction';
 
-export type BotChooser = (s: GameState, level: BotLevel, seed: number) => Promise<Action>;
+export type BotChooser = (
+  s: GameState,
+  level: BotLevel,
+  seed: number,
+  history: GameState[],
+) => Promise<Action>;
 
 export interface ControllerOpts {
   view: BoardView;
@@ -27,6 +32,7 @@ export interface ControllerOpts {
   chooseBot?: BotChooser;
   onGameOver?(s: GameState): void;
   onAction?(s: GameState): void;
+  onRefresh?(c: Controller): void;
 }
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -63,6 +69,10 @@ export class Controller {
 
   private isHumanTurn(s = this.state): boolean {
     return s.winner === null && this.o.seats[s.current]?.kind === 'human';
+  }
+
+  isHumanToMove(): boolean {
+    return this.isHumanTurn() && !this.busy;
   }
 
   /** Which seat's panel sits at the bottom: the lone human, else player 0. */
@@ -103,6 +113,7 @@ export class Controller {
       bottom: this.bottomSeat,
     });
     this.o.view.relayout();
+    this.o.onRefresh?.(this);
   }
 
   onTap(c: Cell, touch = false): void {
@@ -162,7 +173,7 @@ export class Controller {
     this.refresh();
     const started = performance.now();
     const choose = this.o.chooseBot ?? (async (st: GameState) => legalActions(st)[0]!);
-    const action = await choose(s, seat.level, this.o.seed + s.ply);
+    const action = await choose(s, seat.level, this.o.seed + s.ply, this.history);
     if (this.o.speed > 0) {
       const left = 450 - (performance.now() - started);
       if (left > 0) await wait(left);
