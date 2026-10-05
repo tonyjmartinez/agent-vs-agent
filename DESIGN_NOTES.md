@@ -84,13 +84,17 @@ A carrier in the middle needs 2–3 moves to get home. Any defender within reach
 
 ### Candidate rule changes tested (experimental flags, default off, each with tests)
 
-| rules                                 | matchup               | draws | P0 / A win         | median plies | drops | notes                                                      |
-| ------------------------------------- | --------------------- | ----- | ------------------ | ------------ | ----- | ---------------------------------------------------------- |
-| 2-row extraction zones                | hard vs medium (swap) | 34/40 | A 15%              | 120          | 49.4  | still stalls                                               |
-| `dropOnBump: false` (only burns drop) | hard vs hard          | 0/40  | **P0 85%**         | 21           | 0     | becomes a pure race; first player dominates; steals vanish |
-| `dropOnBump: false`                   | hard vs medium (swap) | 0/40  | A 52.5% (P0 82.5%) | 25           | 0.15  | no skill gradient, big seat bias                           |
-| 2-row zones + `dropOnBump: false`     | hard vs hard          | 0/40  | P0 100%            | 13           | 0     | trivial                                                    |
-| `fumble`                              | (see below)           |       |                    |              |       |                                                            |
+| rules                                 | matchup                    | draws | P0 / A win          | median plies | drops | notes                                                      |
+| ------------------------------------- | -------------------------- | ----- | ------------------- | ------------ | ----- | ---------------------------------------------------------- |
+| 2-row extraction zones                | hard vs medium (swap)      | 34/40 | A 15%               | 120          | 49.4  | still stalls                                               |
+| `dropOnBump: false` (only burns drop) | hard vs hard               | 0/40  | **P0 85%**          | 21           | 0     | becomes a pure race; first player dominates; steals vanish |
+| `dropOnBump: false`                   | hard vs medium (swap)      | 0/40  | A 52.5% (P0 82.5%)  | 25           | 0.15  | no skill gradient, big seat bias                           |
+| 2-row zones + `dropOnBump: false`     | hard vs hard               | 0/40  | P0 100%             | 13           | 0     | trivial                                                    |
+| `fumble`                              | medium vs easy (swap), 100 | 0     | A **100%**          | 37           | 2.7   | decisive                                                   |
+| `fumble`                              | hard vs medium (swap), 40  | 13/40 | A **65%** (26–1) ✅ | 120          | 22.0  | meets the gradient gate; P0 45%                            |
+| `fumble`                              | hard vs hard, 40           | 30/40 | P0 15% (6–4)        | 120          | 24.1  | still stalls between equals                                |
+
+**Status:** waiting on the human's call. Default rules are unchanged; every experimental flag is off by default.
 
 ## Later
 
