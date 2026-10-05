@@ -22,16 +22,16 @@
 
 ### 1.1 Facts checked (Oct 2026)
 
-| Thing | Finding | Implication |
-|---|---|---|
-| Phaser | `npm view phaser dist-tags` shows **latest = 4.2.1** (v4.0.0 shipped Apr 2026, 4.2.1 "Giedi" in Jul 2026 was a stability/ESM patch). Ships its own `.d.ts` (`types/phaser.d.ts`). | Use Phaser 4. No `@types` package is needed. |
-| Phaser docs for agents | The npm package ships **`node_modules/phaser/skills/*/SKILL.md`** with 28 topic guides: `scale-and-responsive`, `input-keyboard-mouse-touch`, `tweens`, `particles`, `text-and-bitmaptext`, `loading-assets`, `scenes`, `v3-to-v4-migration`, `v4-new-features`, and more. | **Read the relevant SKILL.md before writing Phaser code.** Most online examples are Phaser 3 and will be subtly wrong in v4. |
-| Phaser 4 breaking changes vs 3 | Canvas renderer is deprecated (use WebGL / `Phaser.AUTO`). FX and masks became **Filters** (`obj.filters.internal.addMask(...)`). `setTintFill` was removed (use `setTint(c).setTintMode(Phaser.TintModes.FILL)`). `Geom.Point` became `Vector2`. The pipeline API was replaced by RenderNodes. | Don't copy v3 snippets blindly. Our needs (shapes, images, text, tweens, particles, camera shake) are all standard API. |
-| Phaser scaling | `Scale.FIT` + `autoCenter: CENTER_BOTH` keeps a fixed logical size and scales via CSS. The parent element **must have a size and no padding**. Don't style the canvas yourself. | The canvas lives in a CSS-sized **square** container with fixed logical size **1080×1080**. FIT on a square container never letterboxes. 1080 logical px looks crisp on a ~360 CSS-px board at DPR 3. |
-| Other versions | vite 8.3.x, vitest 5.0.x, tsx 4.23.x, prettier 3.9.x, eslint 10.x, `@fontsource/fredoka` 5.3.0. TypeScript `latest` is 7.0.2 (the native port). Phaser itself builds with TS ^6. | Pin `typescript@~6` unless 7 works cleanly with the scaffold. Typecheck is a separate `tsc --noEmit` step either way. |
-| This cloud environment | Node 22, npm 10. Chromium is preinstalled at `/opt/pw-browsers` (build 1194), matching **global playwright@1.56.1**. `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`. | Pin **`@playwright/test@1.56.1`** so it finds the preinstalled browser. If you use a newer one, set `launchOptions.executablePath: '/opt/pw-browsers/chromium'`. **Never run `playwright install`.** |
-| Phaser's official scaffolder | `npm create @phaserjs/game@latest` is **interactive**. | Don't use it. Hand-write the small Vite setup (section 4.1), which is deterministic and agent-friendly. |
-| boop. (reference game) | 2 players on a 6×6 bed. Placing a piece pushes all 8 neighbours one square away. Pushes don't chain, and a push is blocked if the target square is occupied. Pieces pushed off the board go back to the owner's pool. 3 kittens in a row graduate to cats, which kittens can't push. 3 cats in a row wins. | We borrow the **adjacent push without chain reactions** and the "off-board goes back to the pool" idea. We do **not** copy its name, art, or 3-in-a-row goal. The theme, objective, and movement are our own. |
+| Thing                          | Finding                                                                                                                                                                                                                                                                                                    | Implication                                                                                                                                                                                                   |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phaser                         | `npm view phaser dist-tags` shows **latest = 4.2.1** (v4.0.0 shipped Apr 2026, 4.2.1 "Giedi" in Jul 2026 was a stability/ESM patch). Ships its own `.d.ts` (`types/phaser.d.ts`).                                                                                                                          | Use Phaser 4. No `@types` package is needed.                                                                                                                                                                  |
+| Phaser docs for agents         | The npm package ships **`node_modules/phaser/skills/*/SKILL.md`** with 28 topic guides: `scale-and-responsive`, `input-keyboard-mouse-touch`, `tweens`, `particles`, `text-and-bitmaptext`, `loading-assets`, `scenes`, `v3-to-v4-migration`, `v4-new-features`, and more.                                 | **Read the relevant SKILL.md before writing Phaser code.** Most online examples are Phaser 3 and will be subtly wrong in v4.                                                                                  |
+| Phaser 4 breaking changes vs 3 | Canvas renderer is deprecated (use WebGL / `Phaser.AUTO`). FX and masks became **Filters** (`obj.filters.internal.addMask(...)`). `setTintFill` was removed (use `setTint(c).setTintMode(Phaser.TintModes.FILL)`). `Geom.Point` became `Vector2`. The pipeline API was replaced by RenderNodes.            | Don't copy v3 snippets blindly. Our needs (shapes, images, text, tweens, particles, camera shake) are all standard API.                                                                                       |
+| Phaser scaling                 | `Scale.FIT` + `autoCenter: CENTER_BOTH` keeps a fixed logical size and scales via CSS. The parent element **must have a size and no padding**. Don't style the canvas yourself.                                                                                                                            | The canvas lives in a CSS-sized **square** container with fixed logical size **1080×1080**. FIT on a square container never letterboxes. 1080 logical px looks crisp on a ~360 CSS-px board at DPR 3.         |
+| Other versions                 | vite 8.3.x, vitest 5.0.x, tsx 4.23.x, prettier 3.9.x, eslint 10.x, `@fontsource/fredoka` 5.3.0. TypeScript `latest` is 7.0.2 (the native port). Phaser itself builds with TS ^6.                                                                                                                           | Pin `typescript@~6` unless 7 works cleanly with the scaffold. Typecheck is a separate `tsc --noEmit` step either way.                                                                                         |
+| This cloud environment         | Node 22, npm 10. Chromium is preinstalled at `/opt/pw-browsers` (build 1194), matching **global playwright@1.56.1**. `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`.                                                                                                                                                 | Pin **`@playwright/test@1.56.1`** so it finds the preinstalled browser. If you use a newer one, set `launchOptions.executablePath: '/opt/pw-browsers/chromium'`. **Never run `playwright install`.**          |
+| Phaser's official scaffolder   | `npm create @phaserjs/game@latest` is **interactive**.                                                                                                                                                                                                                                                     | Don't use it. Hand-write the small Vite setup (section 4.1), which is deterministic and agent-friendly.                                                                                                       |
+| boop. (reference game)         | 2 players on a 6×6 bed. Placing a piece pushes all 8 neighbours one square away. Pushes don't chain, and a push is blocked if the target square is occupied. Pieces pushed off the board go back to the owner's pool. 3 kittens in a row graduate to cats, which kittens can't push. 3 cats in a row wins. | We borrow the **adjacent push without chain reactions** and the "off-board goes back to the pool" idea. We do **not** copy its name, art, or 3-in-a-row goal. The theme, objective, and movement are our own. |
 
 ### 1.2 Stack decision and why
 
@@ -55,7 +55,7 @@
 
 > **AGENT vs AGENT**
 > **Goal:** Be the first to extract **3 intel**.
-> **Your turn:** Move one of your spies **1 square in any direction** (including diagonally) to an empty square. *Or*, if you have a spy in reserve, **deploy** it onto any empty square of your extraction row.
+> **Your turn:** Move one of your spies **1 square in any direction** (including diagonally) to an empty square. _Or_, if you have a spy in reserve, **deploy** it onto any empty square of your extraction row.
 > **Bump:** When a spy arrives, it bumps **every** adjacent spy (yours too!) one square straight away from it. A bump is blocked if another spy is in the way, and bumps don't chain.
 > **Burned:** A spy bumped off the board goes to its owner's reserve.
 > **Intel:** Step onto intel to grab it (one at a time). Get bumped while carrying it and you drop it where you stood.
@@ -69,25 +69,28 @@
 
 **Duel setup:**
 
-| | Player 0 (Red, "you" by default) | Player 1 (Teal) |
-|---|---|---|
-| Extraction row | row 5 (bottom) | row 0 (top) |
-| Starting spies | `{5,1}`, `{5,4}` | `{0,1}`, `{0,4}` |
+|                | Player 0 (Red, "you" by default) | Player 1 (Teal)  |
+| -------------- | -------------------------------- | ---------------- |
+| Extraction row | row 5 (bottom)                   | row 0 (top)      |
+| Starting spies | `{5,1}`, `{5,4}`                 | `{0,1}`, `{0,4}` |
 
 - Initial intel: `{2,2}` and `{3,3}`. That's symmetric under a 180° rotation, so both players face the same position.
 - Player 0 moves first. First-player advantage gets measured in Phase 5. See the mitigation knobs in 2.4.
 
 **State:**
+
 - Every spy has `owner`, `pos` (a cell or `null` when in reserve), and `carrying: boolean`.
 - Intel is a set of cells, with at most one intel per cell.
 - Each player has a score.
 
 **Legal actions for the current player:**
+
 1. **Move:** choose an own spy with `pos != null`. Choose a cell at Chebyshev distance 1 (8 directions) that is on the board, has **no spy**, and does **not** contain intel if the spy is already carrying.
 2. **Deploy:** choose an own spy in reserve and an empty (no spy) cell in the player's extraction zone. The same intel restriction doesn't apply because reserve spies never carry.
 3. **Pass:** only legal if there are no other legal actions. This should be essentially unreachable. Test it anyway.
 
 **Resolution order of one action.** This order is normative. Emit events in this order.
+
 1. **Arrive.** Place the acting spy on the destination. Emit `moved` or `deployed`.
 2. **Pick up (actor).** If the actor isn't carrying and the destination has intel, remove the intel and set `carrying`. Emit `pickedUp`.
 3. **Bump.** For each of the 8 neighbours `n` of the destination that holds a spy `S`, compute the direction `d = n − dest` and the target `t = n + d`.
@@ -97,6 +100,7 @@
    - Otherwise, `S.pos = t`. Emit `bumped`.
 
    Evaluate every neighbour against the **pre-bump** board. This is safe because pushes go radially outward, so every origin is in ring 1, every target is in ring 2, and no two bumps share a target. No chains.
+
 4. **Pick up (bumped spies).** Any spy that was bumped into a cell with intel and isn't carrying picks it up. Emit `pickedUp`.
 5. **Extract.** For **every** spy on the board (any owner) that is carrying and standing in **its own** extraction zone, take these steps in a fixed order: by player index starting from the current player, then by spy id.
    1. Clear `carrying`.
@@ -110,6 +114,7 @@
 8. Advance `current` to the next player and increment `ply`.
 
 **Deliberate clarifications.** Write a test for each of these.
+
 - Bumps hit your **own** spies too.
 - Intel doesn't block movement for empty-handed spies. Picking it up is automatic.
 - Intel doesn't block bumps. A bumped spy landing on intel picks it up if it's empty-handed.
@@ -132,18 +137,18 @@
 ```ts
 interface Rules {
   size: 6;
-  players: PlayerSetup[];          // extraction zone cells, start cells, colour key
-  spiesPerPlayer: number;          // Duel: 2
+  players: PlayerSetup[]; // extraction zone cells, start cells, colour key
+  spiesPerPlayer: number; // Duel: 2
   movement: 'king' | 'orthogonal'; // default 'king'
-  bumpOwnSpies: boolean;           // default true
-  intelOnBoard: number;            // initial intel count (default 2)
-  intelStart: Cell[];              // default [{2,2},{3,3}]
-  intelSpawnOrder: Cell[];         // default centre-out spiral
-  intelToWin: number;              // default 3
-  maxPlies: number;                // default 120 (60 turns each), draw safety
-  carrierCanEnterIntel: false;     // invariant; keep false
-  firstMoveNoBump: boolean;        // balance knob, default false
-  veterans: boolean;               // depth knob for v1.1, default false (2.5)
+  bumpOwnSpies: boolean; // default true
+  intelOnBoard: number; // initial intel count (default 2)
+  intelStart: Cell[]; // default [{2,2},{3,3}]
+  intelSpawnOrder: Cell[]; // default centre-out spiral
+  intelToWin: number; // default 3
+  maxPlies: number; // default 120 (60 turns each), draw safety
+  carrierCanEnterIntel: false; // invariant; keep false
+  firstMoveNoBump: boolean; // balance knob, default false
+  veterans: boolean; // depth knob for v1.1, default false (2.5)
 }
 ```
 
@@ -179,18 +184,18 @@ boop. is soft, plushy, and chunky. Our take is **mid-century spy-movie poster me
 
 ### 3.2 Palette tokens (define once in `src/ui/theme.ts`, mirror as CSS variables)
 
-| Token | Hex | Use |
-|---|---|---|
-| `paper` | `#F6EEDC` | page background |
-| `board` | `#EADBC0` | board base |
-| `tileA` / `tileB` | `#F3E6CC` / `#E6D3B1` | checker tiles (subtle) |
-| `ink` | `#2B2A33` | outlines, text |
-| `red` | `#E4572E` | Player 0 |
-| `teal` | `#17A6A3` | Player 1 |
-| `mustard` | `#F2B84B` | intel folder, highlights |
-| `plum` | `#6C4E8C` | FFA P3 / accents |
-| `olive` | `#7A8B3C` | FFA P4 |
-| `danger` | `#C0392B` @ 35% | "would be burned" preview |
+| Token             | Hex                   | Use                       |
+| ----------------- | --------------------- | ------------------------- |
+| `paper`           | `#F6EEDC`             | page background           |
+| `board`           | `#EADBC0`             | board base                |
+| `tileA` / `tileB` | `#F3E6CC` / `#E6D3B1` | checker tiles (subtle)    |
+| `ink`             | `#2B2A33`             | outlines, text            |
+| `red`             | `#E4572E`             | Player 0                  |
+| `teal`            | `#17A6A3`             | Player 1                  |
+| `mustard`         | `#F2B84B`             | intel folder, highlights  |
+| `plum`            | `#6C4E8C`             | FFA P3 / accents          |
+| `olive`           | `#7A8B3C`             | FFA P4                    |
+| `danger`          | `#C0392B` @ 35%       | "would be burned" preview |
 
 - Colours must stay distinguishable for colour-blind players. Each player also gets a **shape cue**: Red has a round hat brim, Teal has a pointed hat and a scarf. Intel carries a stamp glyph, not just a colour.
 - Dark mode is **not** in v1. One good theme beats two average ones.
@@ -207,18 +212,18 @@ boop. is soft, plushy, and chunky. Our take is **mid-century spy-movie poster me
 
 ### 3.4 Motion spec (all durations in ms; multiply by `speed`, which is 0 in tests)
 
-| Event | Animation |
-|---|---|
-| select | lift 6px + shadow grow, 120, `Back.Out` |
-| move / deploy | arc hop to the target 220 `Sine.InOut`, then squash on landing (scaleY 0.8 → 1, 140) |
-| bump wave | a ring ripple from the destination (graphics circle, alpha 0.5 → 0, 260). Bumped spies slide 180 `Back.Out` at the same moment. |
-| bump blocked | the neighbour wobbles ±4px, 120 |
-| burned | the spy slides off the edge, spins 360°, scales to 0.6, and fades over 380. Camera shake 120ms at 0.004 intensity. A **"BURNED!"** pop text. |
-| pickUp | the folder pops (scale 1.3 → 1) and attaches to the spy |
-| dropped | the folder flips out to the origin cell, 200 |
-| extracted | the spy hops, the folder flies to the HUD score counter (DOM; animate a ghost in canvas to the board edge, then pulse the DOM counter), confetti burst (Phaser particles, 24 particles, team colour plus mustard), **"EXTRACTED!"** stamp text |
-| intelSpawned | scale 0 → 1 with `Back.Out`, 260 |
-| win | a big stamp over the board ("MISSION COMPLETE" / "MISSION FAILED"), then the DOM overlay with Rematch |
+| Event         | Animation                                                                                                                                                                                                                                      |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| select        | lift 6px + shadow grow, 120, `Back.Out`                                                                                                                                                                                                        |
+| move / deploy | arc hop to the target 220 `Sine.InOut`, then squash on landing (scaleY 0.8 → 1, 140)                                                                                                                                                           |
+| bump wave     | a ring ripple from the destination (graphics circle, alpha 0.5 → 0, 260). Bumped spies slide 180 `Back.Out` at the same moment.                                                                                                                |
+| bump blocked  | the neighbour wobbles ±4px, 120                                                                                                                                                                                                                |
+| burned        | the spy slides off the edge, spins 360°, scales to 0.6, and fades over 380. Camera shake 120ms at 0.004 intensity. A **"BURNED!"** pop text.                                                                                                   |
+| pickUp        | the folder pops (scale 1.3 → 1) and attaches to the spy                                                                                                                                                                                        |
+| dropped       | the folder flips out to the origin cell, 200                                                                                                                                                                                                   |
+| extracted     | the spy hops, the folder flies to the HUD score counter (DOM; animate a ghost in canvas to the board edge, then pulse the DOM counter), confetti burst (Phaser particles, 24 particles, team colour plus mustard), **"EXTRACTED!"** stamp text |
+| intelSpawned  | scale 0 → 1 with `Back.Out`, 260                                                                                                                                                                                                               |
+| win           | a big stamp over the board ("MISSION COMPLETE" / "MISSION FAILED"), then the DOM overlay with Rematch                                                                                                                                          |
 
 - Respect `prefers-reduced-motion`: no shake, no confetti, and tweens become 60ms fades.
 - Text pops use Phaser Text with `resolution: 2` (see `skills/text-and-bitmaptext`).
@@ -288,15 +293,23 @@ boop. is soft, plushy, and chunky. Our take is **mid-century spy-movie poster me
 ### 4.2 Core types (starting point)
 
 ```ts
-export type PlayerId = number;                 // 0..N-1
-export interface Cell { r: number; c: number }
-export interface Spy { id: string; owner: PlayerId; pos: Cell | null; carrying: boolean }
+export type PlayerId = number; // 0..N-1
+export interface Cell {
+  r: number;
+  c: number;
+}
+export interface Spy {
+  id: string;
+  owner: PlayerId;
+  pos: Cell | null;
+  carrying: boolean;
+}
 export interface GameState {
   rules: Rules;
   ply: number;
   current: PlayerId;
-  spies: Spy[];                 // stable order, ids like "p0a", "p0b"
-  intel: Cell[];                // sorted for canonical equality
+  spies: Spy[]; // stable order, ids like "p0a", "p0b"
+  intel: Cell[]; // sorted for canonical equality
   scores: number[];
   winner: PlayerId | 'draw' | null;
 }
@@ -318,6 +331,7 @@ export type GameEvent =
 ```
 
 **Engine API:**
+
 - `createGame(rules) → GameState`
 - `legalActions(s) → Action[]`, in a deterministic order.
 - `applyAction(s, a) → { state, events }`. It is **immutable** (returns a new state), throws on illegal actions, and attaches a `phase` index to each event (arrive = 0, bump = 1, pickup = 2, extract = 3, spawn = 4, over = 5) so the animator can group them.
@@ -362,15 +376,15 @@ export type GameEvent =
 ```ts
 interface BoardView {
   mount(el: HTMLElement): Promise<void>;
-  sync(s: GameState): void;                       // no animation
-  play(events: GameEvent[]): Promise<void>;       // resolves when anims done
+  sync(s: GameState): void; // no animation
+  play(events: GameEvent[]): Promise<void>; // resolves when anims done
   setInteraction(opts: {
-    selectable: string[];                         // spy ids that can act
-    targets: Map<string, Action[]>;               // spyId|'reserve' → actions
+    selectable: string[]; // spy ids that can act
+    targets: Map<string, Action[]>; // spyId|'reserve' → actions
     onPreview(a: Action | null): void;
     onCommit(a: Action): void;
   }): void;
-  showPreview(events: GameEvent[] | null): void;  // ghost arrows, danger tint
+  showPreview(events: GameEvent[] | null): void; // ghost arrows, danger tint
   cellToClient(c: Cell): { x: number; y: number }; // for tests
   destroy(): void;
 }
@@ -425,6 +439,7 @@ interface BoardView {
   4. Tapping elsewhere cancels.
 
   On desktop, hover gives the preview and one click commits. Add a setting "Confirm moves on touch" (default **on** for coarse pointers). Detect coarse pointers with `matchMedia('(pointer: coarse)')`.
+
 - The board must never scroll or zoom on double-tap. Set `touch-action: none` on `#board`.
 - Handle orientation changes through CSS. Phaser FIT re-fits automatically, because the container size changes and the ScaleManager watches the parent.
 
@@ -442,6 +457,7 @@ window.__AVA__ = {
 ```
 
 URL params:
+
 - `?seed=42`
 - `?p0=human&p1=bot:hard`
 - `?mode=duel|ffa`
@@ -453,17 +469,18 @@ URL params:
 
 ## 5. How the agent iterates (feedback loops)
 
-| Loop | Command | What it proves | Speed |
-|---|---|---|---|
-| Typecheck | `npm run typecheck` (`tsc --noEmit`) | types are consistent | seconds |
-| Lint/format | `npm run lint`, `npm run format` | conventions, engine import boundary | seconds |
-| Rules | `npm test` (Vitest) | every rule and edge case in 2.2 | seconds |
-| Balance and depth | `npm run sim -- --games 400 --p0 hard --p1 hard --seed 1` | seat balance, game length, draw rate, skill gradient | <1 min |
-| Visual and E2E | `npm run e2e` (Playwright: `desktop` 1280×800 and `mobile` Pixel 7 plus an iPhone 14-sized viewport in Chromium, `hasTouch`) | it boots, it's playable by click and tap, the layout fits, there are no console errors | ~1 min |
-| Eyeballing | Screenshots go to `artifacts/screens/{project}-{name}.png`. **Open them with the Read tool and judge them against section 3.** | aesthetics, cropping, overlap, legibility | — |
-| Manual | `npm run dev -- --host` | (for humans) | — |
+| Loop              | Command                                                                                                                        | What it proves                                                                         | Speed   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | ------- |
+| Typecheck         | `npm run typecheck` (`tsc --noEmit`)                                                                                           | types are consistent                                                                   | seconds |
+| Lint/format       | `npm run lint`, `npm run format`                                                                                               | conventions, engine import boundary                                                    | seconds |
+| Rules             | `npm test` (Vitest)                                                                                                            | every rule and edge case in 2.2                                                        | seconds |
+| Balance and depth | `npm run sim -- --games 400 --p0 hard --p1 hard --seed 1`                                                                      | seat balance, game length, draw rate, skill gradient                                   | <1 min  |
+| Visual and E2E    | `npm run e2e` (Playwright: `desktop` 1280×800 and `mobile` Pixel 7 plus an iPhone 14-sized viewport in Chromium, `hasTouch`)   | it boots, it's playable by click and tap, the layout fits, there are no console errors | ~1 min  |
+| Eyeballing        | Screenshots go to `artifacts/screens/{project}-{name}.png`. **Open them with the Read tool and judge them against section 3.** | aesthetics, cropping, overlap, legibility                                              | —       |
+| Manual            | `npm run dev -- --host`                                                                                                        | (for humans)                                                                           | —       |
 
 **Rules for the loop:**
+
 1. Write the **test first** for any rule. If a rule is ambiguous, decide it, record it in `DESIGN_NOTES.md`, and make the test encode it.
 2. Any rules change has to be checked against the sim before and after. Paste both tables into `DESIGN_NOTES.md`.
 3. After any visual change, regenerate screenshots and actually look at them at both sizes.
@@ -512,6 +529,7 @@ Each phase ends with every earlier check still green, plus a commit.
 ### Phase 0: Scaffold and walking skeleton (target: ½ day)
 
 **Tasks**
+
 1. `npm init -y`, then install:
    - `npm i phaser@4.2.1 @fontsource/fredoka`
    - `npm i -D vite typescript@~6 vitest tsx @playwright/test@1.56.1 eslint typescript-eslint prettier`
@@ -541,6 +559,7 @@ Each phase ends with every earlier check still green, plus a commit.
 7. Write `CLAUDE.md` with the commands, the engine purity rule, and "read the Phaser skills first".
 
 **Done when**
+
 - `build`, `typecheck`, `test` (a trivial test), and `e2e` all pass.
 - The desktop and mobile screenshots show the grid filling the board area with no scrollbars.
 - On mobile the board is about the full width.
@@ -548,8 +567,10 @@ Each phase ends with every earlier check still green, plus a commit.
 ### Phase 1: Rules engine (target: 1 day)
 
 **Tasks**
+
 - Implement `engine/` per sections 2.2 and 4.2: `createGame`, `legalActions`, `applyAction`, `previewAction`, `hash`, and serialize.
 - **Tests.** Build each case from a compact ASCII board helper:
+
   ```ts
   board(`
     . . . . . .
@@ -557,8 +578,9 @@ Each phase ends with every earlier check still green, plus a commit.
     . . i . . .
     . . . T . .
     . . . . . .
-    . R . . T .`)
+    . R . . T .`);
   ```
+
   Lower-case `i` is intel. `R*` or `T*` is a carrier. A reserve list is passed separately.
 
   Required cases:
@@ -605,12 +627,14 @@ Each phase ends with every earlier check still green, plus a commit.
   - `applyAction` never mutates its input (deep-freeze the input in tests).
 
 **Done when**
+
 - All tests pass.
 - The engine has 100% line coverage. Run `vitest --coverage` once to check; it isn't required in CI.
 
 ### Phase 2: Playable hotseat in the browser (target: 1 day)
 
 **Tasks**
+
 - Build the controller, `PhaserBoardView` with **plain shapes** (circles in team colours, a mustard square for intel), the DOM HUD (scores, whose turn, reserve trays with tappable reserve spies, an Undo button), and the select → target → commit flow, including the preview on touch.
 - **Previews:** ghost arrows for bumps, a red tint for burns, a folder icon for drops.
 - Animations at a **minimal** level:
@@ -622,6 +646,7 @@ Each phase ends with every earlier check still green, plus a commit.
 - Add the test hooks and URL params.
 
 **E2E additions**
+
 - Script a full short game through `__AVA__.cellClient` taps on mobile and clicks on desktop. Assert that the score increments and game over appears.
 - A screenshot test that loads `?state=` with a pending burn, taps to preview, and saves `preview-burn.png`.
 
@@ -630,17 +655,20 @@ Each phase ends with every earlier check still green, plus a commit.
 ### Phase 3: Bots (target: 1 day)
 
 **Tasks**
+
 - Build `rng.ts`, `evaluate.ts`, and `bots.ts` (random, easy, medium, hard) per 4.4.
 - Write `scripts/sim.ts` per section 5.
 - Bot-vs-human seats in the controller, with a thinking delay and a turn banner that says "Agent Teal is thinking…".
 
 **Tests**
+
 - Bots only return legal actions.
 - Given a seed, results are deterministic.
 - Hard takes an immediate win when one is available. Use a fixture where an extraction wins.
 - Hard avoids an immediate burn when a safe move exists.
 
 **Done when**
+
 - `npm run sim -- --games 200 --p0 easy --p1 random --swap` shows easy winning ≥85%.
 - medium beats easy ≥70%.
 - hard beats medium ≥65%.
@@ -650,6 +678,7 @@ Each phase ends with every earlier check still green, plus a commit.
 ### Phase 4: Menus and onboarding (target: ½ day)
 
 **Tasks**
+
 - **Start menu (DOM):**
   - "Play vs Agent", with Easy/Medium/Hard.
   - "Pass & Play" (hotseat).
@@ -664,6 +693,7 @@ Each phase ends with every earlier check still green, plus a commit.
 ### Phase 5: Balance pass (target: ½–1 day, mostly sim)
 
 **Tasks**
+
 - Run the matrix: hard vs hard (seat balance), the skill gradient table, and the knobs: `firstMoveNoBump`, `intelToWin` ∈ {2, 3, 4}, `intelOnBoard` ∈ {1, 2, 3}, `movement` ∈ {king, orthogonal}, `bumpOwnSpies` ∈ {true, false}.
 - Use ≥400 games per cell with `--swap` where that's relevant.
 - Record every table in `DESIGN_NOTES.md`. Pick defaults against the targets in section 9, and write one paragraph explaining the choice.
@@ -674,6 +704,7 @@ Each phase ends with every earlier check still green, plus a commit.
 ### Phase 6: Art and juice (target: 1–1½ days)
 
 **Tasks**
+
 - Replace the shapes with SVG art per 3.3: board, tiles, extraction-row tint and glyphs, the spy bean with fedora and shades in two silhouettes, intel folder, and the selected ring.
 - Full motion spec 3.4, including `prefers-reduced-motion`.
 - Particles for extraction, camera shake for burns, and pop text.
@@ -683,6 +714,7 @@ Each phase ends with every earlier check still green, plus a commit.
 - Favicon (an inline SVG spy head) and a `<title>`.
 
 **Visual review protocol** (do it, don't skip it):
+
 1. Generate screenshots for `menu`, `start-position`, `selected`, `preview-burn`, `mid-game`, `extraction-moment` (`speed=0`, captured after the events), and `game-over`, for both `desktop` and `mobile`. Also do `mobile-landscape` (844×390) and a small phone (320×568).
 2. Open each PNG and check:
    - Is the board fully visible with no clipping?
@@ -697,6 +729,7 @@ Each phase ends with every earlier check still green, plus a commit.
 ### Phase 7: Ship (target: ½ day)
 
 **Tasks**
+
 - **GitHub Actions `ci.yml`** on PRs and pushes:
   - `npm ci`
   - typecheck, lint, test
@@ -734,18 +767,19 @@ Each phase ends with every earlier check still green, plus a commit.
 
 ## 9. Balance and "is it fun?" targets (sim-measurable proxies)
 
-| Metric | Target | Why |
-|---|---|---|
-| Seat balance (hard vs hard, 400+ games) | P0 win rate 45–55% | fair |
-| Draw rate (hard vs hard) | < 8% | decisive |
-| Median game length | 24–60 plies (12–30 turns each) | about a 5–10 minute game, like boop |
-| Skill gradient | easy > random ≥85%, medium > easy ≥70%, hard > medium ≥65% | there's real depth to learn |
-| Burns per game | 1.5–6 | battling actually happens but isn't constant chaos |
-| Drops (steals) per game | ≥ 1 | the carrier tension works |
-| Comeback games (winner was behind on score at some point) | ≥ 20% | games stay alive |
-| Forced passes | ~0 | no weird deadlocks |
+| Metric                                                    | Target                                                     | Why                                                |
+| --------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
+| Seat balance (hard vs hard, 400+ games)                   | P0 win rate 45–55%                                         | fair                                               |
+| Draw rate (hard vs hard)                                  | < 8%                                                       | decisive                                           |
+| Median game length                                        | 24–60 plies (12–30 turns each)                             | about a 5–10 minute game, like boop                |
+| Skill gradient                                            | easy > random ≥85%, medium > easy ≥70%, hard > medium ≥65% | there's real depth to learn                        |
+| Burns per game                                            | 1.5–6                                                      | battling actually happens but isn't constant chaos |
+| Drops (steals) per game                                   | ≥ 1                                                        | the carrier tension works                          |
+| Comeback games (winner was behind on score at some point) | ≥ 20%                                                      | games stay alive                                   |
+| Forced passes                                             | ~0                                                         | no weird deadlocks                                 |
 
 Knob priority if the targets miss:
+
 1. **Seat balance:** try `firstMoveNoBump`, then giving P1 a centre-adjacent start.
 2. **Too long or drawish:** lower `intelToWin` or raise `intelOnBoard`.
 3. **Too few burns:** use `orthogonal` movement (more predictable lines) or start the spies one row in.

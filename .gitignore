@@ -1,0 +1,7 @@
+node_modules
+dist
+artifacts/*
+!artifacts/screens
+test-results
+playwright-report
+coverage

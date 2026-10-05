@@ -1,0 +1,91 @@
+:root {
+  --paper: #f6eedc;
+  --board: #eadbc0;
+  --tileA: #f3e6cc;
+  --tileB: #e6d3b1;
+  --ink: #2b2a33;
+  --red: #e4572e;
+  --teal: #17a6a3;
+  --mustard: #f2b84b;
+  --plum: #6c4e8c;
+  --olive: #7a8b3c;
+  --danger: #c0392b;
+  --radius: 16px;
+  --font: 'Fredoka', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+#app {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'top' 'board' 'bottom';
+  gap: 8px;
+  padding: max(8px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(8px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+#hud-top {
+  grid-area: top;
+}
+#hud-bottom {
+  grid-area: bottom;
+}
+
+#board-wrap {
+  grid-area: board;
+  container-type: size;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Phaser needs a sized, unpadded parent. */
+#board {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+  padding: 0;
+  touch-action: none;
+  position: relative;
+}
+
+@media (min-aspect-ratio: 1/1) {
+  #app {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr);
+    grid-template-areas: 'top board bottom';
+    align-items: center;
+  }
+  #board-wrap {
+    height: 100%;
+    width: min(calc(100vw - 340px), calc(100dvh - 16px));
+  }
+}
+
+.hud {
+  min-width: 0;
+}
