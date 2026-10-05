@@ -1,9 +1,18 @@
 import '@fontsource/fredoka/500.css';
 import '@fontsource/fredoka/700.css';
 import './ui/styles.css';
-import Phaser from 'phaser';
-import { BoardScene } from './view/BoardScene';
-import { WORLD, cellCenter } from './view/geometry';
+import { Controller } from './app/controller';
+import { parseConfig } from './app/config';
+import { installHooks } from './app/testHooks';
+import { decode } from './engine/serialize';
+import { showGameOver } from './ui/gameOver';
+import { Hud } from './ui/hud';
+import { PhaserBoardView } from './view/PhaserBoardView';
+
+const cfg = parseConfig(location.search);
+let controller: Controller | null = null;
+const view = new PhaserBoardView();
+const overlayRoot = document.getElementById('overlay-root')!;
 
 async function boot(): Promise<void> {
   await Promise.all([
@@ -11,35 +20,36 @@ async function boot(): Promise<void> {
     document.fonts.load('500 16px Fredoka'),
   ]);
   await new Promise((r) => requestAnimationFrame(() => r(null)));
-  document.getElementById('hud-top')!.textContent = 'Agent Teal';
-  document.getElementById('hud-bottom')!.textContent = 'Agent Red';
-  const scene = new BoardScene();
-  const ready = new Promise<void>((res) => (scene.onReady = res));
-  const game = new Phaser.Game({
-    type: Phaser.AUTO,
-    parent: 'board',
-    transparent: true,
-    banner: false,
-    scale: {
-      mode: Phaser.Scale.FIT,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-      width: WORLD,
-      height: WORLD,
+  await view.mount(document.getElementById('board')!);
+  view.setSpeed(cfg.speed);
+  const hud = new Hud(document.getElementById('hud-top')!, document.getElementById('hud-bottom')!, {
+    onReserve: (p) => controller?.onReserve(p),
+    onUndo: () => {
+      document.getElementById('game-over')?.remove();
+      controller?.undo();
     },
-    scene: [scene],
+    onMenu: () => newGame(),
   });
-  const w = window as unknown as Record<string, unknown>;
-  w.__AVA__ = {
-    ready,
-    cellClient(r: number, c: number) {
-      const rect = game.canvas.getBoundingClientRect();
-      const p = cellCenter(r, c);
-      return {
-        x: rect.left + (p.x / WORLD) * rect.width,
-        y: rect.top + (p.y / WORLD) * rect.height,
-      };
-    },
-  };
+  controller = new Controller({
+    view,
+    hud,
+    seats: cfg.seats,
+    speed: cfg.speed,
+    confirmTouch: cfg.confirmTouch ?? true,
+    seed: cfg.seed,
+    onGameOver: (s) =>
+      showGameOver(overlayRoot, s, controller!.seats, {
+        rematch: () => newGame(),
+        menu: () => newGame(),
+      }),
+  });
+  controller.start(cfg.state ? decode(cfg.state) : undefined);
 }
 
-void boot();
+function newGame(): void {
+  document.getElementById('game-over')?.remove();
+  controller?.start();
+}
+
+const ready = boot();
+if (import.meta.env.DEV || cfg.test) installHooks(ready, () => ({ controller, view }));
