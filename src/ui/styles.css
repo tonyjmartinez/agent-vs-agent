@@ -40,11 +40,17 @@ body {
 #app {
   height: 100dvh;
   display: grid;
-  /* Portrait: HUDs hug the board, spare space goes above and below the whole stack. */
-  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  /* Portrait: HUDs hug the board; the whole stack is centred. HUD heights are fixed, so the
+     board never moves between turns. */
+  grid-template-rows: auto auto auto;
+  align-content: center;
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas: 'top' 'board' 'bottom';
   gap: 8px;
+  /* Space reserved for the portrait HUD stack: top panel (92) + bottom panel & controls (144)
+     + 2 gaps (16) + padding (16) + slack. */
+  --hud-h: 276px;
+  --board: min(calc(100vw - 32px), calc(100dvh - var(--hud-h)));
   padding: max(8px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
     max(8px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 }
@@ -57,6 +63,11 @@ body {
   grid-area: bottom;
   align-self: start;
 }
+#hud-top,
+#hud-bottom {
+  justify-self: center;
+  width: min(100%, max(var(--board), 300px));
+}
 
 #board-wrap {
   grid-area: board;
@@ -65,8 +76,7 @@ body {
   place-items: center;
   min-height: 0;
   min-width: 0;
-  /* Room left after the HUD stack (~280px) and the safe-area padding. */
-  height: min(calc(100vw - 32px), calc(100dvh - 290px));
+  height: var(--board);
 }
 
 /* Phaser needs a sized, unpadded parent. */
@@ -80,6 +90,7 @@ body {
 
 @media (min-aspect-ratio: 1/1) {
   #app {
+    align-content: stretch;
     grid-template-rows: minmax(0, 1fr);
     grid-template-columns: minmax(150px, 1fr) auto minmax(150px, 1fr);
     grid-template-areas: 'top board bottom';
@@ -127,6 +138,7 @@ body {
 }
 .who {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   font-weight: 700;
@@ -184,20 +196,21 @@ body {
   background: var(--danger);
   opacity: 0.8;
 }
+.row2 {
+  min-height: 44px;
+  flex-wrap: nowrap;
+}
 .status {
   font-size: 14px;
   font-weight: 500;
-  min-height: 18px;
   opacity: 0.8;
+  min-width: 0;
 }
 .tray {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 0;
-}
-.tray:empty {
-  display: none;
+  flex: none;
 }
 .tray-label {
   font-size: 13px;
@@ -266,6 +279,8 @@ body {
   #hud-top,
   #hud-bottom {
     align-self: center;
+    width: 100%;
+    max-width: 280px;
   }
   .controls {
     flex-direction: column;
@@ -337,5 +352,25 @@ body {
   * {
     animation-duration: 1ms !important;
     transition-duration: 1ms !important;
+  }
+}
+
+/* Tall phones: spend spare height on a roomier HUD rather than dead space. */
+@media (max-aspect-ratio: 1/1) and (min-height: 820px) {
+  #app {
+    --hud-h: 308px;
+  }
+  .panel {
+    padding: 12px 16px;
+  }
+  .who {
+    font-size: 20px;
+  }
+  .status {
+    font-size: 16px;
+  }
+  .btn {
+    min-height: 52px;
+    font-size: 18px;
   }
 }

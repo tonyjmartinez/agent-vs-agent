@@ -1,7 +1,7 @@
 /** Board geometry in Phaser logical pixels (PLAN 4.6). */
 export const WORLD = 1080;
-export const MARGIN = 72;
-export const CELL = 156;
+export const MARGIN = 36;
+export const CELL = 168;
 export const SIZE = 6;
 
 export const cellCenter = (r: number, c: number): { x: number; y: number } => ({

@@ -26,12 +26,19 @@ Running log of decisions, sim results and playtest notes. Newest decisions appen
 - Coverage: 100% lines on `engine.ts`, `board.ts`, `rules.ts` and `serialize.ts`. A property test plays 2,000 random games and checks the invariants after every action.
 
 ## Phase 2: hotseat in the browser
+
 - **The interaction state machine is pure** (`app/interaction.ts`, unit-tested), not inside the Phaser view. The view only reports `onTap(cell, viaTouch)` and `onHover(cell)` and draws highlights and previews. This is an adaptation of PLAN 4.5's `setInteraction`: it keeps Phaser thin and makes keyboard control trivial.
 - **Confirm-on-touch is decided by the pointer that tapped**, not by `matchMedia('(pointer: coarse)')`. A touch tap previews and a second tap commits; a mouse click commits immediately, with hover giving the preview. Reason: Chromium's iPhone-size emulation (and some hybrid laptops) report `pointer: fine` even when touched. `?confirm=0` turns confirmation off.
 - **Bug found by e2e:** Phaser caches the canvas bounds. When the HUD rendered after boot and pushed the board down, every touch landed one row too high. Fixed with a `ResizeObserver` and a `scale.refresh()` after each HUD render. This would have shipped broken on real phones.
 - **Portrait layout:** HUD panels hug the board and spare height goes above and below the whole stack. Board height is `min(100vw - 32px, 100dvh - 290px)`.
 - Undo pops back to the most recent earlier state where a human was to move. In hotseat that's one ply; vs a bot it's back to your previous turn. Undo also works from the game-over screen.
 - A partial version of the motion spec (hop, squash, bump slide, burn spin, shake, pop text, confetti) went in now because it was cheap with the tween helper. Phase 6 polishes it.
+
+## Mobile layout pass (requested mid-Phase 3)
+- The layout sweep now covers 13 sizes: 320×568, 360×640, 375×667, 360×780, 390×844, 412×915, 430×932, landscape 667×375 / 844×390 / 932×430, tablet 768×1024 and 1024×768, and desktop 1440×900. Each one checks that the board is fully visible, no panel or **panel child** overlaps it, buttons are ≥44px, and there's no horizontal scroll. Screenshots: `artifacts/screens/layout-*.png`.
+- HUD panels now have a **fixed height**: name and score on row 1, status and reserve tray on a 44px row 2. The portrait stack (top panel, board, bottom panel and buttons) is centred as a whole, and `--hud-h` reserves exactly that height. The board never jumps when a reserve spy appears.
+- The Phaser world margin went from 72 → 36 logical px (cell 156 → 168). Every board gets about 8% bigger cells, and on a 320px phone cells are now about 45 CSS px, which clears the touch minimum. Burned spies still fly into the margin and fade.
+- Tall phones (≥820px high, portrait) get a roomier HUD: bigger type and 52px buttons. On a 430×932 phone there's still spare height. That's inherent, because the square board is width-limited.
 
 ## Later
 

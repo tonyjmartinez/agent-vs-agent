@@ -89,7 +89,11 @@ export function applyAction(s: GameState, a: Action): { state: GameState; events
   if (s.winner !== null) throw new Error('game is over');
   if (!isLegal(s, a) && !sameSpyGroupDeploy(s, a))
     throw new Error(`illegal action ${JSON.stringify(a)}`);
+  return applyTrusted(s, a);
+}
 
+/** applyAction without the legality check, for search over actions from `legalActions`. */
+export function applyTrusted(s: GameState, a: Action): { state: GameState; events: GameEvent[] } {
   const rules = s.rules;
   const spies: Spy[] = s.spies.map((x) => ({ ...x, pos: x.pos ? { ...x.pos } : null }));
   let intel: Cell[] = s.intel.map((c) => ({ ...c }));

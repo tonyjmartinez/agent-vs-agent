@@ -108,7 +108,10 @@ export class Hud {
       tray.append(b);
     });
     if (reserve.length) tray.prepend(el('span', 'tray-label', 'Reserve'));
-    box.append(row, status, tray);
+    // Second row: turn status on the left, reserve tray on the right (fixed 44px height).
+    const row2 = el('div', 'row row2');
+    row2.append(status, tray);
+    box.append(row, row2);
     return box;
   }
 }
