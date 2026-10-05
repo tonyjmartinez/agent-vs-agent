@@ -13,6 +13,17 @@ Running log of decisions, sim results and playtest notes. Newest decisions appen
 - Screenshots in `artifacts/screens/` are **committed** (not ignored) so they can be viewed on GitHub from a phone.
 - Added a third e2e project, `iphone` (390×844 @3x, touch), alongside `desktop` and `mobile` (Pixel 7).
 
+## Phase 1: rule decisions (each one is encoded in a test)
+- **Intel never spawns on an extraction zone.** The spawn order is the 4 centre cells, then ring 2, then the non-zone cells of ring 3, walked clockwise and interleaved with each cell's 180° twin so neither side is favoured. Spawning on a zone would hand out free points. (`spawn order ... avoids extraction rows`)
+- **A bumped carrier always drops first**, so a bump can never carry intel onto its owner's row. But an *empty-handed* spy bumped onto dropped intel lying on its own row picks it up and extracts on the opponent's turn. If that's the winning point, **the opponent wins** even though it's your turn. "Current player wins ties" applies only when several players reach the target at once. (`a bumped spy can land on dropped intel ...`)
+- **A carrier bumped onto intel** drops its own intel at the origin, lands empty-handed, and then picks up the intel it landed on (step 4). Net effect: it swaps folders.
+- **maxPlies:** the game ends after exactly `maxPlies` actions (checked after the action that makes `ply + 1 == maxPlies`).
+- **Deploy** may name any reserve spy of the mover; reserve spies are interchangeable. `legalActions` lists only the first reserve spy, to keep the branching factor honest.
+- **Pass** emits a `passed` event (not in the plan's event list) so the UI can show it.
+- **Event phases:** the actor's own pickup is phase 0 (it happens on arrival). `dropped`/`bumped`/`burned`/`bumpBlocked` are phase 1, bumped-spy pickups are phase 2, `extracted` is 3, `intelSpawned` is 4, `gameOver` is 5.
+- **Compact state string** for `?state=`: `v1.<current>.<ply>.<s0>-<s1>.<spies in id order: rc | rc* | x>.<intel rc pairs>`. The start position is `v1.0.0.0-0.51,54,01,04.2233`.
+- Coverage: 100% lines on `engine.ts`, `board.ts`, `rules.ts` and `serialize.ts`. A property test plays 2,000 random games and checks the invariants after every action.
+
 ## Later
 
 (ideas not in the plan go here)
