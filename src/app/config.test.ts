@@ -13,4 +13,10 @@ test('parses URL params with defaults', () => {
   expect(d.speed).toBe(1);
   expect(d.direct).toBe(false);
   expect(parseConfig('?p1=bot:nope').seats[1]).toEqual({ kind: 'human' });
+  expect(parseConfig('?rules=escort,bogus,fumble&win=2').rules).toEqual({
+    escort: true,
+    fumble: true,
+    intelToWin: 2,
+  });
+  expect(parseConfig('').rules).toEqual({});
 });

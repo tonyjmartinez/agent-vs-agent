@@ -5,6 +5,7 @@ import { BotClient } from './app/botClient';
 import { Controller } from './app/controller';
 import { parseConfig, type Seat } from './app/config';
 import { installHooks } from './app/testHooks';
+import { duelRules } from './engine/rules';
 import { decode } from './engine/serialize';
 import { showGameOver } from './ui/gameOver';
 import { Hud } from './ui/hud';
@@ -13,6 +14,8 @@ import { load, save } from './ui/storage';
 import { PhaserBoardView } from './view/PhaserBoardView';
 
 const cfg = parseConfig(location.search);
+// speed=0 (tests): no CSS animation either, so screenshots are deterministic.
+if (cfg.speed === 0) document.documentElement.classList.add('no-motion');
 let controller: Controller | null = null;
 const view = new PhaserBoardView();
 const overlayRoot = document.getElementById('overlay-root')!;
@@ -77,6 +80,7 @@ async function boot(): Promise<void> {
     speed: cfg.speed,
     confirmTouch: cfg.confirmTouch ?? true,
     seed: cfg.seed || Math.floor(Math.random() * 1e9),
+    rules: cfg.rules,
     chooseBot: (s, level, seed, history) => bots.choose(s, level, seed, history),
     onGameOver: (s) => {
       document.getElementById('coach')?.remove();
@@ -93,7 +97,7 @@ async function boot(): Promise<void> {
     },
     onRefresh: coach,
   });
-  if (cfg.direct) controller.start(cfg.state ? decode(cfg.state) : undefined);
+  if (cfg.direct) controller.start(cfg.state ? decode(cfg.state, duelRules(cfg.rules)) : undefined);
   else {
     controller.start();
     toMenu();

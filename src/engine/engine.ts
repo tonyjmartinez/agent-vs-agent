@@ -1,4 +1,4 @@
-import { KING_DIRS, ORTHO_DIRS, add, cmpCell, eq, inBounds } from './board';
+import { KING_DIRS, ORTHO_DIRS, add, cheb, cmpCell, eq, inBounds } from './board';
 import type {
   Action,
   Cell,
@@ -57,6 +57,16 @@ export function legalActions(s: GameState): Action[] {
       if (sp.carrying && hasIntel(s.intel, to)) continue;
       if (s.locks?.some((l) => l.player === sp.owner && eq(l.at, to))) continue; // fumbled
       out.push({ kind: 'move', spyId: sp.id, to });
+    }
+    if (s.rules.sprint && sp.carrying) {
+      for (const d of dirs) {
+        const mid = add(sp.pos, d);
+        const to = add(mid, d);
+        if (!inBounds(to, s.rules.size) || spyAt(s.spies, mid) || spyAt(s.spies, to)) continue;
+        if (hasIntel(s.intel, to)) continue;
+        if (s.locks?.some((l) => l.player === sp.owner && eq(l.at, to))) continue;
+        out.push({ kind: 'move', spyId: sp.id, to });
+      }
     }
   }
   const reserve = mine.find((x) => !x.pos);
@@ -128,8 +138,10 @@ export function applyTrusted(s: GameState, a: Action): { state: GameState; event
     const noBump = rules.firstMoveNoBump && s.ply === 0;
     const landed: Spy[] = [];
     if (!noBump) {
-      const pre = spies.map((x) => ({ id: x.id, pos: x.pos }));
+      const pre = spies.map((x) => ({ id: x.id, owner: x.owner, pos: x.pos }));
       const occupiedPre = (p: Cell) => pre.some((x) => eq(x.pos, p));
+      const escortedPre = (v: Spy, at: Cell) =>
+        pre.some((x) => x.id !== v.id && x.owner === v.owner && x.pos && cheb(x.pos, at) === 1);
       for (const d of KING_DIRS) {
         const n = add(dest, d);
         const victim = spies.find((x) => x !== actor && eq(x.pos, n));
@@ -137,8 +149,11 @@ export function applyTrusted(s: GameState, a: Action): { state: GameState; event
         if (!rules.bumpOwnSpies && victim.owner === actor.owner) continue;
         const t = add(n, d);
         const onBoard = inBounds(t, rules.size);
-        // With dropOnBump off, a carrier keeps its intel, so it can't be shoved onto intel.
-        const keeps = !rules.dropOnBump && victim.carrying && onBoard;
+        // A carrier that keeps its intel (dropOnBump off, or escorted) can't be shoved onto intel.
+        const keeps =
+          victim.carrying &&
+          onBoard &&
+          (!rules.dropOnBump || (rules.escort && escortedPre(victim, n)));
         if (onBoard && (occupiedPre(t) || (keeps && hasIntel(intel, t)))) {
           emit(1, { t: 'bumpBlocked', spyId: victim.id, at: n, dir: d });
           continue;
@@ -178,6 +193,7 @@ export function applyTrusted(s: GameState, a: Action): { state: GameState; event
         ((x.owner - s.current + n) % n) - ((y.owner - s.current + n) % n) ||
         (x.id < y.id ? -1 : x.id > y.id ? 1 : 0),
     );
+  const spawned: Cell[] = [];
   for (const x of order) {
     x.carrying = false;
     scores[x.owner]! += 1;
@@ -191,9 +207,11 @@ export function applyTrusted(s: GameState, a: Action): { state: GameState; event
     const spawn = rules.intelSpawnOrder.find((p) => !spyAt(spies, p) && !hasIntel(intel, p));
     if (spawn) {
       intel.push({ ...spawn });
-      emit(4, { t: 'intelSpawned', at: { ...spawn } });
+      spawned.push({ ...spawn });
     }
   }
+  // Spawns are computed in extraction order but emitted after all extractions (phase grouping).
+  for (const at of spawned) emit(4, { t: 'intelSpawned', at });
 
   // 7. Win check
   let winner: GameState['winner'] = null;

@@ -1,6 +1,6 @@
 import { applyAction, createGame, legalActions, previewAction } from '../engine/engine';
 import { duelRules } from '../engine/rules';
-import type { Action, Cell, GameState, PlayerId } from '../engine/types';
+import type { Action, Cell, GameState, PlayerId, Rules } from '../engine/types';
 import type { BoardView } from '../view/BoardView';
 import type { Hud } from '../ui/hud';
 import type { BotLevel, Seat } from './config';
@@ -29,6 +29,8 @@ export interface ControllerOpts {
   /** Require a second tap to confirm moves made by touch (mouse always commits in one click). */
   confirmTouch: boolean;
   seed: number;
+  /** Rule overrides applied to every new game. */
+  rules?: Partial<Rules>;
   chooseBot?: BotChooser;
   onGameOver?(s: GameState): void;
   onAction?(s: GameState): void;
@@ -84,7 +86,7 @@ export class Controller {
   start(state?: GameState, seats?: Seat[]): void {
     this.generation++;
     if (seats) this.o.seats = seats;
-    this.history = [state ?? createGame(duelRules())];
+    this.history = [state ?? createGame(duelRules(this.o.rules))];
     this.sel = emptySelection;
     this.busy = false;
     this.thinking = false;

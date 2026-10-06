@@ -16,7 +16,8 @@ export function board(
     rules?: Partial<Rules>;
   } = {},
 ): GameState {
-  const rules = duelRules(opts.rules);
+  // Fixtures test the core mechanics, so the shipped variant flags start off unless a test asks.
+  const rules = duelRules({ sprint: false, fumble: false, ...opts.rules });
   const rows = ascii
     .trim()
     .split('\n')

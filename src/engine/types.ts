@@ -37,6 +37,10 @@ export interface Rules {
   dropOnBump: boolean;
   /** Experimental: a team cannot re-grab intel it just dropped until after its next turn. */
   fumble: boolean;
+  /** Experimental: a carrier with a teammate adjacent (before the bump) keeps its intel when shoved. */
+  escort: boolean;
+  /** Experimental: a carrier may dash 2 squares in a straight line over an empty square. */
+  sprint: boolean;
 }
 
 export interface GameState {

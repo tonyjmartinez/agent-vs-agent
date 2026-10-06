@@ -434,23 +434,30 @@ body {
   text-align: center;
 }
 .card.rules p {
-  margin: 0 0 8px;
-  font-size: 15px;
+  margin: 0 0 6px;
+  font-size: 14px;
   line-height: 1.35;
   font-weight: 500;
 }
 .diagrams {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
+  align-items: end;
   gap: 8px;
-  margin: 10px 0 14px;
-  flex-wrap: wrap;
+  margin: 8px 0 12px;
 }
 .diagram {
   margin: 0;
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.diagram svg {
+  width: 100%;
+  height: auto;
+  max-width: 120px;
 }
 .coach {
   position: fixed;
@@ -467,4 +474,11 @@ body {
   pointer-events: none;
   max-width: calc(100vw - 32px);
   text-align: center;
+}
+
+.no-motion *,
+.no-motion *::before,
+.no-motion *::after {
+  animation: none !important;
+  transition: none !important;
 }

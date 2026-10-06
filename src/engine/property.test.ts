@@ -82,3 +82,30 @@ describe('serialize', () => {
     expect(() => decode('v1.0.0.0-0.51,54.')).toThrow();
   });
 });
+
+describe('random-play invariants under experimental rule flags', () => {
+  const variants: [string, Partial<import('./types').Rules>][] = [
+    ['sprint', { sprint: true }],
+    ['fumble', { fumble: true }],
+    ['escort', { escort: true }],
+    ['sprint+fumble', { sprint: true, fumble: true }],
+    ['keep-on-shove', { dropOnBump: false }],
+  ];
+  test.each(variants)(
+    '%s: 300 random games keep every invariant',
+    (_name, patch) => {
+      const rules = duelRules(patch);
+      const rnd = lcg(99);
+      for (let g = 0; g < 300; g++) {
+        let s = createGame(rules);
+        while (s.winner === null) {
+          const acts = legalActions(s);
+          const { state } = applyAction(s, acts[Math.floor(rnd() * acts.length)]!);
+          checkInvariants(state, s);
+          s = state;
+        }
+      }
+    },
+    60_000,
+  );
+});

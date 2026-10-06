@@ -1,7 +1,13 @@
 export type BotLevel = 'random' | 'easy' | 'medium' | 'hard';
 export type Seat = { kind: 'human' } | { kind: 'bot'; level: BotLevel };
 
+/** Rule flags that can be switched on from the URL: `?rules=escort,fumble`. */
+export const RULE_FLAGS = ['escort', 'fumble', 'firstMoveNoBump'] as const;
+export type RuleFlag = (typeof RULE_FLAGS)[number];
+
 export interface AppConfig {
+  /** Rule overrides from `?rules=` (flag list) and `?win=N`. */
+  rules: Partial<Record<RuleFlag, boolean>> & { intelToWin?: number };
   seed: number;
   seats: [Seat, Seat];
   mode: 'duel';
@@ -31,7 +37,14 @@ export function parseConfig(search: string): AppConfig {
     parseSeat(q.get('p1'), { kind: 'human' }),
   ];
   const confirm = q.get('confirm');
+  const rules: AppConfig['rules'] = {};
+  for (const f of (q.get('rules') ?? '').split(',')) {
+    if ((RULE_FLAGS as readonly string[]).includes(f)) rules[f as RuleFlag] = true;
+  }
+  const win = num('win', 0);
+  if (win >= 1 && win <= 9) rules.intelToWin = Math.floor(win);
   return {
+    rules,
     seed: num('seed', 0) || 0,
     seats,
     mode: 'duel',

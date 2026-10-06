@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { add, cell, cheb, key, sub } from './board';
 import { applyAction, createGame, legalActions } from './engine';
 import { board } from './fixtures';
-import { ffaRules } from './rules';
+import { duelRules, ffaRules } from './rules';
 
 describe('board helpers', () => {
   test('arithmetic', () => {
@@ -145,4 +145,157 @@ describe('fumble (experimental knob)', () => {
     const c = applyAction(b.state, { kind: 'move', spyId: 'p0a', to: { r: 2, c: 3 } });
     expect(c.events.map((e) => e.t)).toContain('pickedUp');
   });
+});
+
+describe('escort (experimental knob)', () => {
+  const opts = { rules: { escort: true } };
+  test('a carrier with a teammate next to it keeps its intel when shoved', () => {
+    const s = board(
+      `
+      . . . . . .
+      . . . . T .
+      . R . T* . .
+      . . . . . .
+      . . . . . .
+      . . . . . .`,
+      opts,
+    );
+    // Teal carrier at (2,3) is escorted by teal at (1,4). Red arrives at (2,2) and shoves it.
+    const { state, events } = applyAction(s, { kind: 'move', spyId: 'p0a', to: { r: 2, c: 2 } });
+    expect(events.map((e) => e.t)).not.toContain('dropped');
+    expect(state.spies.find((x) => x.id === 'p1b')).toMatchObject({
+      pos: { r: 2, c: 4 },
+      carrying: true,
+    });
+  });
+  test('an unescorted carrier still drops; escort is judged before the shove', () => {
+    const s = board(
+      `
+      . . . . . .
+      . . . . . .
+      . R . T* . .
+      . . . . . .
+      . . . . . .
+      . . . . T .`,
+      opts,
+    );
+    const { events } = applyAction(s, { kind: 'move', spyId: 'p0a', to: { r: 2, c: 2 } });
+    expect(events.map((e) => e.t)).toContain('dropped');
+  });
+  test('an escorted carrier burned off the board still drops', () => {
+    const s = board(
+      `
+      . . T* T . .
+      . . . . . .
+      . . R . . .
+      . . . . . .
+      . . . . . .
+      . . . . . .`,
+      { ...opts, current: 0 },
+    );
+    const { events } = applyAction(s, { kind: 'move', spyId: 'p0a', to: { r: 1, c: 2 } });
+    expect(events.map((e) => e.t).slice(0, 3)).toEqual(['moved', 'dropped', 'burned']);
+  });
+  test('an escorted carrier cannot be shoved onto intel (blocked instead)', () => {
+    const s = board(
+      `
+      . . . . . .
+      . . . . T .
+      . R . T* i .
+      . . . . . .
+      . . . . . .
+      . . . . . .`,
+      opts,
+    );
+    const { state, events } = applyAction(s, { kind: 'move', spyId: 'p0a', to: { r: 2, c: 2 } });
+    expect(events[1]).toMatchObject({ t: 'bumpBlocked', spyId: 'p1b' });
+    expect(state.spies.find((x) => x.id === 'p1b')).toMatchObject({
+      pos: { r: 2, c: 3 },
+      carrying: true,
+    });
+  });
+});
+
+describe('sprint (experimental knob)', () => {
+  const opts = { rules: { sprint: true } };
+  const targets = (s: ReturnType<typeof board>, id: string) =>
+    legalActions(s)
+      .filter((a) => a.kind === 'move' && a.spyId === id)
+      .map((a) => (a.kind === 'move' ? `${a.to.r}${a.to.c}` : ''))
+      .sort();
+  test('a carrier may also dash 2 squares in a straight line over an empty square', () => {
+    const s = board(
+      `
+      . . . . . .
+      . . . . . .
+      . . R* . . .
+      . . . T . .
+      . . . . . .
+      . . . . . T`,
+      opts,
+    );
+    // 8 one-step moves (none blocked) + 2-step dashes, except through the spy at (3,3) -> no (4,4).
+    expect(targets(s, 'p0a')).toEqual(
+      [
+        '00',
+        '02',
+        '04',
+        '11',
+        '12',
+        '13',
+        '20',
+        '21',
+        '23',
+        '24',
+        '31',
+        '32',
+        '33',
+        '40',
+        '42',
+      ].filter((x) => x !== '33'),
+    );
+  });
+  test('empty-handed spies cannot dash; dashing bumps only at the landing square', () => {
+    const s = board(
+      `
+      . . . . . .
+      . . . . . .
+      . . R* . . .
+      . . . . . .
+      . . T . . .
+      . . . . . .`,
+      opts,
+    );
+    expect(targets({ ...s, current: 1 }, 'p1a').length).toBe(8); // not carrying: no dashes
+    // Red dashes (2,2) -> (0,2)? no: dash toward home (row 5) is blocked by teal at (4,2): (3,2) is empty, lands (4,2)? occupied.
+    expect(targets(s, 'p0a')).not.toContain('42');
+    const { events } = applyAction(s, { kind: 'move', spyId: 'p0a', to: { r: 4, c: 4 } });
+    // Lands on (4,4): teal at (4,2) is two away, so nothing is bumped.
+    expect(events.map((e) => e.t)).toEqual(['moved']);
+  });
+  test('a dash cannot land on intel or pass over a spy', () => {
+    const s = board(
+      `
+      . . . . . .
+      . . . . . .
+      . . R* T i .
+      . . . . . .
+      . . i . . .
+      . . . . . T`,
+      opts,
+    );
+    expect(targets(s, 'p0a')).not.toContain('24'); // over a spy
+    expect(targets(s, 'p0a')).not.toContain('42'); // onto intel
+  });
+});
+
+test('shipped Duel defaults: sprint and fumble on, other experimental flags off', () => {
+  const r = duelRules();
+  expect([r.sprint, r.fumble, r.escort, r.dropOnBump, r.firstMoveNoBump]).toEqual([
+    true,
+    true,
+    false,
+    true,
+    false,
+  ]);
 });

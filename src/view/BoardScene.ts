@@ -24,6 +24,7 @@ export class BoardScene extends Phaser.Scene {
   private spies = new Map<string, SpyGO>();
   private intel = new Map<string, Phaser.GameObjects.Container>();
   private hl!: Phaser.GameObjects.Graphics;
+  private links!: Phaser.GameObjects.Graphics;
   private pv!: Phaser.GameObjects.Graphics;
   private ghost: Phaser.GameObjects.Container | null = null;
   private hover: string | null = null;
@@ -36,6 +37,7 @@ export class BoardScene extends Phaser.Scene {
   create(): void {
     this.drawBoard();
     this.hl = this.add.graphics().setDepth(1);
+    this.links = this.add.graphics().setDepth(3);
     this.pv = this.add.graphics().setDepth(60);
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       const c = pointToCell(p.x, p.y);
@@ -194,9 +196,45 @@ export class BoardScene extends Phaser.Scene {
       this.removeIntel({ r: r!, c: c! })?.destroy();
     }
     for (const c of s.intel) this.addIntel(c);
+    this.drawEscorts(s);
   }
 
   // ---------- highlights & preview ----------
+
+  /** Escort rule: a gold link + ring marks carriers that a shove can't knock loose. */
+  private drawEscorts(s: GameState): void {
+    const g = this.links.clear();
+    // Fumble locks: a dashed ring in the fumbling team's colour with a slash ("not yours yet").
+    for (const l of s.locks ?? []) {
+      const p = cellCenter(l.at.r, l.at.c);
+      const col = hex(playerColors[l.player] ?? theme.ink);
+      for (let i = 0; i < 12; i += 2) {
+        const a0 = (i / 12) * Math.PI * 2;
+        const a1 = ((i + 1) / 12) * Math.PI * 2;
+        g.lineStyle(8, col, 1).beginPath().arc(p.x, p.y, 58, a0, a1).strokePath();
+      }
+      g.lineStyle(8, col, 1).lineBetween(p.x - 40, p.y + 40, p.x + 40, p.y - 40);
+    }
+    if (!s.rules.escort) return;
+    for (const c of s.spies) {
+      if (!c.carrying || !c.pos) continue;
+      const mates = s.spies.filter(
+        (x) =>
+          x !== c &&
+          x.owner === c.owner &&
+          x.pos &&
+          Math.max(Math.abs(x.pos.r - c.pos!.r), Math.abs(x.pos.c - c.pos!.c)) === 1,
+      );
+      if (!mates.length) continue;
+      const a = cellCenter(c.pos.r, c.pos.c);
+      for (const m of mates) {
+        const b = cellCenter(m.pos!.r, m.pos!.c);
+        g.lineStyle(12, INK, 0.5).lineBetween(a.x, a.y, b.x, b.y);
+        g.lineStyle(6, MUSTARD, 1).lineBetween(a.x, a.y, b.x, b.y);
+      }
+      g.lineStyle(7, MUSTARD, 1).strokeCircle(a.x, a.y, 60);
+    }
+  }
 
   setHighlights(h: Highlights): void {
     const g = this.hl.clear();
@@ -216,10 +254,19 @@ export class BoardScene extends Phaser.Scene {
         g.lineStyle(6, INK, 1).strokeCircle(p.x, p.y, 66);
       }
     }
+    const from =
+      h.selected && h.selected !== 'reserve' ? s.spies.find((x) => x.id === h.selected)?.pos : null;
     for (const t of h.targets) {
       const p = cellCenter(t.r, t.c);
-      g.fillStyle(MUSTARD, 0.9).fillCircle(p.x, p.y, 17);
-      g.lineStyle(4, INK, 0.9).strokeCircle(p.x, p.y, 17);
+      const dash = from && Math.max(Math.abs(t.r - from.r), Math.abs(t.c - from.c)) === 2;
+      if (dash) {
+        // Sprint target: a hollow ring with a speed tick, distinct from a one-step dot.
+        g.lineStyle(10, INK, 0.9).strokeCircle(p.x, p.y, 24);
+        g.lineStyle(6, MUSTARD, 1).strokeCircle(p.x, p.y, 24);
+      } else {
+        g.fillStyle(MUSTARD, 0.9).fillCircle(p.x, p.y, 17);
+        g.lineStyle(4, INK, 0.9).strokeCircle(p.x, p.y, 17);
+      }
     }
     if (h.cursor) {
       const x = MARGIN + h.cursor.c * CELL;
@@ -359,6 +406,7 @@ export class BoardScene extends Phaser.Scene {
     if (this.speed <= 0 || !events.length) return;
     this.showPreview(null, null);
     this.hl.clear();
+    this.links.clear();
     const phases = [...new Set(events.map((e) => e.phase))].sort();
     for (const ph of phases) {
       await Promise.all(events.filter((e) => e.phase === ph).map((e) => this.animate(e, before)));

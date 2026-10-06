@@ -50,6 +50,12 @@ function enemyCanReach(s: GameState, owner: PlayerId, q: Cell): boolean {
 /** What an enemy bump next ply could do to this spy. */
 export function threatOn(s: GameState, spy: Spy): 'burn' | 'drop' | null {
   if (!spy.pos) return null;
+  const pos = spy.pos;
+  // Shoves can't knock intel loose when the rules say the carrier keeps it.
+  const keepsOnShove =
+    !s.rules.dropOnBump ||
+    (s.rules.escort &&
+      s.spies.some((x) => x !== spy && x.owner === spy.owner && x.pos && cheb(x.pos, pos) === 1));
   let worst: 'burn' | 'drop' | null = null;
   for (const d of KING_DIRS) {
     const q = sub(spy.pos, d);
@@ -57,7 +63,7 @@ export function threatOn(s: GameState, spy: Spy): 'burn' | 'drop' | null {
     const t = add(spy.pos, d);
     const off = !inBounds(t, s.rules.size);
     if (!off && s.spies.some((x) => eq(x.pos, t))) continue; // braced
-    if (!off && !spy.carrying) continue; // harmless shove
+    if (!off && (!spy.carrying || keepsOnShove)) continue; // harmless shove
     if (!enemyCanReach(s, spy.owner, q)) continue;
     if (off) return 'burn';
     worst = 'drop';

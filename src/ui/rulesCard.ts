@@ -57,6 +57,8 @@ export function rulesHtml(): string {
   <p><b>Bump:</b> wherever a spy lands, it shoves <b>every</b> neighbour (yours too!) one square straight away. A spy with another spy behind it can't be shoved. No chain reactions.</p>
   <p><b>Burned:</b> shoved off the board → back to its owner's reserve.</p>
   <p><b>Intel:</b> step on a folder to grab it. Get bumped while carrying and you drop it where you stood.</p>
+  <p><b>Sprint:</b> carrying intel? You may dash <b>2 squares in a straight line</b> instead, over an empty square (ringed targets).</p>
+  <p><b>Fumble:</b> if your carrier drops the intel, your team can't grab that folder on your next turn (it's marked).</p>
   <p><b>Extract:</b> carry it onto your home row to bank it. New intel appears in the middle.</p>
   ${diagrams()}`;
 }

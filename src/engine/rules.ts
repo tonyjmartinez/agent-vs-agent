@@ -74,7 +74,10 @@ export function duelRules(overrides: Partial<Rules> = {}): Rules {
     firstMoveNoBump: false,
     veterans: false,
     dropOnBump: true,
-    fumble: false,
+    // Shipped variant (Phase 3 balance work, see DESIGN_NOTES): carriers sprint, fumbles lock.
+    fumble: true,
+    escort: false,
+    sprint: true,
   };
   return { ...base, ...overrides };
 }

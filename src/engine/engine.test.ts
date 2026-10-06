@@ -677,3 +677,23 @@ describe('purity and helpers', () => {
     expect(hash({ ...s, current: 1 })).not.toBe(hash(s));
   });
 });
+
+test('double extraction emits both extractions before both spawns', () => {
+  const s = board(
+    `
+    . . . . . .
+    . . . . . .
+    . . . . . .
+    . . . . . .
+    . . . . R* .
+    . R* . . . .`,
+  );
+  const { events } = applyAction(s, mv('p0a', 5, 4)); // p0b already waits on its row (fixture-only)
+  expect(events.map((e) => e.t)).toEqual([
+    'moved',
+    'extracted',
+    'extracted',
+    'intelSpawned',
+    'intelSpawned',
+  ]);
+});

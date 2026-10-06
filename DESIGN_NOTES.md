@@ -94,7 +94,49 @@ A carrier in the middle needs 2–3 moves to get home. Any defender within reach
 | `fumble`                              | hard vs medium (swap), 40  | 13/40 | A **65%** (26–1) ✅ | 120          | 22.0  | meets the gradient gate; P0 45%                            |
 | `fumble`                              | hard vs hard, 40           | 30/40 | P0 15% (6–4)        | 120          | 24.1  | still stalls between equals                                |
 
-**Status:** waiting on the human's call. Default rules are unchanged; every experimental flag is off by default.
+**Status:** resolved below. Sprint + fumble ship as the default.
+
+## Rules decision: sprint + fumble ship as the Duel default
+
+The human said "keep iterating", so I resolved the Phase 3 blocker myself. Two candidate fixes were tested and rejected.
+
+- **Escort** (an escorted carrier keeps its intel when shoved): hard vs medium 32/40 draws, A 17.5%. No help.
+- **Two-row zones**: no help (above).
+
+A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usually score, then deadlock at **match point**. A carrier moves at the same speed as its chasers, so one defender can always arrive next to it. The fix has to give the carrier **tempo**.
+
+**Sprint** (new): a carrier may dash 2 squares in a straight line over an empty square, bumping only where it lands. **Fumble** (from before): your team can't re-grab intel it just dropped until after its next turn. Neither works alone. Together:
+
+| matchup (`--swap` unless mirror) | rules                        | games | A win            | draws | median plies | burns | drops | extractions |
+| -------------------------------- | ---------------------------- | ----- | ---------------- | ----- | ------------ | ----- | ----- | ----------- |
+| hard vs medium                   | base                         | 60    | 11.7%            | 53    | 120          | –     | 46.5  | –           |
+| hard vs medium                   | sprint                       | 40    | 30.0%            | 28    | 120          | 2.0   | 57.2  | 3.4         |
+| hard vs medium                   | escort + fumble              | 40    | 65.0%            | 14    | 120          | 4.3   | 23.9  | 2.2         |
+| hard vs medium                   | **sprint + fumble**          | 40    | **85.0%**        | 6     | 62           | 3.5   | 14.4  | 3.4         |
+| hard vs medium                   | **sprint + fumble** (seed 2) | 80    | **88.8%** (71–1) | 8     | 70           | 3.7   | 15.0  | 3.6         |
+| medium vs easy                   | **sprint + fumble**          | 200   | **100%**         | 0     | 27           | 0.9   | 1.0   | 3.2         |
+| easy vs random                   | **sprint + fumble**          | 200   | **98.0%**        | 3     | 81           | 7.2   | 2.4   | 3.0         |
+| hard vs hard                     | sprint                       | 40    | P0 0%            | 40    | 120          | 3.1   | 58.9  | 1.9         |
+| hard vs hard                     | **sprint + fumble**          | 40    | P0 5%            | 37    | 120          | 5.6   | 23.8  | 1.5         |
+
+**Seat balance.** The medium mirror is nearly deterministic: identical bots replay one opening, giving P0 84% on the new rules and 185/200 draws on the base. So it isn't a fair seat test. The noisy easy-vs-easy mirror is (400 games, seed 5):
+
+| easy vs easy        | P0 win    | draws  | median plies | burns | drops | extractions | comebacks |
+| ------------------- | --------- | ------ | ------------ | ----- | ----- | ----------- | --------- |
+| base rules          | 40.5%     | 80     | 120          | 8.4   | 6.2   | 3.2         | 23.4%     |
+| **sprint + fumble** | **48.8%** | **34** | **79**       | 6.4   | 2.9   | 4.0         | **33.3%** |
+
+**Choice.** Sprint and fumble are now on in `duelRules()`. They clear every skill-gradient gate (85/70/65 → 98/100/89), seat balance is inside 45–55%, and games are far more decisive. Both rules are one sentence on the rules card and visible on the board: dash targets get rings, and a fumbled folder gets a dashed ring and slash in the fumbling team's colour.
+
+**Still open:**
+
+- **Hard vs hard still draws (37/40).** Two depth-6 bots defend perfectly at match point. This only affects bot-vs-bot mirrors; it's logged rather than chased.
+- Easy-mirror burns (6.4) and median length (79 plies) sit a little above the PLAN §9 ranges.
+- Engine fixtures still test the base mechanics, with flags off. A dedicated test pins the shipped defaults.
+
+**Engine bug found by the property test once sprint was on:** a double extraction emitted extract, spawn, extract, spawn, which breaks phase grouping. Spawns are now emitted after all extractions (tested).
+
+**URL switches for phone A/B:** `?rules=escort,fumble,firstMoveNoBump` (on-switches only) and `?win=N`.
 
 ## Later
 
