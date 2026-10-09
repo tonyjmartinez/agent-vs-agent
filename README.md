@@ -2,7 +2,7 @@
 
 A small bump-and-run spy board game for phone and desktop browsers. Two agents per side on a 6×6 board: move one square, and everything next to where you land gets **bumped** one square away. Bump spies off the edge to **burn** them, grab **intel** from the middle, and carry 3 home to win.
 
-- **Play:** https://agent-vs-agent.pages.dev (Cloudflare Pages, once the repo is connected; see Deploy below)
+- **Play:** Cloudflare `agent-vs-agent` Worker, once connected (see Deploy below)
 - **Rules:** tap **How to play** in the game, or see `PLAN.md` §2.
 - **Design log and balance data:** `DESIGN_NOTES.md`
 
@@ -24,18 +24,12 @@ npm run e2e                                                # Playwright, desktop
 npx tsx scripts/single.ts                                  # single-file build → dist-single/
 ```
 
-## Deploy (Cloudflare Pages, Git integration)
+## Deploy (Cloudflare, via `wrangler.jsonc`)
 
-Cloudflare builds straight from this repo. One-time setup in the Cloudflare dashboard:
+The repo carries its own Cloudflare config (`wrangler.jsonc`): a static-assets Worker serving `dist/`.
 
-1. **Workers & Pages → Create → Pages → Connect to Git**, then pick `tonyjmartinez/agent-vs-agent`.
-2. Build settings:
-   - Framework preset: **None** (or Vite)
-   - Build command: `npm run build`
-   - Build output directory: `dist`
-   - Production branch: `main`
-3. **Save and Deploy.**
+**From the dashboard (auto-deploys on push):** go to **Workers & Pages → Create → Import a repository** and pick `tonyjmartinez/agent-vs-agent`. Cloudflare reads `wrangler.jsonc`. If it asks, use build command `npm run build` and deploy command `npx wrangler deploy`. Pushes to `main` go live at `https://agent-vs-agent.<your-subdomain>.workers.dev`. Add a custom domain (e.g. `play.tonyjmartinez.com`) under the Worker's **Settings → Domains & Routes**.
 
-Every push to `main` then goes live at `https://agent-vs-agent.pages.dev`, and other branches get preview URLs. Node 22 comes from `.nvmrc`. Add a custom domain (e.g. `play.tonyjmartinez.com`) under the project's **Custom domains**.
+**From your machine:** run `npx wrangler login` once, then `npm run deploy` (it builds, then runs `wrangler deploy`).
 
 GitHub Actions (`.github/workflows/ci.yml`) only runs the checks: typecheck, lint, tests and build.
