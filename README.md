@@ -2,7 +2,7 @@
 
 A small bump-and-run spy board game for phone and desktop browsers. Two agents per side on a 6×6 board: move one square, and everything next to where you land gets **bumped** one square away. Bump spies off the edge to **burn** them, grab **intel** from the middle, and carry 3 home to win.
 
-- **Play:** https://agent-vs-agent.pages.dev (Cloudflare Pages, once the secrets below are set; add a custom domain such as `play.tonyjmartinez.com` in Cloudflare)
+- **Play:** https://agent-vs-agent.pages.dev (Cloudflare Pages, once the repo is connected; see Deploy below)
 - **Rules:** tap **How to play** in the game, or see `PLAN.md` §2.
 - **Design log and balance data:** `DESIGN_NOTES.md`
 
@@ -24,19 +24,18 @@ npm run e2e                                                # Playwright, desktop
 npx tsx scripts/single.ts                                  # single-file build → dist-single/
 ```
 
-## Deploy (Cloudflare Pages)
+## Deploy (Cloudflare Pages, Git integration)
 
-Every push runs `.github/workflows/deploy.yml`. It typechecks, lints, runs the tests, builds, and uploads `dist/` to Cloudflare Pages with `wrangler`.
+Cloudflare builds straight from this repo. One-time setup in the Cloudflare dashboard:
 
-- `main` deploys to production: `https://agent-vs-agent.pages.dev` plus any custom domain.
-- Other branches get a preview at `https://<branch>.agent-vs-agent.pages.dev`.
+1. **Workers & Pages → Create → Pages → Connect to Git**, then pick `tonyjmartinez/agent-vs-agent`.
+2. Build settings:
+   - Framework preset: **None** (or Vite)
+   - Build command: `npm run build`
+   - Build output directory: `dist`
+   - Production branch: `main`
+3. **Save and Deploy.**
 
-One-time setup:
+Every push to `main` then goes live at `https://agent-vs-agent.pages.dev`, and other branches get preview URLs. Node 22 comes from `.nvmrc`. Add a custom domain (e.g. `play.tonyjmartinez.com`) under the project's **Custom domains**.
 
-1. Cloudflare → **My Profile → API Tokens → Create Token → Custom token**. Permission: **Account → Cloudflare Pages → Edit**. Copy the token.
-2. Copy your **Account ID** (Cloudflare dashboard → Workers & Pages, right sidebar).
-3. GitHub → this repo → **Settings → Secrets and variables → Actions** → add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
-4. **Actions → Deploy to Cloudflare Pages → Run workflow** (or push). The first run creates the `agent-vs-agent` Pages project.
-5. Optional: **Workers & Pages → agent-vs-agent → Custom domains**, then add e.g. `play.tonyjmartinez.com`.
-
-Until the secrets exist, the workflow still runs the checks and build but skips the upload.
+GitHub Actions (`.github/workflows/ci.yml`) only runs the checks: typecheck, lint, tests and build.

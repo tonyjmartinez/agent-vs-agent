@@ -1,0 +1,28 @@
+name: CI
+
+# Checks only. Deploys are handled by Cloudflare Pages' Git integration (it builds from the repo).
+on:
+  push:
+    branches: [main, ccr-e80c4bbb-atuxna]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

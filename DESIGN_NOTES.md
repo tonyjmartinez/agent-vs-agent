@@ -168,8 +168,7 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 ## Hosting: GitHub Pages → Cloudflare Pages
 
 - The GitHub user site `tonyjmartinez.github.io` still has `tonyjmartinez.com` as its custom domain, so any project Pages site redirects to `tonyjmartinez.com/<repo>/`. That domain is served by **Firebase Hosting**, where the portfolio SPA answers every path. A GitHub project site would have been unreachable.
-- Deploys now go through `wrangler pages deploy` from GitHub Actions, after the checks pass. `main` is production and other branches are previews.
-- The project is created on the first run if it's missing. Without the secrets, the upload is skipped and the workflow stays green.
+- Deploys use **Cloudflare Pages' Git integration**: Cloudflare builds `npm run build` → `dist` on every push (`main` is production, other branches get previews). GitHub Actions is now checks-only (`ci.yml`). A wrangler-from-Actions version was tried first, but the owner preferred no secrets.
 - `public/_headers` gives hashed `/assets/*` an immutable cache. `.nvmrc` pins Node 22 in case Cloudflare's Git integration is used instead.
 - The old `gh-pages` branch is no longer updated. It was left in place; deleting it is the owner's call.
 
