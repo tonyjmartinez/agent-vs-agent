@@ -2,7 +2,7 @@
 
 A small bump-and-run spy board game for phone and desktop browsers. Two agents per side on a 6×6 board: move one square, and everything next to where you land gets **bumped** one square away. Bump spies off the edge to **burn** them, grab **intel** from the middle, and carry 3 home to win.
 
-- **Play:** https://tonyjmartinez.github.io/agent-vs-agent/ (once GitHub Pages is enabled, see below)
+- **Play:** https://agent-vs-agent.pages.dev (Cloudflare Pages, once the secrets below are set; add a custom domain such as `play.tonyjmartinez.com` in Cloudflare)
 - **Rules:** tap **How to play** in the game, or see `PLAN.md` §2.
 - **Design log and balance data:** `DESIGN_NOTES.md`
 
@@ -24,8 +24,19 @@ npm run e2e                                                # Playwright, desktop
 npx tsx scripts/single.ts                                  # single-file build → dist-single/
 ```
 
-## Deploy
+## Deploy (Cloudflare Pages)
 
-Every push to the working branch runs `.github/workflows/deploy.yml`. It typechecks, lints, runs the tests, builds, and publishes `dist/` to the `gh-pages` branch.
+Every push runs `.github/workflows/deploy.yml`. It typechecks, lints, runs the tests, builds, and uploads `dist/` to Cloudflare Pages with `wrangler`.
 
-One-time setup: **Settings → Pages → Build and deployment → Source: Deploy from a branch → `gh-pages` / (root)**. Pages on a private repo needs GitHub Pro; otherwise make the repo public.
+- `main` deploys to production: `https://agent-vs-agent.pages.dev` plus any custom domain.
+- Other branches get a preview at `https://<branch>.agent-vs-agent.pages.dev`.
+
+One-time setup:
+
+1. Cloudflare → **My Profile → API Tokens → Create Token → Custom token**. Permission: **Account → Cloudflare Pages → Edit**. Copy the token.
+2. Copy your **Account ID** (Cloudflare dashboard → Workers & Pages, right sidebar).
+3. GitHub → this repo → **Settings → Secrets and variables → Actions** → add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+4. **Actions → Deploy to Cloudflare Pages → Run workflow** (or push). The first run creates the `agent-vs-agent` Pages project.
+5. Optional: **Workers & Pages → agent-vs-agent → Custom domains**, then add e.g. `play.tonyjmartinez.com`.
+
+Until the secrets exist, the workflow still runs the checks and build but skips the upload.

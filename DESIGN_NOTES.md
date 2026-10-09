@@ -4,7 +4,7 @@ Running log of decisions, sim results and playtest notes. Newest decisions appen
 
 ## Defaults (human hasn't answered PLAN §11)
 
-- Headline mode: **Duel** (2 players × 2 spies). Title: **Agent vs Agent**. Hosting: **GitHub Pages**.
+- Headline mode: **Duel** (2 players × 2 spies). Title: **Agent vs Agent**. Hosting: **Cloudflare Pages** (switched from GitHub Pages; see below).
 
 ## Phase 0
 
@@ -164,6 +164,14 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - **Add to Home Screen:** `public/manifest.webmanifest`, `apple-touch-icon.png`, and 192/512 icons rendered from the spy SVG by `scripts/icons.ts`. Display is standalone. The single-file artifact build strips these links because it has no sibling files.
 - **Keyboard (PLAN 4.6):** arrows move a cursor and preview legal targets, Enter/Space select or commit, Tab/Shift+Tab cycle your spies, Esc cancels, U undoes. When a button has focus, Tab, Enter and Space keep their normal meaning, so keyboard navigation of the HUD still works.
 - **Rejected: sprint-aware bot evaluation** (carrier distance counted as ⌈d/2⌉ when sprint is on). Hard vs medium, 80 games, seed 2: 83.8% (67–0, 13 draws, median 95 plies) against 88.8% (71–1, 8 draws, median 70) before. That's not better, and games got longer. Both bots share the evaluation, so it isn't a clean A/B. Reverted.
+
+## Hosting: GitHub Pages → Cloudflare Pages
+
+- The GitHub user site `tonyjmartinez.github.io` still has `tonyjmartinez.com` as its custom domain, so any project Pages site redirects to `tonyjmartinez.com/<repo>/`. That domain is served by **Firebase Hosting**, where the portfolio SPA answers every path. A GitHub project site would have been unreachable.
+- Deploys now go through `wrangler pages deploy` from GitHub Actions, after the checks pass. `main` is production and other branches are previews.
+- The project is created on the first run if it's missing. Without the secrets, the upload is skipped and the workflow stays green.
+- `public/_headers` gives hashed `/assets/*` an immutable cache. `.nvmrc` pins Node 22 in case Cloudflare's Git integration is used instead.
+- The old `gh-pages` branch is no longer updated. It was left in place; deleting it is the owner's call.
 
 ## Later
 
