@@ -38,3 +38,25 @@ test('sprint targets and a fumble lock render, and a dash commits', async ({ pag
   await shot(page, info, 'greyscale');
   expect(errors).toEqual([]);
 });
+
+test('last-move trail shows where the bot just moved', async ({ page }, info) => {
+  const errors = trackErrors(page);
+  await open(page, 'p0=human&p1=bot:easy&seed=7');
+  await page.evaluate(() =>
+    (window as any).__AVA__.act({ kind: 'move', spyId: 'p0a', to: { r: 4, c: 1 } }),
+  );
+  await page.waitForFunction(() => (window as any).__AVA__.getState().ply >= 2);
+  await page.evaluate(() => (window as any).__AVA__.idle());
+  const last = await page.evaluate(() => (window as any).__AVA__.controller().moves.at(-1));
+  expect(last.owner).toBe(1);
+  expect(last.to).toBeTruthy();
+  await shot(page, info, 'last-move');
+  // Undo rewinds the trail with the history.
+  await page.click('#btn-undo');
+  const after = await page.evaluate(() => {
+    const c = (window as any).__AVA__.controller();
+    return { len: c.moves.length, hist: c.history.length };
+  });
+  expect(after.len).toBe(after.hist);
+  expect(errors).toEqual([]);
+});

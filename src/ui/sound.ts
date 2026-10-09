@@ -23,6 +23,19 @@ export class Sound {
     return this.muted;
   }
 
+  /** Haptics (Android; iOS Safari has no vibrate API, so this is a no-op there). */
+  private buzz(events: GameEvent[]): void {
+    const nav = navigator as Navigator & { vibrate?: (p: number | number[]) => boolean };
+    if (typeof nav.vibrate !== 'function') return;
+    try {
+      if (events.some((e) => e.t === 'extracted')) nav.vibrate([25, 60, 40]);
+      else if (events.some((e) => e.t === 'burned')) nav.vibrate(60);
+      else if (events.some((e) => e.t === 'dropped')) nav.vibrate(20);
+    } catch {
+      /* some browsers throw without a recent gesture */
+    }
+  }
+
   private tone(
     f0: number,
     f1: number,
@@ -47,7 +60,9 @@ export class Sound {
   }
 
   play(events: GameEvent[]): void {
-    if (!this.ctx || this.muted) return;
+    if (this.muted) return;
+    this.buzz(events);
+    if (!this.ctx) return;
     if (this.ctx.state === 'suspended') void this.ctx.resume();
     const has = (t: GameEvent['t']) => events.some((e) => e.t === t);
     if (has('moved') || has('deployed')) this.tone(440, 660, 80);

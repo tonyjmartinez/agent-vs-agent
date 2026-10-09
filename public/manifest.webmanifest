@@ -1,0 +1,16 @@
+{
+  "name": "Agent vs Agent",
+  "short_name": "Agent vs Agent",
+  "description": "Bump. Grab. Get home. A pocket spy board game.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F6EEDC",
+  "theme_color": "#F6EEDC",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

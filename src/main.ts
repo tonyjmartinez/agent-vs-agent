@@ -125,5 +125,15 @@ function toMenu(): void {
   showMenu(overlayRoot, ({ seats }) => newGame(seats));
 }
 
+// Desktop keyboard play; ignored while a menu or dialog is open.
+addEventListener('keydown', (e: KeyboardEvent) => {
+  if (!controller || document.querySelector('.overlay') || e.metaKey || e.ctrlKey || e.altKey)
+    return;
+  // Let Tab/Enter/Space keep their normal meaning while a button has focus.
+  const onButton = document.activeElement instanceof HTMLButtonElement;
+  if (onButton && (e.key === 'Tab' || e.key === 'Enter' || e.key === ' ')) return;
+  if (controller.onKey(e.key, e.shiftKey)) e.preventDefault();
+});
+
 const ready = boot();
 if (import.meta.env.DEV || cfg.test) installHooks(ready, () => ({ controller, view }));

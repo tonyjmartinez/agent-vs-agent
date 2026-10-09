@@ -9,6 +9,8 @@ export interface Highlights {
   targets: Cell[];
   /** Keyboard cursor cell (desktop nicety). */
   cursor: Cell | null;
+  /** The previous action's footprint, so you can see what just happened (esp. bot moves). */
+  lastMove: { from: Cell | null; to: Cell; owner: number } | null;
 }
 
 export interface ViewHandlers {

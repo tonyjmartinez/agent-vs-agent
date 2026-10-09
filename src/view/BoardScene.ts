@@ -120,6 +120,24 @@ export class BoardScene extends Phaser.Scene {
         20,
       );
     }
+    // Home-row labels so new players know where intel goes.
+    for (const [r, col, label] of [
+      [5, playerColors[0], 'RED HQ'],
+      [0, playerColors[1], 'TEAL HQ'],
+    ] as const) {
+      const y = MARGIN + r * CELL + CELL / 2;
+      this.add
+        .text(MARGIN + (CELL * SIZE) / 2, y, label, {
+          fontFamily: FONT,
+          fontStyle: '700',
+          fontSize: '46px',
+          color: col,
+          resolution: 2,
+        })
+        .setOrigin(0.5)
+        .setAlpha(0.45)
+        .setDepth(0.5);
+    }
     // Dashed stitch inset.
     g.lineStyle(3, INK, 0.25);
     const inset = x0 + 10;
@@ -301,6 +319,23 @@ export class BoardScene extends Phaser.Scene {
       } else {
         g.fillStyle(MUSTARD, 0.9).fillCircle(p.x, p.y, 17);
         g.lineStyle(4, INK, 0.9).strokeCircle(p.x, p.y, 17);
+      }
+    }
+    if (h.lastMove) {
+      // Last move: a tinted landing tile and a dashed outline where it came from.
+      const col = hex(playerColors[h.lastMove.owner] ?? theme.ink);
+      const tile = (c: Cell) => ({ x: MARGIN + c.c * CELL + 8, y: MARGIN + c.r * CELL + 8 });
+      const t = tile(h.lastMove.to);
+      g.fillStyle(col, 0.38).fillRoundedRect(t.x, t.y, CELL - 16, CELL - 16, 20);
+      if (h.lastMove.from) {
+        const f = tile(h.lastMove.from);
+        g.lineStyle(5, col, 0.7);
+        const L = CELL - 16;
+        for (let i = 0; i < L; i += 24) {
+          const e = Math.min(i + 12, L);
+          g.lineBetween(f.x + i, f.y, f.x + e, f.y).lineBetween(f.x + i, f.y + L, f.x + e, f.y + L);
+          g.lineBetween(f.x, f.y + i, f.x, f.y + e).lineBetween(f.x + L, f.y + i, f.x + L, f.y + e);
+        }
       }
     }
     if (h.cursor) {

@@ -156,6 +156,15 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - `speed=0` also disables CSS animation, so overlay screenshots are deterministic.
 - **Phase 6 still to do:** keyboard controls, extraction-row glyphs, the perf/long-task check, and more screenshot states (mid-game, extraction moment).
 
+## Iteration: phone feel and clarity
+
+- **Last-move trail:** a tinted tile where the last move landed and a dashed outline where it started, in the mover's colour. It matters most for following bot moves on a phone. The controller keeps an index-aligned `moves[]` beside `history[]`, so undo rewinds it too.
+- **Home-row labels:** "RED HQ" / "TEAL HQ" are drawn faintly into each extraction row.
+- **Haptics:** `navigator.vibrate` on extract, burn and drop (Android). It shares the sound mute and is a no-op on iOS Safari.
+- **Add to Home Screen:** `public/manifest.webmanifest`, `apple-touch-icon.png`, and 192/512 icons rendered from the spy SVG by `scripts/icons.ts`. Display is standalone. The single-file artifact build strips these links because it has no sibling files.
+- **Keyboard (PLAN 4.6):** arrows move a cursor and preview legal targets, Enter/Space select or commit, Tab/Shift+Tab cycle your spies, Esc cancels, U undoes. When a button has focus, Tab, Enter and Space keep their normal meaning, so keyboard navigation of the HUD still works.
+- **Rejected: sprint-aware bot evaluation** (carrier distance counted as ⌈d/2⌉ when sprint is on). Hard vs medium, 80 games, seed 2: 83.8% (67–0, 13 draws, median 95 plies) against 88.8% (71–1, 8 draws, median 70) before. That's not better, and games got longer. Both bots share the evaluation, so it isn't a clean A/B. Reverted.
+
 ## Later
 
 (ideas not in the plan go here)

@@ -44,7 +44,9 @@ const head = /<head>([\s\S]*?)<\/head>/.exec(html)![1]!;
 const body = /<body>([\s\S]*?)<\/body>/.exec(html)![1]!;
 const keepHead = head
   .split('\n')
-  .filter((l) => !/<meta charset|<meta name="viewport"/.test(l))
+  .filter(
+    (l) => !/<meta charset|<meta name="viewport"|rel="manifest"|rel="apple-touch-icon"/.test(l),
+  )
   .join('\n');
 const override = `<style>html,body{height:100%}body{height:100%;background:#F6EEDC}#app{height:100%;padding-top:8px;padding-bottom:8px}#app{--board:min(calc(100vw - 32px),calc(100dvh - var(--hud-h) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)))}</style>`;
 const artifact = `${keepHead}\n${override}\n${body}`;

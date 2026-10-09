@@ -1,7 +1,7 @@
 import { applyAction, createGame, legalActions, previewAction } from '../engine/engine';
 import { duelRules } from '../engine/rules';
 import type { Action, GameEvent, Cell, GameState, PlayerId, Rules } from '../engine/types';
-import type { BoardView } from '../view/BoardView';
+import type { BoardView, Highlights } from '../view/BoardView';
 import type { Hud } from '../ui/hud';
 import type { BotLevel, Seat } from './config';
 import {
@@ -44,6 +44,8 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 /** Single source of truth: owns history, turns input and bots into actions (PLAN 4.3). */
 export class Controller {
   history: GameState[] = [];
+  /** Footprint of the action that produced each history entry (index-aligned; first is null). */
+  moves: Highlights['lastMove'][] = [];
   sel: Selection = emptySelection;
   busy = false;
   thinking = false;
@@ -89,6 +91,7 @@ export class Controller {
     this.generation++;
     if (seats) this.o.seats = seats;
     this.history = [state ?? createGame(duelRules(this.o.rules))];
+    this.moves = [null];
     this.sel = emptySelection;
     this.busy = false;
     this.thinking = false;
@@ -105,6 +108,7 @@ export class Controller {
       selectable: human && !this.sel.selected ? selectableSpies(s) : [],
       targets: human ? targetsFor(s, this.sel.selected) : [],
       cursor: human ? this.cursor : null,
+      lastMove: this.busy ? null : (this.moves.at(-1) ?? null),
     });
     const p = this.sel.pending;
     this.o.view.showPreview(human ? p : null, human && p ? previewAction(s, p) : null);
@@ -126,6 +130,63 @@ export class Controller {
     this.sel = res.selection;
     if (res.kind === 'commit') void this.commit(res.action);
     else this.refresh();
+  }
+
+  /**
+   * Keyboard (PLAN 4.6): arrows move a cursor (previewing legal targets), Enter/Space select or
+   * commit, Tab cycles your spies, Esc cancels, U undoes. Returns true if the key was handled.
+   */
+  onKey(key: string, shift = false): boolean {
+    if (key === 'u' || key === 'U') {
+      this.undo();
+      return true;
+    }
+    if (this.busy || !this.isHumanTurn()) return false;
+    const s = this.state;
+    const size = s.rules.size;
+    const mine = selectableSpies(s);
+    const posOf = (id: string) => s.spies.find((x) => x.id === id)?.pos ?? null;
+    const arrows: Record<string, [number, number]> = {
+      ArrowUp: [-1, 0],
+      ArrowDown: [1, 0],
+      ArrowLeft: [0, -1],
+      ArrowRight: [0, 1],
+    };
+    if (key in arrows) {
+      const [dr, dc] = arrows[key]!;
+      const from = this.cursor ?? (mine[0] ? posOf(mine[0]) : null) ?? { r: size - 1, c: 0 };
+      const next = this.cursor
+        ? {
+            r: Math.min(size - 1, Math.max(0, from.r + dr)),
+            c: Math.min(size - 1, Math.max(0, from.c + dc)),
+          }
+        : from;
+      this.cursor = next;
+      if (this.sel.selected) this.sel = hoverCell(s, this.sel, next);
+      this.refresh();
+      return true;
+    }
+    if (key === 'Enter' || key === ' ') {
+      if (!this.cursor) return false;
+      this.onTap(this.cursor, false);
+      return true;
+    }
+    if (key === 'Tab') {
+      if (!mine.length) return false;
+      const i = this.sel.selected ? mine.indexOf(this.sel.selected) : -1;
+      const n = mine.length;
+      const id = mine[(((shift ? i - 1 : i + 1) % n) + n) % n]!;
+      this.sel = { selected: id, pending: null };
+      this.cursor = posOf(id);
+      this.refresh();
+      return true;
+    }
+    if (key === 'Escape') {
+      this.sel = emptySelection;
+      this.refresh();
+      return true;
+    }
+    return false;
   }
 
   onHover(c: Cell | null): void {
@@ -154,6 +215,12 @@ export class Controller {
     this.busy = true;
     this.sel = emptySelection;
     this.history.push(state);
+    const arrive = events.find((e) => e.t === 'moved' || e.t === 'deployed');
+    this.moves.push(
+      arrive && (arrive.t === 'moved' || arrive.t === 'deployed')
+        ? { from: arrive.t === 'moved' ? arrive.from : null, to: arrive.to, owner: before.current }
+        : null,
+    );
     this.refresh();
     this.o.onEvents?.(events);
     await this.o.view.play(events, before);
@@ -206,6 +273,7 @@ export class Controller {
     if (t === null || this.busy || this.thinking) return;
     this.generation++;
     this.history = this.history.slice(0, t + 1);
+    this.moves = this.moves.slice(0, t + 1);
     this.sel = emptySelection;
     this.o.view.sync(this.state);
     this.refresh();
