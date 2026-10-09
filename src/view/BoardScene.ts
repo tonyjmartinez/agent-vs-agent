@@ -6,6 +6,7 @@ import type { Highlights, ViewHandlers } from './BoardView';
 import { CELL, MARGIN, SIZE, cellCenter, pointToCell } from './geometry';
 
 const INK = hex(theme.ink);
+const INTEL_SCALE = 1.3;
 const MUSTARD = hex(theme.mustard);
 const DANGER = hex(theme.danger);
 const FONT = 'Fredoka, system-ui, sans-serif';
@@ -30,13 +31,37 @@ export class BoardScene extends Phaser.Scene {
   private hover: string | null = null;
   private state: GameState | null = null;
 
+  /** Pre-rasterised SVG art, handed over by PhaserBoardView before boot. */
+  art: { spies: HTMLCanvasElement[]; folder: HTMLCanvasElement } | null = null;
+  private pulse!: Phaser.GameObjects.Ellipse;
+
   constructor() {
     super('board');
   }
 
   create(): void {
+    if (this.art) {
+      this.art.spies.forEach((c, i) => this.textures.addCanvas(`spy${i}`, c));
+      this.textures.addCanvas('folder', this.art.folder);
+    }
     this.drawBoard();
     this.hl = this.add.graphics().setDepth(1);
+    // Selection spotlight under the selected spy's feet, pulsing slowly.
+    this.pulse = this.add
+      .ellipse(0, 0, 150, 52, MUSTARD, 0.55)
+      .setStrokeStyle(6, INK, 0.9)
+      .setDepth(1)
+      .setVisible(false);
+    this.tweens.add({
+      targets: this.pulse,
+      scaleX: 1.12,
+      scaleY: 1.12,
+      alpha: 0.75,
+      duration: 700,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.InOut',
+    });
     this.links = this.add.graphics().setDepth(3);
     this.pv = this.add.graphics().setDepth(60);
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
@@ -111,29 +136,21 @@ export class BoardScene extends Phaser.Scene {
 
   // ---------- pieces ----------
 
+  /** Folder ~64 logical px wide at scale 1 (texture is the 80×64 SVG rasterised at 2×). */
   private makeFolder(scale = 1): Phaser.GameObjects.Container {
-    const g = this.add.graphics();
-    g.fillStyle(INK, 1).fillRoundedRect(-30, -22, 60, 46, 8);
-    g.fillStyle(MUSTARD, 1).fillRoundedRect(-27, -19, 54, 40, 6);
-    g.fillStyle(MUSTARD, 1).fillRoundedRect(-27, -25, 24, 10, 4);
-    g.lineStyle(3, INK, 1).strokeRoundedRect(-27, -25, 24, 10, 4);
-    g.fillStyle(DANGER, 0.9).fillRoundedRect(-18, -4, 36, 12, 3);
-    return this.add.container(0, 0, [g]).setScale(scale);
+    const img = this.add.image(0, 0, 'folder').setScale(0.4);
+    return this.add.container(0, 0, [img]).setScale(scale);
   }
 
   private makeSpy(owner: number): SpyGO {
-    const color = hex(playerColors[owner] ?? theme.ink);
-    const shadow = this.add.ellipse(0, 44, 92, 26, INK, 0.2);
-    const g = this.add.graphics();
-    g.fillStyle(INK, 1);
-    if (owner % 2 === 0) g.fillCircle(0, 0, 50);
-    else g.fillRoundedRect(-48, -48, 96, 96, 26);
-    g.fillStyle(color, 1);
-    if (owner % 2 === 0) g.fillCircle(0, 0, 44);
-    else g.fillRoundedRect(-42, -42, 84, 84, 22);
-    g.fillStyle(INK, 1).fillRoundedRect(-30, -12, 60, 14, 7); // shades
-    const body = this.add.container(0, 0, [g]);
-    const badge = this.makeFolder(0.62).setPosition(30, 26).setVisible(false);
+    const shadow = this.add.ellipse(0, 52, 110, 28, INK, 0.2);
+    // Spy art is 120×140 (rasterised at 2×); its body centre sits at y≈88, so origin 0.63.
+    const art = this.add
+      .image(0, 0, `spy${owner % 2}`)
+      .setScale(0.6)
+      .setOrigin(0.5, 0.63);
+    const body = this.add.container(0, 0, [art]);
+    const badge = this.makeFolder(0.85).setPosition(42, 34).setVisible(false);
     const c = this.add.container(0, 0, [shadow, body, badge]) as SpyGO;
     c.figure = body;
     c.badge = badge;
@@ -151,7 +168,7 @@ export class BoardScene extends Phaser.Scene {
 
   private addIntel(c: Cell): Phaser.GameObjects.Container {
     const p = cellCenter(c.r, c.c);
-    const f = this.makeFolder(1).setPosition(p.x, p.y).setDepth(2);
+    const f = this.makeFolder(INTEL_SCALE).setPosition(p.x, p.y).setDepth(2);
     this.intel.set(key(c), f);
     if (this.speed > 0 && !this.reducedMotion) {
       this.tweens.add({
@@ -183,7 +200,18 @@ export class BoardScene extends Phaser.Scene {
       this.tweens.killTweensOf(go.figure);
       go.setAngle(0).setScale(1).setAlpha(1);
       go.figure.setScale(1).setPosition(0, 0);
-      go.badge.setVisible(sp.carrying).setScale(0.62);
+      this.tweens.killTweensOf(go.badge);
+      go.badge.setVisible(sp.carrying).setScale(0.85).setY(34);
+      if (sp.carrying && this.speed > 0 && !this.reducedMotion) {
+        this.tweens.add({
+          targets: go.badge,
+          y: 30,
+          duration: 500,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.InOut',
+        });
+      }
       if (sp.pos) {
         const p = cellCenter(sp.pos.r, sp.pos.c);
         go.setPosition(p.x, p.y)
@@ -239,19 +267,26 @@ export class BoardScene extends Phaser.Scene {
   setHighlights(h: Highlights): void {
     const g = this.hl.clear();
     const s = this.state;
+    this.pulse?.setVisible(false);
     if (!s) return;
+    // Selected spy lifts 10px (Back.Out, 120ms); everyone else settles.
+    for (const [id, go] of this.spies) {
+      const y = id === h.selected ? -10 : 0;
+      if (go.figure.y === y) continue;
+      this.tweens.killTweensOf(go.figure);
+      this.tweens.add({ targets: go.figure, y, duration: this.dur(120), ease: 'Back.Out' });
+    }
     for (const id of h.selectable) {
       const sp = s.spies.find((x) => x.id === id);
       if (!sp?.pos || id === h.selected) continue;
       const p = cellCenter(sp.pos.r, sp.pos.c);
-      g.lineStyle(5, INK, 0.25).strokeCircle(p.x, p.y, 62);
+      g.lineStyle(5, INK, 0.3).strokeEllipse(p.x, p.y + 52, 150, 50);
     }
     if (h.selected && h.selected !== 'reserve') {
       const sp = s.spies.find((x) => x.id === h.selected);
       if (sp?.pos) {
         const p = cellCenter(sp.pos.r, sp.pos.c);
-        g.fillStyle(MUSTARD, 0.45).fillCircle(p.x, p.y, 66);
-        g.lineStyle(6, INK, 1).strokeCircle(p.x, p.y, 66);
+        this.pulse.setPosition(p.x, p.y + 52).setVisible(true);
       }
     }
     const from =
@@ -407,6 +442,7 @@ export class BoardScene extends Phaser.Scene {
     this.showPreview(null, null);
     this.hl.clear();
     this.links.clear();
+    this.pulse.setVisible(false);
     const phases = [...new Set(events.map((e) => e.phase))].sort();
     for (const ph of phases) {
       await Promise.all(events.filter((e) => e.phase === ph).map((e) => this.animate(e, before)));
@@ -442,10 +478,10 @@ export class BoardScene extends Phaser.Scene {
       case 'pickedUp': {
         const go = this.spyGO(e.spyId, owner(e.spyId));
         this.removeIntel(e.at)?.destroy();
-        go.badge.setVisible(true).setScale(0.62 * 1.3);
+        go.badge.setVisible(true).setScale(0.85 * 1.3);
         return this.tween({
           targets: go.badge,
-          scale: 0.62,
+          scale: 0.85,
           duration: this.dur(180),
           ease: 'Back.Out',
         });
@@ -486,8 +522,13 @@ export class BoardScene extends Phaser.Scene {
       case 'dropped': {
         const go = this.spyGO(e.spyId, owner(e.spyId));
         go.badge.setVisible(false);
-        const f = this.addIntel(e.at).setScale(0.5);
-        return this.tween({ targets: f, scale: 1, duration: this.dur(200), ease: 'Back.Out' });
+        const f = this.addIntel(e.at).setScale(INTEL_SCALE * 0.5);
+        return this.tween({
+          targets: f,
+          scale: INTEL_SCALE,
+          duration: this.dur(200),
+          ease: 'Back.Out',
+        });
       }
       case 'extracted': {
         const go = this.spyGO(e.spyId, owner(e.spyId));
@@ -501,7 +542,12 @@ export class BoardScene extends Phaser.Scene {
       }
       case 'intelSpawned': {
         const f = this.addIntel(e.at).setScale(0);
-        return this.tween({ targets: f, scale: 1, duration: this.dur(260), ease: 'Back.Out' });
+        return this.tween({
+          targets: f,
+          scale: INTEL_SCALE,
+          duration: this.dur(260),
+          ease: 'Back.Out',
+        });
       }
       default:
         return Promise.resolve();

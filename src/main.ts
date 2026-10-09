@@ -9,6 +9,7 @@ import { duelRules } from './engine/rules';
 import { decode } from './engine/serialize';
 import { showGameOver } from './ui/gameOver';
 import { Hud } from './ui/hud';
+import { Sound } from './ui/sound';
 import { showMenu, showPause } from './ui/menu';
 import { load, save } from './ui/storage';
 import { PhaserBoardView } from './view/PhaserBoardView';
@@ -20,6 +21,9 @@ let controller: Controller | null = null;
 const view = new PhaserBoardView();
 const overlayRoot = document.getElementById('overlay-root')!;
 const bots = new BotClient();
+const sound = new Sound();
+// iOS: audio may only start inside a user gesture.
+addEventListener('pointerup', () => sound.unlock(), { capture: true });
 
 // ---------- first-game coach marks (shown once) ----------
 const COACH_KEY = 'ava.coach.v1';
@@ -67,6 +71,11 @@ async function boot(): Promise<void> {
       document.getElementById('game-over')?.remove();
       controller?.undo();
     },
+    onSound: () => {
+      sound.toggle();
+      controller?.refresh();
+    },
+    soundOn: () => !sound.muted,
     onMenu: () =>
       showPause(overlayRoot, {
         restart: () => newGame(),
@@ -96,6 +105,7 @@ async function boot(): Promise<void> {
       }
     },
     onRefresh: coach,
+    onEvents: (ev) => sound.play(ev),
   });
   if (cfg.direct) controller.start(cfg.state ? decode(cfg.state, duelRules(cfg.rules)) : undefined);
   else {

@@ -1,11 +1,17 @@
 import type { GameState, PlayerId } from '../engine/types';
 import type { Seat } from '../app/config';
+import { headSvg, spySvg, svgUri } from './art';
 import { playerNames } from './theme';
+
+const heads = [0, 1].map((p) => `url("${svgUri(headSvg(p))}")`);
+const bodies = [0, 1].map((p) => `url("${svgUri(spySvg(p))}")`);
 
 export interface HudHandlers {
   onReserve(owner: PlayerId): void;
   onUndo(): void;
   onMenu(): void;
+  onSound(): void;
+  soundOn(): boolean;
 }
 
 export interface HudView {
@@ -42,7 +48,15 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return e;
 }
 
+const speaker = (on: boolean) =>
+  `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/>${
+    on
+      ? '<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+      : '<path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'
+  }</svg>`;
+
 export class Hud {
+  private lastScores: number[] = [];
   constructor(
     private top: HTMLElement,
     private bottom: HTMLElement,
@@ -60,7 +74,14 @@ export class Hud {
     const menu = el('button', 'btn', 'Menu');
     menu.id = 'btn-menu';
     menu.addEventListener('click', () => this.h.onMenu());
-    controls.append(undo, menu);
+    const snd = el('button', 'btn icon');
+    snd.id = 'btn-sound';
+    const on = this.h.soundOn();
+    snd.setAttribute('aria-label', on ? 'Mute sound' : 'Unmute sound');
+    snd.setAttribute('aria-pressed', String(!on));
+    snd.innerHTML = speaker(on);
+    snd.addEventListener('click', () => this.h.onSound());
+    controls.append(undo, menu, snd);
     this.bottom.replaceChildren(this.panel(v, v.bottom), controls);
   }
 
@@ -72,14 +93,21 @@ export class Hud {
     box.dataset.player = String(p);
     const row = el('div', 'row');
     const who = el('div', 'who');
-    who.append(el('span', `chip p${p}`), el('span', 'name', seatLabel(seat, p, v.seats)));
+    const chip = el('span', `chip p${p}`);
+    chip.style.backgroundImage = heads[p % 2]!;
+    who.append(chip, el('span', 'name', seatLabel(seat, p, v.seats)));
     if (seat?.kind === 'bot') who.append(el('span', 'tag', levelName[seat.level] ?? ''));
     const score = el('div', 'score');
     score.setAttribute('aria-label', `${s.scores[p]} of ${s.rules.intelToWin} intel`);
     score.dataset.testid = `score-${p}`;
     score.dataset.score = String(s.scores[p]);
-    for (let i = 0; i < s.rules.intelToWin; i++)
-      score.append(el('span', `pip${i < (s.scores[p] ?? 0) ? ' full' : ''}`));
+    const prev = this.lastScores[p] ?? 0;
+    const now = s.scores[p] ?? 0;
+    for (let i = 0; i < s.rules.intelToWin; i++) {
+      // A pip filled since the last render pops (the "folder lands in the counter" beat).
+      score.append(el('span', `pip${i < now ? ' full' : ''}${i < now && i >= prev ? ' new' : ''}`));
+    }
+    this.lastScores[p] = now;
     row.append(who, score);
     const status = el('div', 'status');
     status.setAttribute('aria-live', 'polite');
@@ -102,6 +130,7 @@ export class Hud {
         `reserve-spy p${p}${v.reserveSelected && active && i === 0 ? ' selected' : ''}`,
       );
       b.setAttribute('aria-label', `Deploy reserve spy ${x.id}`);
+      b.style.backgroundImage = bodies[p % 2]!;
       b.dataset.testid = `reserve-${p}`;
       b.disabled = !(active && seat?.kind === 'human');
       b.addEventListener('click', () => this.h.onReserve(p));

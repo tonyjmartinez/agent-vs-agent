@@ -33,5 +33,8 @@ test('sprint targets and a fumble lock render, and a dash commits', async ({ pag
   const st = await page.evaluate(() => (window as any).__AVA__.getState());
   expect(st.locks).toEqual([{ at: { r: 2, c: 3 }, player: 1 }]);
   await shot(page, info, 'fumble-lock');
+  // Colour-blind check (PLAN 6): teams must stay distinguishable in greyscale (hat shape, scarf).
+  await page.addStyleTag({ content: 'html { filter: grayscale(1) }' });
+  await shot(page, info, 'greyscale');
   expect(errors).toEqual([]);
 });

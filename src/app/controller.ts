@@ -1,6 +1,6 @@
 import { applyAction, createGame, legalActions, previewAction } from '../engine/engine';
 import { duelRules } from '../engine/rules';
-import type { Action, Cell, GameState, PlayerId, Rules } from '../engine/types';
+import type { Action, GameEvent, Cell, GameState, PlayerId, Rules } from '../engine/types';
 import type { BoardView } from '../view/BoardView';
 import type { Hud } from '../ui/hud';
 import type { BotLevel, Seat } from './config';
@@ -35,6 +35,8 @@ export interface ControllerOpts {
   onGameOver?(s: GameState): void;
   onAction?(s: GameState): void;
   onRefresh?(c: Controller): void;
+  /** Fired with each action's events just before they animate (sound, haptics). */
+  onEvents?(events: GameEvent[]): void;
 }
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -153,6 +155,7 @@ export class Controller {
     this.sel = emptySelection;
     this.history.push(state);
     this.refresh();
+    this.o.onEvents?.(events);
     await this.o.view.play(events, before);
     if (gen !== this.generation) return;
     this.o.view.sync(state);

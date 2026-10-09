@@ -1,4 +1,5 @@
 import type { BotLevel, Seat } from '../app/config';
+import { spySvg, svgUri } from './art';
 import { showRules } from './rulesCard';
 import { load, save } from './storage';
 
@@ -16,12 +17,8 @@ export function showMenu(root: HTMLElement, onStart: (c: MenuChoice) => void): v
   wrap.id = 'menu';
   wrap.innerHTML = `<div class="card menu" role="dialog" aria-modal="true" aria-labelledby="menu-title">
     <div class="logo" aria-hidden="true">
-      <svg viewBox="0 0 120 60" width="120" height="60">
-        <circle cx="38" cy="32" r="22" fill="var(--red)" stroke="var(--ink)" stroke-width="4"/>
-        <rect x="24" y="26" width="28" height="8" rx="4" fill="var(--ink)"/>
-        <rect x="64" y="10" width="44" height="44" rx="12" fill="var(--teal)" stroke="var(--ink)" stroke-width="4"/>
-        <rect x="72" y="26" width="28" height="8" rx="4" fill="var(--ink)"/>
-      </svg>
+      <img src="${svgUri(spySvg(0))}" alt="" width="72" height="84" />
+      <img src="${svgUri(spySvg(1))}" alt="" width="72" height="84" class="flip" />
     </div>
     <h1 id="menu-title" class="stamp title-stamp">AGENT vs AGENT</h1>
     <p class="tag-line">Bump. Grab. Get home.</p>

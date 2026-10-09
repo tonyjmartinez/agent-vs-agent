@@ -3,6 +3,7 @@ import type { Action, Cell, GameEvent, GameState } from '../engine/types';
 import { BoardScene } from './BoardScene';
 import type { BoardView, Highlights, ViewHandlers } from './BoardView';
 import { WORLD, cellCenter } from './geometry';
+import { folderSvg, rasterise, spySvg } from '../ui/art';
 
 export class PhaserBoardView implements BoardView {
   private game: Phaser.Game | null = null;
@@ -10,6 +11,13 @@ export class PhaserBoardView implements BoardView {
 
   async mount(el: HTMLElement): Promise<void> {
     const ready = new Promise<void>((res) => (this.scene.onReady = res));
+    // Rasterise the SVG art at 2× before boot so textures exist when the scene is created.
+    const [spy0, spy1, folder] = await Promise.all([
+      rasterise(spySvg(0), 120, 140),
+      rasterise(spySvg(1), 120, 140),
+      rasterise(folderSvg(), 80, 64),
+    ]);
+    this.scene.art = { spies: [spy0, spy1], folder };
     this.scene.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.game = new Phaser.Game({
       type: Phaser.AUTO,
