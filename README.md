@@ -28,8 +28,8 @@ npx tsx scripts/single.ts                                  # single-file build �
 
 The repo carries its own Cloudflare config (`wrangler.jsonc`): a static-assets Worker serving `dist/`.
 
-**From the dashboard (auto-deploys on push):** go to **Workers & Pages → Create → Import a repository** and pick `tonyjmartinez/agent-vs-agent`. Cloudflare reads `wrangler.jsonc`. If it asks, use build command `npm run build` and deploy command `npx wrangler deploy`. Pushes to `main` go live at `https://agent-vs-agent.<your-subdomain>.workers.dev`. Add a custom domain (e.g. `play.tonyjmartinez.com`) under the Worker's **Settings → Domains & Routes**.
+**From the dashboard (auto-deploys on push):** go to **Workers & Pages → Create → Import a repository** and pick `tonyjmartinez/agent-vs-agent`. Cloudflare reads `wrangler.jsonc`. Leave the build command empty; the deploy command is `npx wrangler deploy`, which runs the build itself via `build.command`. Pushes to `main` go live at `https://agent-vs-agent.<your-subdomain>.workers.dev`. Add a custom domain (e.g. `play.tonyjmartinez.com`) under the Worker's **Settings → Domains & Routes**.
 
-**From your machine:** run `npx wrangler login` once, then `npm run deploy` (it builds, then runs `wrangler deploy`).
+**From your machine:** run `npx wrangler login` once, then `npm run deploy` (`wrangler deploy` runs the build itself, then uploads).
 
 GitHub Actions (`.github/workflows/ci.yml`) only runs the checks: typecheck, lint, tests and build.

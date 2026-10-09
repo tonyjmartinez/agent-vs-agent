@@ -13,7 +13,7 @@
     "e2e": "playwright test",
     "lint": "eslint .",
     "format": "prettier -w .",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "wrangler deploy"
   },
   "repository": {
     "type": "git",
