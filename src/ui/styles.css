@@ -1,0 +1,90 @@
+@import '@fontsource/fredoka/500.css';
+
+:root {
+  --paper: #f6eedc;
+  --board: #eadbc0;
+  --tile-a: #f3e6cc;
+  --tile-b: #e6d3b1;
+  --ink: #2b2a33;
+  --red: #e4572e;
+  --teal: #17a6a3;
+  --mustard: #f2b84b;
+  --plum: #6c4e8c;
+  --olive: #7a8b3c;
+  --danger: rgba(192, 57, 43, 0.35);
+  --hud: 56px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Fredoka', system-ui, sans-serif;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#app {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: var(--hud) 1fr var(--hud);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+.hud {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+#board-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+#board {
+  aspect-ratio: 1;
+  width: min(
+    100vw - 32px,
+    100dvh - 2 * var(--hud) - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+  );
+  touch-action: none;
+}
+
+@media (min-aspect-ratio: 1/1) {
+  #app {
+    grid-template-rows: 1fr;
+    grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1fr);
+  }
+  #app > * {
+    grid-row: 1;
+  }
+  #hud-top {
+    grid-column: 1;
+  }
+  #board-wrap {
+    grid-column: 2;
+  }
+  #hud-bottom {
+    grid-column: 3;
+  }
+  #board {
+    width: min(100vw - 2 * 120px - 32px, 100dvh - 32px);
+  }
+}
