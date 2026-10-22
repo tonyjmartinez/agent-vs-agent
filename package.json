@@ -12,7 +12,8 @@
     "sim": "tsx scripts/sim.ts",
     "e2e": "playwright test",
     "lint": "eslint .",
-    "format": "prettier -w ."
+    "format": "prettier -w .",
+    "coverage": "vitest run --coverage --coverage.include='src/engine/**' --coverage.exclude='**/*.test.ts'"
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,7 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.56.1",
     "@types/pngjs": "^6.0.5",
+    "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^10.13.0",
     "pngjs": "^7.0.0",
     "prettier": "^3.9.10",
