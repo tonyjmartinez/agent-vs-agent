@@ -30,8 +30,13 @@ npm run typecheck && npm test && npm run build   # names per PLAN.md section 4.1
 
 Each run is a fresh agent. Before stopping, update this section and `DESIGN_NOTES.md` so the next run can continue.
 
-- **Status:** Phase 0 done (PR #1, open). Phase 1 (rules engine) done on `claude/phase-1-rules-engine`
-  (stacked PR on the Phase 0 branch). Next: Phase 2 (playable hotseat: controller, BoardView, sprites, input).
+- **Status:** Phase 0 (PR #1), Phase 1 (PR #2, stacked), Phase 2 (hotseat UI; PR stacked on Phase 1) are done and
+  open for review, unmerged. Next: Phase 3 (bots: random/easy/medium/hard, `src/ai/`, seat config in the controller).
+- **App layout:** `src/app/` (controller = single source of truth, `interaction.ts` pure select/target/commit
+  reducer, config/URL params, test hooks `window.__AVA__`), `src/view/` (Phaser only: `BoardScene`, `BoardView`
+  interface), `src/ui/` (DOM HUD, game-over overlay, styles). URL params: `?test=1&speed=0&state=<compact>&confirm=0|1`.
+- **E2E conventions:** `tests/helpers.ts` (`load`, `commit`, `tapCell`) drives real taps/clicks; use `?state=` to set
+  up positions (format in `engine/serialize.ts`); screenshots go to `artifacts/screens/ava-<project>-<name>.png`: open them.
 - **Engine API** (`src/engine/`): `createGame`, `legalActions`, `applyAction` (immutable, throws on illegal),
   `previewAction`, `hash`, `toJSON/fromJSON`, `toCompact/fromCompact`. Test helper `board()`/`render()` in `testing.ts`.
 - **Checks that must stay green:** `npm run typecheck && npm run lint && npm test && npm run build && npm run e2e`;

@@ -1,12 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { PNG } from 'pngjs';
+import { load } from './helpers';
 
-test('boots, draws the board, no console errors', async ({ page }, info) => {
-  const errors: string[] = [];
-  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-  page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto('/?test=1');
-  await page.evaluate(() => window.__AVA__!.ready);
+test('boots, draws the board and HUD, no console errors', async ({ page }, info) => {
+  const errors = await load(page);
   await page.waitForTimeout(300);
 
   const canvas = page.locator('#board canvas');
@@ -19,19 +16,21 @@ test('boots, draws the board, no console errors', async ({ page }, info) => {
   );
   expect(noScroll).toBe(true);
 
+  await expect(page.getByTestId('score-0')).toHaveText('Score 0/3');
+  await expect(page.getByTestId('score-1')).toHaveText('Score 0/3');
+  await expect(page.getByTestId('turn-0')).toHaveText('Your turn');
+  const undo = (await page.getByTestId('undo').boundingBox())!;
+  expect(undo.width).toBeGreaterThanOrEqual(44);
+  expect(undo.height).toBeGreaterThanOrEqual(44);
+  if (info.project.name === 'mobile') expect(box.width).toBeGreaterThan(300);
+
   await page.screenshot({ path: `artifacts/screens/ava-${info.project.name}-page.png` });
-  const shot = await page.screenshot({
-    path: `artifacts/screens/ava-${info.project.name}-boot.png`,
-    clip: box,
-  });
+  const shot = await page.screenshot({ clip: box });
   const png = PNG.sync.read(shot);
   const seen = new Set<number>();
   for (let i = 0; i < png.data.length; i += 4 * 97) {
     seen.add((png.data[i]! << 16) | (png.data[i + 1]! << 8) | png.data[i + 2]!);
   }
-  expect(seen.size).toBeGreaterThan(3);
-
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  expect(await page.evaluate(() => window.__AVA__!.clicks.length)).toBe(1);
+  expect(seen.size).toBeGreaterThan(8); // tiles + spies + intel, not a blank canvas
   expect(errors).toEqual([]);
 });

@@ -3,6 +3,7 @@
 ## Progress
 - Phase 0 (scaffold and walking skeleton): done (PR #1).
 - Phase 1 (rules engine): done (stacked on Phase 0).
+- Phase 2 (playable hotseat, plain shapes): done (stacked on Phase 1).
 
 ## Decisions
 - Phaser 4.2.1 renders WebGL in headless Chromium once launched with `--use-angle=swiftshader --enable-unsafe-swiftshader`
@@ -26,5 +27,14 @@
 - `hash()` excludes `ply` so equal positions collide (for transposition tables).
 - Coverage: engine at 100% lines (`npm run coverage`). Property test: 2000 seeded random games hold all invariants.
 - Mechanics note for Phase 5: in Duel geometry, "bump an enemy carrier into its zone" can never bank (carriers drop on bump).
+
+## Phase 2 decisions
+- Interaction is a pure reducer (`app/interaction.ts`): desktop = hover previews, click commits; touch (`confirm`) = first tap
+  previews, same target again commits. Undo pops one ply (both seats human).
+- `controller.act` races `view.play` against a 4s timeout so a stalled animation (hidden tab) never freezes the game, then
+  always `sync`s to the authoritative state.
+- Previews: ghost spy, ink arrows on bumped spies, red tint + X + arrow on burns, folder icon on drops.
+- E2E: scripted 40-ply game through real taps compared move-for-move with the engine; `?state=` sets up win, deploy and burn cases.
+- Not done yet from the plan's polish: bump-wave ripple, confetti, win stamp, selected-spy pulse, reduced-motion beyond 60ms tweens.
 
 ## Later
