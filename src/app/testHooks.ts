@@ -4,6 +4,7 @@ export interface AvaHooks {
   ready: Promise<void>;
   /** True when a move needs a second tap to commit. */
   confirm: boolean;
+  seats: string[];
   getState(): GameState;
   legal(): Action[];
   act(a: Action): Promise<void>;

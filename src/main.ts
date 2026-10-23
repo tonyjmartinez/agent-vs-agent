@@ -28,6 +28,7 @@ const ready = view
 installTestHooks(config.test, {
   ready,
   confirm: config.confirm,
+  seats: config.seats.map((x) => (x.kind === 'bot' ? `bot:${x.level}` : 'human')),
   getState: () => controller.state,
   legal: () => controller.legal(),
   act: (a) => controller.act(a),

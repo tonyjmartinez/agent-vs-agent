@@ -30,8 +30,13 @@ npm run typecheck && npm test && npm run build   # names per PLAN.md section 4.1
 
 Each run is a fresh agent. Before stopping, update this section and `DESIGN_NOTES.md` so the next run can continue.
 
-- **Status:** Phase 0 (PR #1), Phase 1 (PR #2, stacked), Phase 2 (hotseat UI; PR stacked on Phase 1) are done and
-  open for review, unmerged. Next: Phase 3 (bots: random/easy/medium/hard, `src/ai/`, seat config in the controller).
+- **Status:** Phases 0-3 are done and open for review, unmerged, as stacked PRs (#1 scaffold, #2 engine, #3 hotseat,
+  then Phase 3 bots). Next: Phase 4 (start menu, rules card, coach marks, pause menu, localStorage), then Phase 5
+  (balance: the sim shows long, drawish games, see DESIGN_NOTES.md).
+- **Bots/sim** (`src/ai/`): `makeBot(level, seed, budget?)` for random/easy/medium/hard (`choose`, `reset`);
+  `evaluate.ts` weights in `W`; `search.ts` alpha-beta + TT; medium/hard penalise repeated positions (`REPEAT_PENALTY`).
+  `npm run sim -- --games N --p0 hard --p1 medium --swap [--nodes 5000] [--rules '{...}']` (use `--nodes` for quick,
+  clock-independent tuning runs). URL seats: `?p0=human&p1=bot:medium`.
 - **App layout:** `src/app/` (controller = single source of truth, `interaction.ts` pure select/target/commit
   reducer, config/URL params, test hooks `window.__AVA__`), `src/view/` (Phaser only: `BoardScene`, `BoardView`
   interface), `src/ui/` (DOM HUD, game-over overlay, styles). URL params: `?test=1&speed=0&state=<compact>&confirm=0|1`.

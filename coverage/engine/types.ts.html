@@ -3,15 +3,15 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for rules.ts</title>
+    <title>Code coverage report for engine/types.ts</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="prettify.css" />
-    <link rel="stylesheet" href="base.css" />
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.png" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style type='text/css'>
         .coverage-summary .sorter {
-            background-image: url(sort-arrow-sprite.png);
+            background-image: url(../sort-arrow-sprite.png);
         }
     </style>
 </head>
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="index.html">All files</a> rules.ts</h1>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">engine</a> types.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>19/19</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>7/7</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>11/11</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
@@ -127,32 +127,12 @@
 <a name='L62'></a><a href='#L62'>62</a>
 <a name='L63'></a><a href='#L63'>63</a>
 <a name='L64'></a><a href='#L64'>64</a>
-<a name='L65'></a><a href='#L65'>65</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">25164x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2097x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2097x</span>
-<span class="cline-any cline-yes">2097x</span>
-<span class="cline-any cline-yes">12582x</span>
-<span class="cline-any cline-yes">289386x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">448758x</span>
-<span class="cline-any cline-yes">224379x</span>
-<span class="cline-any cline-yes">12582x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2097x</span>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -190,71 +170,106 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type { Cell, Rules } from './types';
-import { SIZE } from './board';
-&nbsp;
-const row = (r: number): Cell[] =&gt; Array.from({ length: SIZE }, (_, c) =&gt; ({ r, c }));
-&nbsp;
-/** Centre four first, then the remaining cells by ring (distance from the board centre), row-major. */
-function defaultSpawnOrder(): Cell[] {
-  const centre: Cell[] = [
-    { r: 2, c: 2 },
-    { r: 3, c: 3 },
-    { r: 2, c: 3 },
-    { r: 3, c: 2 },
-  ];
-  const rest: Cell[] = [];
-  for (let r = 0; r &lt; SIZE; r++) {
-    for (let c = 0; c &lt; SIZE; c++) {
-      if (!centre.some((p) =&gt; p.r === r &amp;&amp; p.c === c)) rest.push({ r, c });
-    }
-  }
-  const ring = (p: Cell) =&gt; Math.max(Math.abs(2 * p.r - 5), Math.abs(2 * p.c - 5));
-  rest.sort((a, b) =&gt; ring(a) - ring(b));
-  return [...centre, ...rest];
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export type PlayerId = number;
+export interface Cell {
+  r: number;
+  c: number;
+}
+export interface Spy {
+  id: string;
+  owner: PlayerId;
+  pos: Cell | null;
+  carrying: boolean;
 }
 &nbsp;
-export function duelRules(overrides: Partial&lt;Rules&gt; = {}): Rules {
-  return {
-    size: 6,
-    players: [
-      {
-        extraction: row(5),
-        start: [
-          { r: 5, c: 1 },
-          { r: 5, c: 4 },
-        ],
-        color: 'red',
-      },
-      {
-        extraction: row(0),
-        start: [
-          { r: 0, c: 1 },
-          { r: 0, c: 4 },
-        ],
-        color: 'teal',
-      },
-    ],
-    spiesPerPlayer: 2,
-    movement: 'king',
-    bumpOwnSpies: true,
-    intelOnBoard: 2,
-    intelStart: [
-      { r: 2, c: 2 },
-      { r: 3, c: 3 },
-    ],
-    intelSpawnOrder: defaultSpawnOrder(),
-    intelToWin: 3,
-    maxPlies: 120,
-    carrierCanEnterIntel: false,
-    firstMoveNoBump: false,
-    veterans: false,
-    ...overrides,
-  };
+export interface PlayerSetup {
+  /** Cells that bank intel for this player; also where this player deploys. */
+  extraction: Cell[];
+  /** Starting cells, one per spy, in spy order. */
+  start: Cell[];
+  color: string;
 }
 &nbsp;
-export const DUEL_RULES: Rules = duelRules();
+export interface Rules {
+  size: 6;
+  players: PlayerSetup[];
+  spiesPerPlayer: number;
+  movement: 'king' | 'orthogonal';
+  bumpOwnSpies: boolean;
+  intelOnBoard: number;
+  intelStart: Cell[];
+  intelSpawnOrder: Cell[];
+  intelToWin: number;
+  maxPlies: number;
+  carrierCanEnterIntel: false;
+  firstMoveNoBump: boolean;
+  veterans: boolean;
+}
+&nbsp;
+export type Winner = PlayerId | 'draw' | null;
+&nbsp;
+export interface GameState {
+  rules: Rules;
+  ply: number;
+  current: PlayerId;
+  spies: Spy[];
+  intel: Cell[];
+  scores: number[];
+  winner: Winner;
+}
+&nbsp;
+export type Action =
+  | { kind: 'move'; spyId: string; to: Cell }
+  | { kind: 'deploy'; spyId: string; to: Cell }
+  | { kind: 'pass' };
+&nbsp;
+export type EventBody =
+  | { t: 'moved'; spyId: string; from: Cell; to: Cell }
+  | { t: 'deployed'; spyId: string; to: Cell }
+  | { t: 'pickedUp'; spyId: string; at: Cell }
+  | { t: 'bumped'; spyId: string; from: Cell; to: Cell; by: string }
+  | { t: 'bumpBlocked'; spyId: string; at: Cell; dir: Cell }
+  | { t: 'burned'; spyId: string; from: Cell; dir: Cell }
+  | { t: 'dropped'; spyId: string; at: Cell }
+  | { t: 'extracted'; spyId: string; owner: PlayerId; at: Cell; score: number }
+  | { t: 'intelSpawned'; at: Cell }
+  | { t: 'gameOver'; winner: PlayerId | 'draw' };
+&nbsp;
+/** `phase`: arrive 0, bump 1, pickup 2, extract 3, spawn 4, over 5. Non-decreasing within one action. */
+export type GameEvent = EventBody &amp; { phase: number };
+&nbsp;
+export const PHASE = { arrive: 0, bump: 1, pickup: 2, extract: 3, spawn: 4, over: 5 } as const;
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -262,16 +277,16 @@ export const DUEL_RULES: Rules = duelRules();
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-10-22T23:38:32.126Z
+                at 2026-10-23T00:54:29.928Z
             </div>
-        <script src="prettify.js"></script>
+        <script src="../prettify.js"></script>
         <script>
             window.onload = function () {
                 prettyPrint();
             };
         </script>
-        <script src="sorter.js"></script>
-        <script src="block-navigation.js"></script>
+        <script src="../sorter.js"></script>
+        <script src="../block-navigation.js"></script>
     </body>
 </html>
     
