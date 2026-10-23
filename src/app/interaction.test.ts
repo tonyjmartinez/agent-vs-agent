@@ -91,5 +91,14 @@ describe('parseConfig', () => {
     expect(parseConfig('?confirm=0', true).confirm).toBe(false);
     expect(parseConfig('?speed=nope&seed=-3', false)).toMatchObject({ speed: 1, seed: 1 });
     expect(parseConfig('', false, true).test).toBe(true);
+    expect(parseConfig('', false).seats).toEqual([{ kind: 'human' }, { kind: 'human' }]);
+    expect(parseConfig('?p0=bot:easy&p1=bot:hard', false).seats).toEqual([
+      { kind: 'bot', level: 'easy' },
+      { kind: 'bot', level: 'hard' },
+    ]);
+    expect(parseConfig('?p0=bot:genius&p1=robot', false).seats).toEqual([
+      { kind: 'human' },
+      { kind: 'human' },
+    ]);
   });
 });
