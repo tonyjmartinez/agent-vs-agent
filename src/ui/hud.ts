@@ -5,6 +5,7 @@ export const PLAYER_NAMES = ['Red', 'Teal', 'Plum', 'Olive'];
 export interface HudHandlers {
   onReserve(player: PlayerId): void;
   onUndo(): void;
+  onMenu(): void;
 }
 
 export interface HudOptions {
@@ -21,6 +22,7 @@ export interface HudOptions {
 export class Hud {
   private panels: HTMLElement[] = [];
   private undo: HTMLButtonElement;
+  private menu: HTMLButtonElement;
 
   constructor(
     top: HTMLElement,
@@ -48,7 +50,16 @@ export class Hud {
     this.undo.textContent = 'Undo';
     this.undo.dataset.testid = 'undo';
     this.undo.addEventListener('click', () => this.handlers.onUndo());
-    bottom.appendChild(this.undo);
+    this.menu = document.createElement('button');
+    this.menu.className = 'btn';
+    this.menu.type = 'button';
+    this.menu.textContent = 'Menu';
+    this.menu.dataset.testid = 'menu-btn';
+    this.menu.addEventListener('click', () => this.handlers.onMenu());
+    const controls = document.createElement('span');
+    controls.className = 'controls';
+    controls.append(this.undo, this.menu);
+    bottom.appendChild(controls);
   }
 
   render(s: GameState, o: HudOptions): void {
