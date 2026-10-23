@@ -5,6 +5,7 @@ import type { Action, Cell, GameState } from '../engine/types';
 import type { BoardView } from '../view/BoardView';
 import type { Hud } from '../ui/hud';
 import type { GameOver } from '../ui/gameOver';
+import type { Coach } from '../ui/coach';
 import type { Config } from './config';
 import { IDLE, reduce, selectable, targetsFor, type Input, type UiState } from './interaction';
 
@@ -13,6 +14,7 @@ export interface ControllerDeps {
   hud: Hud;
   gameOver: GameOver;
   config: Config;
+  coach?: Coach;
 }
 
 /** Single source of truth: owns the history and turns input into actions (PLAN.md 4.3). */
@@ -22,6 +24,8 @@ export class Controller {
   private ui: UiState = IDLE;
   private busy = false;
   private thinking = false;
+  /** Bumped on undo/rematch so a bot that was mid-think discards its stale move. */
+  private gen = 0;
   private initial: GameState;
   private bots: (Bot | null)[];
 
@@ -55,15 +59,17 @@ export class Controller {
   private async maybeBot(): Promise<void> {
     const bot = this.bots[this.state.current];
     if (!bot || this.state.winner !== null || this.busy || this.thinking) return;
+    const gen = this.gen;
     this.thinking = true;
     this.refresh();
     try {
       await new Promise<void>((res) => setTimeout(res, this.speed > 0 ? 450 * this.speed : 0));
+      if (gen !== this.gen) return; // undo/rematch happened while thinking
       const action = bot.choose(this.state);
       this.thinking = false;
       await this.act(action);
     } finally {
-      this.thinking = false;
+      if (gen === this.gen) this.thinking = false;
     }
   }
 
@@ -99,8 +105,10 @@ export class Controller {
     if (this.busy || this.thinking || !this.humanToMove) return;
     const { ui, commit } = reduce(this.state, this.ui, i, this.confirm);
     this.ui = ui;
-    if (commit) void this.act(commit);
-    else this.refresh();
+    if (commit) {
+      this.d.coach?.finish();
+      void this.act(commit);
+    } else this.refresh();
   }
 
   tapCell(cell: Cell): void {
@@ -115,7 +123,9 @@ export class Controller {
 
   /** Pop back to the last position where a human was to move (one ply in hotseat). */
   undo(): void {
-    if (this.busy || this.thinking || !this.canUndo) return;
+    if (this.busy || !this.canUndo) return;
+    this.gen++;
+    this.thinking = false;
     do this.history.pop();
     while (this.history.length > 1 && !this.humanToMove);
     this.bots.forEach((b) => b?.reset());
@@ -130,7 +140,9 @@ export class Controller {
   }
 
   rematch(): void {
-    if (this.busy || this.thinking) return;
+    if (this.busy) return;
+    this.gen++;
+    this.thinking = false;
     this.history = [createGame()];
     this.bots.forEach((b) => b?.reset());
     this.ui = IDLE;
@@ -157,6 +169,12 @@ export class Controller {
       bots: this.bots.map((b) => b !== null),
     });
     this.d.gameOver.render(s);
+    if (this.d.coach) {
+      if (s.winner !== null || !this.humanToMove || this.busy) this.d.coach.hide();
+      else if (!selected) this.d.coach.update('select');
+      else if (preview && this.confirm) this.d.coach.update('confirm');
+      else this.d.coach.update('target');
+    }
   }
 
   /** For tests/hooks. */
