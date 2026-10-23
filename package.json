@@ -13,7 +13,8 @@
     "e2e": "playwright test",
     "lint": "eslint .",
     "format": "prettier -w .",
-    "coverage": "vitest run --coverage --coverage.include='src/engine/**' --coverage.include='src/ai/**' --coverage.exclude='**/*.test.ts'"
+    "coverage": "vitest run --coverage --coverage.include='src/engine/**' --coverage.include='src/ai/**' --coverage.exclude='**/*.test.ts'",
+    "matrix": "tsx scripts/matrix.ts"
   },
   "repository": {
     "type": "git",
