@@ -501,3 +501,73 @@ body {
     transform: scale(1.5) rotate(6deg);
   }
 }
+
+/* ---------- missions ---------- */
+.card.missions {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+.mission-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.mission-btn {
+  width: 100%;
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: 32px 1fr 24px;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 6px 12px;
+}
+.mission-no {
+  font-weight: 700;
+  font-size: 18px;
+  text-align: center;
+}
+.mission-text {
+  display: grid;
+  line-height: 1.2;
+}
+.mission-text small {
+  font-size: 13px;
+  opacity: 0.75;
+}
+.mission-tick {
+  font-weight: 700;
+  color: var(--teal);
+  text-align: center;
+}
+.mission-btn.done {
+  background: color-mix(in srgb, var(--teal) 14%, var(--paper));
+}
+.stamp-card .goal {
+  text-align: center;
+  font-weight: 700;
+  font-size: 18px;
+  margin: 10px 0 0;
+}
+.mission-pill {
+  top: max(10px, env(safe-area-inset-top));
+  bottom: auto;
+  white-space: nowrap;
+  background: var(--mustard);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+}
+/* Landscape: the board spans the height, so park the pill at the top of the right-hand column. */
+@media (min-aspect-ratio: 1/1) {
+  .mission-pill {
+    left: auto;
+    right: 12px;
+    transform: none;
+    white-space: normal;
+    font-size: 14px;
+    max-width: max(130px, calc((100vw - 100dvh) / 2 - 24px));
+  }
+}

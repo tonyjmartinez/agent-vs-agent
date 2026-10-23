@@ -10,7 +10,11 @@ export interface MenuChoice {
 const KEY = 'ava.menu.v1';
 
 /** Start menu: Play vs Agent (Easy/Medium/Hard), Pass & Play, How to play. */
-export function showMenu(root: HTMLElement, onStart: (c: MenuChoice) => void): void {
+export function showMenu(
+  root: HTMLElement,
+  onStart: (c: MenuChoice) => void,
+  onMissions?: () => void,
+): void {
   const last = load<{ level: BotLevel }>(KEY, { level: 'easy' });
   const wrap = document.createElement('div');
   wrap.className = 'overlay menu-overlay';
@@ -34,6 +38,7 @@ export function showMenu(root: HTMLElement, onStart: (c: MenuChoice) => void): v
       </div>
       <button class="btn primary big" id="btn-play-bot">Play vs Agent</button>
     </div>
+    <button class="btn big" id="btn-missions">Missions</button>
     <button class="btn big" id="btn-hotseat">Pass &amp; Play</button>
     <button class="btn big" id="btn-howto">How to play</button>
   </div>`;
@@ -59,6 +64,10 @@ export function showMenu(root: HTMLElement, onStart: (c: MenuChoice) => void): v
     .querySelector('#btn-hotseat')!
     .addEventListener('click', () => start([{ kind: 'human' }, { kind: 'human' }]));
   wrap.querySelector('#btn-howto')!.addEventListener('click', () => showRules(root));
+  wrap.querySelector('#btn-missions')!.addEventListener('click', () => {
+    wrap.remove();
+    onMissions?.();
+  });
   root.append(wrap);
 }
 

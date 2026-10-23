@@ -17,3 +17,18 @@ Spec: `PLAN.md` (source of truth). Decisions + sim tables: `DESIGN_NOTES.md`.
 - Always `view.sync(state)` after `view.play(events)`; sprites are never the truth.
 - After visual changes regenerate screenshots and look at them (desktop + phone).
 - Container: `@playwright/test@1.56.1` matches preinstalled Chromium. Never run `playwright install` here.
+
+## Handoff (living memory: read first, update last)
+
+The hourly automation starts a fresh agent each run. Keep this section and `DESIGN_NOTES.md` current.
+
+- **Work from `main`.** Branch `claude/night-<slug>` from `origin/main`, open a PR to `main`, and merge it yourself once
+  every check is green (the owner asked for self-merging). Don't build on the old `claude/phase-*` branches or PRs #1-#5:
+  they are a separate, superseded rebuild.
+- **Checks before any merge:** `npm run typecheck && npm run lint && npm test && npm run build && npm run e2e`. Look at
+  the new or changed screenshots in `artifacts/screens/` (phone and desktop). Commit only screenshots your change
+  affects; restore the rest (`git checkout -- artifacts/screens/<file>`) so diffs stay focused.
+- **Latest iteration:** Missions (tactical puzzles). See "Iteration: Missions" in `DESIGN_NOTES.md`. Add new missions with
+  `npx tsx scripts/missions.ts`; `src/missions.test.ts` must prove each one.
+- **Next ideas (pick one per run):** daily mission, "show solution" after a fail, 3-move missions, a match stats
+  debrief on the game-over card, the `DESIGN_NOTES.md` "Later" list.

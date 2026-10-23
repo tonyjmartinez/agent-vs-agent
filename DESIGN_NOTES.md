@@ -172,6 +172,34 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - `public/_headers` gives hashed `/assets/*` an immutable cache. `.nvmrc` pins Node 22 in case Cloudflare's Git integration is used instead.
 - The old `gh-pages` branch is no longer updated. It was left in place; deleting it is the owner's call.
 
+## Iteration: Missions (tactical puzzles)
+
+- **What:** 13 hand-curated puzzles, opened from **Missions** on the start menu or `?mission=<id>`. You play Red against a
+  defender. Each mission has a goal (`win`, `extract` = bank one intel, `burn` = put a Teal agent in reserve) and a budget
+  of 1 or 2 Red moves. Progress is stored in `localStorage` (`ava.missions.v1`), and completed missions get a tick.
+- **Solver** (`src/ai/solve.ts`, pure): AND-OR search over Red moves and all Teal replies, memoised on
+  `hash + ply + moves left`. The goal is judged only right after a Red move. If Teal wins the game in between, that
+  refutes the line. Depth ≤ 2 Red moves (3 plies) runs in milliseconds.
+- **The defender is the solver, not a bot.** Teal plays a reply that leaves Red no forced win if one exists, so a
+  wrong first move is always punished. A hard bot plays its own evaluation and could let a wrong line succeed.
+- **Positions are mined, then curated:** `npx tsx scripts/missions.ts --games 400 --seed 2` plays seeded self-play
+  (Red easy/medium, Teal medium) and prints Red-to-move positions where a goal is forced within N moves, impossible
+  in N−1, and solved by at most a third of first moves. Positions with fumble locks are skipped, because the compact
+  state string doesn't carry locks. Picks were made for variety: edge burns, sprint home, carrier strike, evading a
+  defender, knocking a carrier loose, a double burn, wins in 2.
+- **Proof in tests:** `src/missions.test.ts` checks every mission: round-trips and is legal; forced within budget; not
+  forced in fewer; at most 1/3 of first moves work; and the defender refutes **every** wrong first move and **no**
+  right one. `e2e/missions.spec.ts` plays all 13 to completion through real clicks against the in-browser defender
+  (desktop). On touch it covers a 1-move and a 2-move mission, a refuted wrong move → Failed → Retry, pause → Restart,
+  progress after reload, and a 7-size check that the goal pill never covers the board.
+- **Controller:** new `stop()` freezes the board (no input, no bot move) once a mission is decided. `start()` clears it.
+  Quit-to-menu also stops the game behind the menu.
+- **Known compromise:** the goal pill is pinned to the top (portrait) or the right column (landscape). On a 320px phone
+  it sits over Teal's score pips, and on a short landscape phone over the top of your panel. It never covers the
+  board and ignores pointer events.
+- **Ideas:** a daily mission (seeded by date), 3-move missions (needs a faster solver or a node cap), missions with
+  `?rules=` variants, a "show solution" button after a fail.
+
 ## Later
 
 (ideas not in the plan go here)

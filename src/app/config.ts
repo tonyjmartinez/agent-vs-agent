@@ -16,6 +16,8 @@ export interface AppConfig {
   state: string | null;
   /** true → skip the start menu and go straight into a game (any game param given). */
   direct: boolean;
+  /** `?mission=<id>`: open that mission directly. */
+  mission: string | null;
   confirmTouch: boolean | null;
 }
 
@@ -51,7 +53,8 @@ export function parseConfig(search: string): AppConfig {
     speed: num('speed', 1),
     test: q.get('test') === '1',
     state: q.get('state'),
-    direct: q.has('p0') || q.has('p1') || q.has('state'),
+    direct: q.has('p0') || q.has('p1') || q.has('state') || q.has('mission'),
+    mission: q.get('mission'),
     confirmTouch: confirm === null ? null : confirm === '1',
   };
 }
