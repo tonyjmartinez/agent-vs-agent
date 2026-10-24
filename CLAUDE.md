@@ -28,11 +28,11 @@ The hourly automation starts a fresh agent each run. Keep this section and `DESI
 - **Checks before any merge:** `npm run typecheck && npm run lint && npm test && npm run build && npm run e2e`. Look at
   the new or changed screenshots in `artifacts/screens/` (phone and desktop). Commit only screenshots your change
   affects; restore the rest (`git checkout -- artifacts/screens/<file>`) so diffs stay focused.
-- **Latest iterations:** Missions (tactical puzzles), then Show solution (mission replay). See "Iteration: Missions" and
-  "Iteration: Show solution" in `DESIGN_NOTES.md`. Add new missions with `npx tsx scripts/missions.ts`;
+- **Latest iterations:** Missions (tactical puzzles), Show solution (mission replay), Match stats debrief on the game-over
+  card. See the "Iteration: ..." sections in `DESIGN_NOTES.md`. Add new missions with `npx tsx scripts/missions.ts`;
   `src/missions.test.ts` must prove each one (and its replay).
 - **E2E gotcha:** the Cloudflare check `Workers Builds: agent-vs-agent` fails on every branch (not caused by code); the GitHub
   Actions `checks` job is the real gate. Auto-playing e2e tests assert zero console errors, so any browser intervention
   warning (like the vibrate one) shows up there.
-- **Next ideas (pick one per run):** daily mission, 3-move missions, a match stats debrief on the game-over card, the
+- **Next ideas (pick one per run):** daily mission, 3-move missions, more debrief stats (longest carry, closest call), the
   `DESIGN_NOTES.md` "Later" list.

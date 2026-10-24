@@ -1,5 +1,6 @@
 import { applyAction, createGame, legalActions, previewAction } from '../engine/engine';
 import { duelRules } from '../engine/rules';
+import { addAction, emptyStats, type MatchStats } from '../engine/stats';
 import type { Action, GameEvent, Cell, GameState, PlayerId, Rules } from '../engine/types';
 import type { BoardView, Highlights } from '../view/BoardView';
 import type { Hud } from '../ui/hud';
@@ -46,6 +47,8 @@ export class Controller {
   history: GameState[] = [];
   /** Footprint of the action that produced each history entry (index-aligned; first is null). */
   moves: Highlights['lastMove'][] = [];
+  /** Match stats after each history entry (index-aligned, so undo rewinds them). */
+  statsLog: MatchStats[] = [];
   sel: Selection = emptySelection;
   busy = false;
   thinking = false;
@@ -60,6 +63,10 @@ export class Controller {
 
   get state(): GameState {
     return this.history.at(-1)!;
+  }
+  /** Stats for the game so far. */
+  get stats(): MatchStats {
+    return this.statsLog.at(-1)!;
   }
   get seats(): Seat[] {
     return this.o.seats;
@@ -94,6 +101,7 @@ export class Controller {
     if (seats) this.o.seats = seats;
     this.history = [state ?? createGame(duelRules(this.o.rules))];
     this.moves = [null];
+    this.statsLog = [emptyStats(this.state.rules.players.length)];
     this.sel = emptySelection;
     this.busy = false;
     this.thinking = false;
@@ -228,6 +236,7 @@ export class Controller {
     this.busy = true;
     this.sel = emptySelection;
     this.history.push(state);
+    this.statsLog.push(addAction(this.stats, before, events));
     const arrive = events.find((e) => e.t === 'moved' || e.t === 'deployed');
     this.moves.push(
       arrive && (arrive.t === 'moved' || arrive.t === 'deployed')
@@ -288,6 +297,7 @@ export class Controller {
     this.generation++;
     this.history = this.history.slice(0, t + 1);
     this.moves = this.moves.slice(0, t + 1);
+    this.statsLog = this.statsLog.slice(0, t + 1);
     this.sel = emptySelection;
     this.o.view.sync(this.state);
     this.refresh();

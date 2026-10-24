@@ -180,7 +180,7 @@ async function boot(): Promise<void> {
         : bots.choose(s, level, seed, history),
     onGameOver: (s) => {
       document.getElementById('coach')?.remove();
-      showGameOver(overlayRoot, s, controller!.seats, {
+      showGameOver(overlayRoot, s, controller!.seats, controller!.stats, {
         rematch: () => newGame(),
         menu: () => toMenu(),
       });
