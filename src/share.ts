@@ -20,14 +20,26 @@ export function shareText(m: Mission, base: string): string {
 
 export type ShareResult = 'shared' | 'copied' | 'failed';
 
-interface ShareNav {
+export interface ShareNav {
   share?: (d: { text: string }) => Promise<void>;
   clipboard?: { writeText(t: string): Promise<void> };
 }
 
 /** Native share sheet when there is one, else the clipboard. A cancelled share sheet is not an error. */
 export async function shareMission(m: Mission, base: string, nav: ShareNav): Promise<ShareResult> {
-  const text = shareText(m, base);
+  return sendShare(shareText(m, base), nav);
+}
+
+/** The bare game link (no mission, no test flags). */
+export function gameLink(base: string): string {
+  const u = new URL(base);
+  u.search = '';
+  u.hash = '';
+  return u.toString();
+}
+
+/** Share any text: native sheet first, else the clipboard. */
+export async function sendShare(text: string, nav: ShareNav): Promise<ShareResult> {
   if (nav.share) {
     try {
       await nav.share({ text });

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Seat } from '../app/config';
 import { decode } from '../engine/serialize';
 import type { GameState } from '../engine/types';
-import { humanResult, loadRecords, recordLine, recordResult } from './record';
+import { humanResult, loadRecords, recordLine, recordResult, resultShareText } from './record';
 
 function fakeStorage(initial: Record<string, string> = {}) {
   const data = new Map(Object.entries(initial));
@@ -91,5 +91,45 @@ describe('recordLine', () => {
     expect(recordLine('random', { w: 0, l: 1, d: 1 })).toBe(
       'Record vs Rookie: 0 wins · 1 loss · 1 draw',
     );
+  });
+});
+
+describe('resultShareText', () => {
+  const base = 'https://example.dev/play/?test=1&mission=x#y';
+  const at = (winner: GameState['winner'], scores: number[], ply: number): GameState => ({
+    ...ended(winner),
+    scores,
+    ply,
+  });
+
+  it('brags after a win, with the human’s score first, whichever seat they played', () => {
+    expect(resultShareText(at(0, [3, 1], 25), [human, bot('hard')], base)).toBe(
+      'I beat the Hard agent 3–1 in 13 turns in Agent vs Agent. Think you can?\nhttps://example.dev/play/',
+    );
+    expect(resultShareText(at(1, [0, 3], 24), [bot('easy'), human], base)).toBe(
+      'I beat the Easy agent 3–0 in 12 turns in Agent vs Agent. Think you can?\nhttps://example.dev/play/',
+    );
+  });
+
+  it('says "1 turn" in the singular', () => {
+    expect(resultShareText(at(0, [3, 0], 1), [human, bot('hard')], base)).toContain('in 1 turn in');
+  });
+
+  it('challenges after a loss and after a draw', () => {
+    expect(resultShareText(at(1, [1, 3], 30), [human, bot('medium')], base)).toBe(
+      'The Medium agent beat me 1–3 in Agent vs Agent. Your turn?\nhttps://example.dev/play/',
+    );
+    expect(resultShareText(at('draw', [1, 1], 80), [human, bot('hard')], base)).toBe(
+      'I held the Hard agent to a draw in Agent vs Agent. Think you can do better?\nhttps://example.dev/play/',
+    );
+  });
+
+  it('is null for hot-seat, bot-vs-bot and unfinished games, and never carries a position', () => {
+    expect(resultShareText(at(0, [3, 0], 10), [human, human], base)).toBeNull();
+    expect(resultShareText(at(0, [3, 0], 10), [bot('easy'), bot('hard')], base)).toBeNull();
+    expect(resultShareText(at(null, [1, 1], 10), [human, bot('hard')], base)).toBeNull();
+    const t = resultShareText(at(0, [3, 0], 10), [human, bot('hard')], base)!;
+    expect(t).not.toContain('v1.');
+    expect(t).not.toContain('mission');
   });
 });

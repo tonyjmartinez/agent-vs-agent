@@ -353,3 +353,13 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   handler deliberately ignores Enter/Tab/Space while a button has focus, so Enter could not commit the move. `hint()` now
   blurs the pill. `e2e/hintkeys.spec.ts` plays a 1-move and a whole 2-move mission by keyboard alone (focus pill, Enter,
   arrows, Enter) on desktop.
+
+## Iteration: Share the result + landscape game-over layout
+
+- `resultShareText(state, seats, base)` (ui/record.ts): brag/challenge/draw text from the human's side (their score first, "1 turn"
+  singular), link = the bare game URL, never a position. `sendShare(text, nav)` is the shared native-sheet-or-clipboard sender
+  (`shareMission` now uses it). The game-over card shows Share only for human-vs-bot games.
+- Found while adding the third button: the vs-bot card (stamp, six stat rows, record line, buttons) was 473px tall and scrolled
+  inside the card on 667x375 and 844x390 phones in landscape. The earlier "fits the viewport" sweeps only checked the card's box,
+  not its inner scroll. Fix: at `max-height: 460px` landscape the card is a two-column grid (stamp left, debrief right), and both
+  sweeps now also assert `scrollHeight <= clientHeight`.

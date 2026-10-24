@@ -707,3 +707,36 @@ body {
     padding: 1px 8px;
   }
 }
+
+/* Short landscape screens: stamp on the left, debrief on the right, so the card never needs to scroll. */
+@media (max-height: 460px) and (min-aspect-ratio: 1/1) {
+  #game-over .card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    column-gap: 16px;
+    align-content: center;
+    width: min(680px, calc(100vw - 32px));
+  }
+  #game-over .stamp {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+  #game-over .card > .sub:not(.record):not(.share-note) {
+    grid-column: 1;
+    grid-row: 3 / span 2;
+  }
+  #game-over .stats,
+  #game-over .record,
+  #game-over .actions,
+  #game-over .share-note {
+    grid-column: 2;
+  }
+  #game-over .stats {
+    margin-bottom: 6px;
+  }
+  #game-over .sub.record,
+  #game-over .share-note {
+    margin: 0 0 6px;
+  }
+}

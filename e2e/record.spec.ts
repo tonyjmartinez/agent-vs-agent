@@ -121,6 +121,38 @@ test('the game-over card with a record line still fits phones and landscape', as
     expect(cb.y + cb.height, `card bottom cut off at ${w}x${h}`).toBeLessThanOrEqual(h);
     expect(cb.x).toBeGreaterThanOrEqual(0);
     expect(cb.x + cb.width).toBeLessThanOrEqual(w);
+    // Nothing hides behind an inner scroll: every button is visible without scrolling the card.
+    expect(
+      await card.evaluate((e) => e.scrollHeight <= e.clientHeight + 1),
+      `card scrolls at ${w}x${h}`,
+    ).toBe(true);
     await page.screenshot({ path: `artifacts/screens/game-over-record-${w}x${h}.png` });
   }
+});
+
+test('the game-over card can share the result: text, link, and only for games against a bot', async ({
+  page,
+}, info) => {
+  await page.addInitScript(() => {
+    const w = window as any;
+    w.__sent = [] as string[];
+    Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: async (t: string) => void w.__sent.push(t) },
+    });
+  });
+  await winAGame(page, info, 'bot:hard');
+  await page.click('[data-testid="share-result-btn"]');
+  await expect(page.locator('[data-testid="share-result-note"]')).toHaveText('Copied to share.');
+  const [msg] = await page.evaluate(() => (window as any).__sent as string[]);
+  expect(msg).toBe(
+    `I beat the Hard agent 3–0 in 1 turn in Agent vs Agent. Think you can?\n${new URL('/', page.url()).toString()}`,
+  );
+  await shot(page, info, 'game-over-share');
+  // Hot-seat games have nothing to brag about.
+  await open(page, 'p0=human&p1=human&state=v1.0.0.2-0.41*,21,02,04.33');
+  await move(page, info, [4, 1], [5, 1]);
+  await expect(page.locator('#game-over')).toBeVisible();
+  await expect(page.locator('[data-testid="share-result-btn"]')).toHaveCount(0);
 });

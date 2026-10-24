@@ -1,6 +1,7 @@
 import type { BotLevel, Seat } from '../app/config';
 import type { GameState } from '../engine/types';
 import { levelName } from './hud';
+import { gameLink } from '../share';
 import { load, save } from './storage';
 
 const KEY = 'ava.record.v1';
@@ -60,4 +61,24 @@ export function humanResult(
 export function recordLine(level: BotLevel, t: Tally): string {
   const draws = t.d ? ` · ${t.d} ${t.d === 1 ? 'draw' : 'draws'}` : '';
   return `Record vs ${levelName[level] ?? level}: ${t.w} ${t.w === 1 ? 'win' : 'wins'} · ${t.l} ${t.l === 1 ? 'loss' : 'losses'}${draws}`;
+}
+
+/**
+ * Brag-or-challenge text for a finished human-versus-bot game, from the human's side: scores are shown human first.
+ * `null` for any other kind of game. Carries only the game link, never a position.
+ */
+export function resultShareText(s: GameState, seats: readonly Seat[], base: string): string | null {
+  const r = humanResult(s, seats);
+  if (!r) return null;
+  const me = seats.findIndex((x) => x.kind === 'human');
+  const score = `${s.scores[me]}–${s.scores[1 - me]}`;
+  const turns = Math.ceil(s.ply / 2);
+  const bot = `the ${levelName[r.level] ?? r.level} agent`;
+  const line =
+    r.outcome === 'win'
+      ? `I beat ${bot} ${score} in ${turns} ${turns === 1 ? 'turn' : 'turns'} in Agent vs Agent. Think you can?`
+      : r.outcome === 'loss'
+        ? `${bot[0]!.toUpperCase()}${bot.slice(1)} beat me ${score} in Agent vs Agent. Your turn?`
+        : `I held ${bot} to a draw in Agent vs Agent. Think you can do better?`;
+  return `${line}\n${gameLink(base)}`;
 }
