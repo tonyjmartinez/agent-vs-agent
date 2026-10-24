@@ -20,6 +20,8 @@ export interface HudView {
   reserveSelected: boolean;
   thinking: boolean;
   canUndo: boolean;
+  /** The game is frozen (e.g. a mission was decided): no panel shows an active turn. */
+  stopped?: boolean;
   /** Seat index whose panel goes at the bottom (the local human in vs-bot games). */
   bottom: PlayerId;
 }
@@ -88,7 +90,7 @@ export class Hud {
   private panel(v: HudView, p: PlayerId): HTMLElement {
     const s = v.state;
     const seat = v.seats[p];
-    const active = s.winner === null && s.current === p;
+    const active = !v.stopped && s.winner === null && s.current === p;
     const box = el('section', `panel p${p}${active ? ' active' : ''}`);
     box.dataset.player = String(p);
     const row = el('div', 'row');

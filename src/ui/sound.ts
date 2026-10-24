@@ -1,6 +1,18 @@
 import type { GameEvent } from '../engine/types';
 import { load, save } from './storage';
 
+/**
+ * Chrome blocks (and logs an error for) `vibrate` until the page has had a user gesture, which an
+ * auto-playing replay or bot-vs-bot game started from a URL never gets. Skip it then.
+ */
+export function mayVibrate(nav: {
+  vibrate?: unknown;
+  userActivation?: { hasBeenActive: boolean };
+}): boolean {
+  if (typeof nav.vibrate !== 'function') return false;
+  return nav.userActivation ? nav.userActivation.hasBeenActive : true;
+}
+
 /** Tiny synthesized blips (PLAN 3.5). No asset files; audio starts only after a user gesture. */
 export class Sound {
   private ctx: AudioContext | null = null;
@@ -26,7 +38,7 @@ export class Sound {
   /** Haptics (Android; iOS Safari has no vibrate API, so this is a no-op there). */
   private buzz(events: GameEvent[]): void {
     const nav = navigator as Navigator & { vibrate?: (p: number | number[]) => boolean };
-    if (typeof nav.vibrate !== 'function') return;
+    if (!mayVibrate(nav)) return;
     try {
       if (events.some((e) => e.t === 'extracted')) nav.vibrate([25, 60, 40]);
       else if (events.some((e) => e.t === 'burned')) nav.vibrate(60);

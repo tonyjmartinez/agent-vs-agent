@@ -48,6 +48,8 @@ interface MissionRun {
   m: Mission;
   start: GameState;
   solver: Solver;
+  /** Replaying the forced line: both seats are automated and the mission is not credited. */
+  demo: boolean;
 }
 let run: MissionRun | null = null;
 
@@ -58,12 +60,19 @@ function redMovesMade(c: Controller): number {
   return n;
 }
 
-function startMission(m: Mission): void {
+function startMission(m: Mission, demo = false): void {
   document.getElementById('game-over')?.remove();
   document.getElementById('mission-result')?.remove();
   document.getElementById('coach')?.remove();
   const start = decode(m.state, duelRules());
-  run = { m, start, solver: new Solver(start, m.goal) };
+  run = { m, start, solver: new Solver(start, m.goal), demo };
+  if (demo) {
+    controller?.start(start, [
+      { kind: 'bot', level: 'hard' },
+      { kind: 'bot', level: 'hard' },
+    ]);
+    return;
+  }
   controller?.start(start, [{ kind: 'human' }, { kind: 'bot', level: 'hard' }]);
   showBriefing(overlayRoot, m, () => controller?.refresh());
 }
@@ -83,11 +92,12 @@ function judgeMission(c: Controller, s: GameState): void {
   if (!success && !failed) return;
   c.stop();
   endMission();
-  if (success) markCompleted(r.m.id);
+  if (success && !r.demo) markCompleted(r.m.id);
   const nextM = MISSIONS[MISSIONS.indexOf(r.m) + 1];
-  showMissionResult(overlayRoot, r.m, success, {
+  showMissionResult(overlayRoot, r.m, success ? (r.demo ? 'solution' : 'complete') : 'failed', {
     next: nextM ? () => startMission(nextM) : undefined,
     retry: () => startMission(r.m),
+    solution: () => startMission(r.m, true),
     list: () => openMissions(),
   });
 }
@@ -100,7 +110,9 @@ function openMissions(): void {
 
 function coach(c: Controller): void {
   if (run) {
-    missionPill(pillText(run.m, run.m.moves - redMovesMade(c)));
+    missionPill(
+      run.demo ? 'Solution · watch the line' : pillText(run.m, run.m.moves - redMovesMade(c)),
+    );
   }
   let el = document.getElementById('coach');
   if (run) {
@@ -164,7 +176,7 @@ async function boot(): Promise<void> {
     rules: cfg.rules,
     chooseBot: (s, level, seed, history) =>
       run && controller
-        ? Promise.resolve(run.solver.defend(s, run.m.moves - redMovesMade(controller)))
+        ? Promise.resolve(run.solver.demoStep(s, run.m.moves - redMovesMade(controller)))
         : bots.choose(s, level, seed, history),
     onGameOver: (s) => {
       document.getElementById('coach')?.remove();
@@ -184,7 +196,7 @@ async function boot(): Promise<void> {
     onEvents: (ev) => sound.play(ev),
   });
   const direct = cfg.mission ? missionById(cfg.mission) : undefined;
-  if (direct) startMission(direct);
+  if (direct) startMission(direct, cfg.solution);
   else if (cfg.direct)
     controller.start(cfg.state ? decode(cfg.state, duelRules(cfg.rules)) : undefined);
   else {

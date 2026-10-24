@@ -18,6 +18,8 @@ export interface AppConfig {
   direct: boolean;
   /** `?mission=<id>`: open that mission directly. */
   mission: string | null;
+  /** `?solution=1` with a mission: replay the forced line instead of playing it. */
+  solution: boolean;
   confirmTouch: boolean | null;
 }
 
@@ -55,6 +57,7 @@ export function parseConfig(search: string): AppConfig {
     state: q.get('state'),
     direct: q.has('p0') || q.has('p1') || q.has('state') || q.has('mission'),
     mission: q.get('mission'),
+    solution: q.get('solution') === '1',
     confirmTouch: confirm === null ? null : confirm === '1',
   };
 }

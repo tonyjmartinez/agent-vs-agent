@@ -20,3 +20,14 @@ test('parses URL params with defaults', () => {
   });
   expect(parseConfig('').rules).toEqual({});
 });
+
+test('mission and solution params', () => {
+  const m = parseConfig('?mission=double-tap');
+  expect(m.mission).toBe('double-tap');
+  expect(m.solution).toBe(false);
+  expect(m.direct).toBe(true); // a mission link skips the menu
+  expect(parseConfig('?mission=double-tap&solution=1').solution).toBe(true);
+  expect(parseConfig('?mission=double-tap&solution=yes').solution).toBe(false);
+  expect(parseConfig('').mission).toBeNull();
+  expect(parseConfig('').solution).toBe(false);
+});
