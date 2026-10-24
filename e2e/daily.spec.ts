@@ -4,7 +4,7 @@ import { dailyMission, dayKey } from '../src/daily';
 import { DAILY_POOL } from '../src/dailyPool';
 import { legalActions } from '../src/engine/engine';
 import { decode } from '../src/engine/serialize';
-import { goalText } from '../src/missions';
+import { MISSIONS, goalText } from '../src/missions';
 import { shot, trackErrors } from './helpers';
 import { ava, openMission, play, same, solve } from './missionHelpers';
 
@@ -45,8 +45,10 @@ test('the daily mission opens from a link, solves through real input, and is cre
   await expect(dailyBtn(page)).toHaveClass(/done/);
   await expect(dailyBtn(page)).toContainText(day);
   await expect(streakText(page)).toHaveText('Streak: 1 day');
-  // Progress through the 13 curated missions is untouched.
-  await expect(page.locator('[data-testid="missions-progress"]')).toHaveText('0 of 13 complete');
+  // Progress through the curated missions is untouched.
+  await expect(page.locator('[data-testid="missions-progress"]')).toHaveText(
+    `0 of ${MISSIONS.length} complete`,
+  );
   await shot(page, info, 'daily-list-done');
   expect(errors).toEqual([]);
 });

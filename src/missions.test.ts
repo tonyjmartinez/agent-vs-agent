@@ -15,6 +15,9 @@ describe('missions', () => {
       expect(MISSIONS[i]!.moves).toBeGreaterThanOrEqual(MISSIONS[i - 1]!.moves);
     }
     expect(MISSIONS.length).toBeGreaterThanOrEqual(10);
+    expect(MISSIONS.filter((m) => m.moves === 3).length).toBeGreaterThanOrEqual(3);
+    expect(goalText({ goal: 'extract', moves: 3 })).toBe('Bank an intel in 3 moves');
+    expect(pillText({ goal: 'extract' }, 3)).toBe('Bank an intel · 3 moves left');
     expect(missionById('double-tap')?.title).toBe('Double Tap');
     expect(missionById('nope')).toBeUndefined();
     expect(goalText({ goal: 'burn', moves: 1 })).toBe('Burn a Teal agent in 1 move');

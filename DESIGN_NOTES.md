@@ -288,3 +288,14 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   its own event, so a pure burn is a burn, not a shove. Invariant-tested over random games (`stats.test.ts`).
 - The extra debrief row overflowed 375px-high landscape screens, so `styles.css` tightens the stats table under
   `max-height: 460px`; the e2e viewport sweep now asserts the whole card (stamp to buttons) is on screen.
+
+## Iteration: 3-move missions
+
+- `scripts/mine.ts` takes a move-budget list (`--moves 3` in `scripts/missions.ts`). A 3-move search is fast per position but
+  candidates are rare (17 in 120 games, mostly `extract`; no `win` yet).
+- Added `long-way-round` (extract), `cornered` (burn), `reserve-play` (burn) at the end of `MISSIONS` (order is by move budget,
+  enforced by a test). `src/missions.test.ts` proves each exactly like the others (forced in 3, not in 2, ≤ a third of first
+  moves work, defender refutes every wrong first move, replay reaches the goal).
+- The `?solution=1` replay can finish before the budget when the replayed defender doesn't fight at full strength
+  (`cornered` ends after 2 Red moves), so the e2e ply check is "odd and ≤ 2·moves−1" (exactly 1 for 1-move missions).
+- The daily pool stays 1-2 moves: 3-move entries would need re-proving the pool and a different day→puzzle cycle length.
