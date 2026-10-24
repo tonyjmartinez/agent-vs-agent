@@ -324,3 +324,8 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   done) and scrolls the card so it is centred, computed from bounding rects (`scrollIntoView` did not move the card).
 - A skipped mission stays "next" until done. `e2e/nextup.spec.ts` seeds `ava.missions.v1` to cover fresh, partial, gap and
   all-done states.
+
+## Iteration: 3-move win missions
+
+- Mined two 3-move `win` puzzles (seeds 11 and 12, 400 games each, ~10 minutes in parallel): `long-odds` (2-1, Teal also carrying)
+  and `overtime` (2-2, ply 74). All proof tests (`missions`, `hint`) cover them automatically; 18 missions now.

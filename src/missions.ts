@@ -150,6 +150,22 @@ export const MISSIONS: readonly Mission[] = [
     moves: 3,
     state: 'v1.0.20.1-1.41,x,00,43.2233',
   },
+  {
+    id: 'long-odds',
+    title: 'Long Odds',
+    brief: 'One point from victory, and it takes three moves to get it. Teal is carrying too.',
+    goal: 'win',
+    moves: 3,
+    state: 'v1.0.34.2-1.12,55,33*,05.22',
+  },
+  {
+    id: 'overtime',
+    title: 'Overtime',
+    brief: 'Level at two apiece, deep into the game. Whoever banks next takes it.',
+    goal: 'win',
+    moves: 3,
+    state: 'v1.0.74.2-2.54,31,33*,11.22',
+  },
 ];
 
 export const missionById = (id: string): Mission | undefined => MISSIONS.find((m) => m.id === id);
