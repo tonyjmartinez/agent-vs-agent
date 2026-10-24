@@ -14,11 +14,13 @@ import { Sound } from './ui/sound';
 import { showMenu, showPause } from './ui/menu';
 import {
   markCompleted,
+  markDayDone,
   missionPill,
   showBriefing,
   showMissionResult,
   showMissions,
 } from './ui/missions';
+import { dailyMission, dayKey } from './daily';
 import { MISSIONS, missionById, pillText, type Mission } from './missions';
 import type { GameState } from './engine/types';
 import { load, save } from './ui/storage';
@@ -92,8 +94,12 @@ function judgeMission(c: Controller, s: GameState): void {
   if (!success && !failed) return;
   c.stop();
   endMission();
-  if (success && !r.demo) markCompleted(r.m.id);
-  const nextM = MISSIONS[MISSIONS.indexOf(r.m) + 1];
+  if (success && !r.demo) {
+    if (r.m.daily) markDayDone(r.m.id.slice('daily-'.length));
+    else markCompleted(r.m.id);
+  }
+  // The daily mission isn't part of the list, so it has no "next".
+  const nextM = r.m.daily ? undefined : MISSIONS[MISSIONS.indexOf(r.m) + 1];
   showMissionResult(overlayRoot, r.m, success ? (r.demo ? 'solution' : 'complete') : 'failed', {
     next: nextM ? () => startMission(nextM) : undefined,
     retry: () => startMission(r.m),
@@ -102,10 +108,13 @@ function judgeMission(c: Controller, s: GameState): void {
   });
 }
 
+/** The date the daily mission is for: the clock (UTC), or `?day=` in tests. */
+const today = (): string => cfg.day ?? dayKey(new Date());
+
 function openMissions(): void {
   endMission();
   document.getElementById('game-over')?.remove();
-  showMissions(overlayRoot, { pick: (m) => startMission(m), back: () => toMenu() });
+  showMissions(overlayRoot, { pick: (m) => startMission(m), back: () => toMenu() }, today());
 }
 
 function coach(c: Controller): void {
@@ -195,7 +204,11 @@ async function boot(): Promise<void> {
     onRefresh: coach,
     onEvents: (ev) => sound.play(ev),
   });
-  const direct = cfg.mission ? missionById(cfg.mission) : undefined;
+  const direct = cfg.mission
+    ? cfg.mission === 'daily'
+      ? dailyMission(today())
+      : missionById(cfg.mission)
+    : undefined;
   if (direct) startMission(direct, cfg.solution);
   else if (cfg.direct)
     controller.start(cfg.state ? decode(cfg.state, duelRules(cfg.rules)) : undefined);

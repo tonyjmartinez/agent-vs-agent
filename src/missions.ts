@@ -16,6 +16,8 @@ export interface Mission {
   moves: number;
   /** Compact state string (`engine/serialize.ts`), Red to move. */
   state: string;
+  /** The mission of the day (see `daily.ts`): not in the list, progress tracked as a streak. */
+  daily?: boolean;
 }
 
 export const MISSIONS: readonly Mission[] = [

@@ -31,3 +31,12 @@ test('mission and solution params', () => {
   expect(parseConfig('').mission).toBeNull();
   expect(parseConfig('').solution).toBe(false);
 });
+
+test('day param: only real calendar dates are accepted', () => {
+  expect(parseConfig('?mission=daily&day=2026-03-10').day).toBe('2026-03-10');
+  expect(parseConfig('?mission=daily').day).toBeNull();
+  for (const bad of ['2026-02-30', '2026-13-01', 'today', '', '2026-3-1', '2026-03-10T00:00']) {
+    expect(parseConfig(`?mission=daily&day=${bad}`).day, bad).toBeNull();
+  }
+  expect(parseConfig('?mission=daily').mission).toBe('daily');
+});

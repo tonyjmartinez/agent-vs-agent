@@ -1,3 +1,4 @@
+import { dailyMission, isDayKey, streak } from '../daily';
 import { MISSIONS, goalText, type Mission } from '../missions';
 import { load, save } from './storage';
 
@@ -15,19 +16,48 @@ export function markCompleted(id: string): void {
   save(KEY, [...done]);
 }
 
+const DAILY_KEY = 'ava.daily.v1';
+const KEEP_DAYS = 120;
+
+/** Dates (UTC `YYYY-MM-DD`) on which the daily mission was solved for real, oldest first. */
+export function completedDays(): string[] {
+  const v = load<unknown>(DAILY_KEY, []);
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && isDayKey(x)) : [];
+}
+
+export function markDayDone(day: string): void {
+  if (!isDayKey(day)) return;
+  const days = [...new Set([...completedDays(), day])].sort().slice(-KEEP_DAYS);
+  save(DAILY_KEY, days);
+}
+
 const esc = (t: string) => t.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+
+/** Stamp text, with any date kept on one line (a date that wraps at its hyphens reads as two numbers). */
+const stampTitle = (title: string): string =>
+  esc(title.toUpperCase()).replace(/\d{4}-\d{2}-\d{2}/, (d) => `<span class="nowrap">${d}</span>`);
 
 /** Mission list: one button per mission, completed ones ticked. */
 export function showMissions(
   root: HTMLElement,
   on: { pick(m: Mission): void; back(): void },
+  today: string,
 ): void {
   const done = completedMissions();
+  const days = completedDays();
+  const daily = dailyMission(today);
+  const dailyDone = days.includes(today);
+  const run = streak(days, today);
   const wrap = document.createElement('div');
   wrap.className = 'overlay menu-overlay';
   wrap.id = 'missions';
   wrap.innerHTML = `<div class="card menu missions" role="dialog" aria-modal="true" aria-labelledby="missions-title">
     <h2 id="missions-title" class="title">Missions</h2>
+    <button class="btn daily-btn${dailyDone ? ' done' : ''}" data-testid="daily-btn">
+      <span class="mission-text"><b>Daily mission</b><small>${today} · ${goalText(daily)}</small></span>
+      <span class="mission-tick" aria-label="${dailyDone ? 'done today' : 'not done today'}">${dailyDone ? '✓' : ''}</span>
+    </button>
+    <p class="sub" data-testid="daily-streak">Streak: ${run} day${run === 1 ? '' : 's'}</p>
     <p class="sub" data-testid="missions-progress">${done.size} of ${MISSIONS.length} complete</p>
     <ol class="mission-list">
       ${MISSIONS.map(
@@ -50,6 +80,10 @@ export function showMissions(
       on.pick(m);
     }),
   );
+  wrap.querySelector('[data-testid="daily-btn"]')!.addEventListener('click', () => {
+    wrap.remove();
+    on.pick(daily);
+  });
   wrap.querySelector('#btn-missions-back')!.addEventListener('click', () => {
     wrap.remove();
     on.back();
@@ -64,8 +98,8 @@ export function showBriefing(root: HTMLElement, m: Mission, onGo: () => void): v
   wrap.className = 'overlay';
   wrap.id = 'briefing';
   wrap.innerHTML = `<div class="card stamp-card" role="dialog" aria-modal="true" aria-labelledby="briefing-title">
-    <div class="menu-label">Mission ${n} of ${MISSIONS.length}</div>
-    <div class="stamp" id="briefing-title">${esc(m.title.toUpperCase())}</div>
+    <div class="menu-label">${m.daily ? 'Daily mission' : `Mission ${n} of ${MISSIONS.length}`}</div>
+    <div class="stamp" id="briefing-title">${stampTitle(m.title)}</div>
     <p class="goal" data-testid="briefing-goal">${goalText(m)}</p>
     <p class="sub">${esc(m.brief)}</p>
     <div class="actions"><button class="btn primary" id="btn-briefing-go">Start</button></div>

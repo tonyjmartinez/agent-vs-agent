@@ -1,3 +1,4 @@
+import { isDayKey } from '../daily';
 export type BotLevel = 'random' | 'easy' | 'medium' | 'hard';
 export type Seat = { kind: 'human' } | { kind: 'bot'; level: BotLevel };
 
@@ -20,6 +21,8 @@ export interface AppConfig {
   mission: string | null;
   /** `?solution=1` with a mission: replay the forced line instead of playing it. */
   solution: boolean;
+  /** `?day=YYYY-MM-DD`: pretend it is that (UTC) date for the daily mission; null = use the clock. */
+  day: string | null;
   confirmTouch: boolean | null;
 }
 
@@ -58,6 +61,7 @@ export function parseConfig(search: string): AppConfig {
     direct: q.has('p0') || q.has('p1') || q.has('state') || q.has('mission'),
     mission: q.get('mission'),
     solution: q.get('solution') === '1',
+    day: isDayKey(q.get('day') ?? '') ? q.get('day') : null,
     confirmTouch: confirm === null ? null : confirm === '1',
   };
 }
