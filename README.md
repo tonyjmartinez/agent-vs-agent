@@ -4,6 +4,7 @@ A small bump-and-run spy board game for phone and desktop browsers. Two agents p
 
 - **Play:** Cloudflare `agent-vs-agent` Worker, once connected (see Deploy below)
 - **Rules:** tap **How to play** in the game, or see `PLAN.md` §2.
+- **Missions:** 13 tactical puzzles (start menu → **Missions**, or `?mission=first-contact`). Each one is proven solvable by `src/missions.test.ts`.
 - **Design log and balance data:** `DESIGN_NOTES.md`
 
 On a phone, open the site and use **Share → Add to Home Screen** to play it fullscreen like an app.

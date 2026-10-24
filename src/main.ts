@@ -1,6 +1,7 @@
 import '@fontsource/fredoka/500.css';
 import '@fontsource/fredoka/700.css';
 import './ui/styles.css';
+import { Solver, goalMet } from './ai/solve';
 import { BotClient } from './app/botClient';
 import { Controller } from './app/controller';
 import { parseConfig, type Seat } from './app/config';
@@ -11,6 +12,15 @@ import { showGameOver } from './ui/gameOver';
 import { Hud } from './ui/hud';
 import { Sound } from './ui/sound';
 import { showMenu, showPause } from './ui/menu';
+import {
+  markCompleted,
+  missionPill,
+  showBriefing,
+  showMissionResult,
+  showMissions,
+} from './ui/missions';
+import { MISSIONS, missionById, pillText, type Mission } from './missions';
+import type { GameState } from './engine/types';
 import { load, save } from './ui/storage';
 import { PhaserBoardView } from './view/PhaserBoardView';
 
@@ -33,8 +43,70 @@ addEventListener('pointerdown', (e: PointerEvent) => (lastTouch = e.pointerType 
   capture: true,
 });
 
+// ---------- missions (tactical puzzles; see src/missions.ts) ----------
+interface MissionRun {
+  m: Mission;
+  start: GameState;
+  solver: Solver;
+}
+let run: MissionRun | null = null;
+
+/** Red moves played since the mission started. */
+function redMovesMade(c: Controller): number {
+  let n = 0;
+  for (let i = 1; i < c.history.length; i++) if (c.history[i - 1]!.current === 0) n++;
+  return n;
+}
+
+function startMission(m: Mission): void {
+  document.getElementById('game-over')?.remove();
+  document.getElementById('mission-result')?.remove();
+  document.getElementById('coach')?.remove();
+  const start = decode(m.state, duelRules());
+  run = { m, start, solver: new Solver(start, m.goal) };
+  controller?.start(start, [{ kind: 'human' }, { kind: 'bot', level: 'hard' }]);
+  showBriefing(overlayRoot, m, () => controller?.refresh());
+}
+
+function endMission(): void {
+  run = null;
+  missionPill(null);
+}
+
+/** Judge the mission after every action: success right after a Red move, else out of moves. */
+function judgeMission(c: Controller, s: GameState): void {
+  if (!run) return;
+  const r = run;
+  const redJustMoved = c.history.length > 1 && c.history.at(-2)!.current === 0;
+  const success = redJustMoved && goalMet(r.start, s, r.m.goal, 0);
+  const failed = !success && (s.winner !== null || (redJustMoved && redMovesMade(c) >= r.m.moves));
+  if (!success && !failed) return;
+  c.stop();
+  endMission();
+  if (success) markCompleted(r.m.id);
+  const nextM = MISSIONS[MISSIONS.indexOf(r.m) + 1];
+  showMissionResult(overlayRoot, r.m, success, {
+    next: nextM ? () => startMission(nextM) : undefined,
+    retry: () => startMission(r.m),
+    list: () => openMissions(),
+  });
+}
+
+function openMissions(): void {
+  endMission();
+  document.getElementById('game-over')?.remove();
+  showMissions(overlayRoot, { pick: (m) => startMission(m), back: () => toMenu() });
+}
+
 function coach(c: Controller): void {
+  if (run) {
+    missionPill(pillText(run.m, run.m.moves - redMovesMade(c)));
+  }
   let el = document.getElementById('coach');
+  if (run) {
+    el?.remove();
+    return;
+  }
   if (coachDone || !c.isHumanToMove() || document.querySelector('.overlay')) {
     el?.remove();
     return;
@@ -78,7 +150,7 @@ async function boot(): Promise<void> {
     soundOn: () => !sound.muted,
     onMenu: () =>
       showPause(overlayRoot, {
-        restart: () => newGame(),
+        restart: () => (run ? startMission(run.m) : newGame()),
         quit: () => toMenu(),
       }),
   });
@@ -90,7 +162,10 @@ async function boot(): Promise<void> {
     confirmTouch: cfg.confirmTouch ?? true,
     seed: cfg.seed || Math.floor(Math.random() * 1e9),
     rules: cfg.rules,
-    chooseBot: (s, level, seed, history) => bots.choose(s, level, seed, history),
+    chooseBot: (s, level, seed, history) =>
+      run && controller
+        ? Promise.resolve(run.solver.defend(s, run.m.moves - redMovesMade(controller)))
+        : bots.choose(s, level, seed, history),
     onGameOver: (s) => {
       document.getElementById('coach')?.remove();
       showGameOver(overlayRoot, s, controller!.seats, {
@@ -98,7 +173,8 @@ async function boot(): Promise<void> {
         menu: () => toMenu(),
       });
     },
-    onAction: () => {
+    onAction: (s) => {
+      if (controller) judgeMission(controller, s);
       if (!coachDone && controller && controller.history.length > 1) {
         coachDone = true;
         save(COACH_KEY, true);
@@ -107,7 +183,10 @@ async function boot(): Promise<void> {
     onRefresh: coach,
     onEvents: (ev) => sound.play(ev),
   });
-  if (cfg.direct) controller.start(cfg.state ? decode(cfg.state, duelRules(cfg.rules)) : undefined);
+  const direct = cfg.mission ? missionById(cfg.mission) : undefined;
+  if (direct) startMission(direct);
+  else if (cfg.direct)
+    controller.start(cfg.state ? decode(cfg.state, duelRules(cfg.rules)) : undefined);
   else {
     controller.start();
     toMenu();
@@ -115,14 +194,17 @@ async function boot(): Promise<void> {
 }
 
 function newGame(seats?: Seat[]): void {
+  endMission();
   document.getElementById('game-over')?.remove();
   controller?.start(undefined, seats);
 }
 
 function toMenu(): void {
+  endMission();
+  controller?.stop();
   document.getElementById('game-over')?.remove();
   document.getElementById('coach')?.remove();
-  showMenu(overlayRoot, ({ seats }) => newGame(seats));
+  showMenu(overlayRoot, ({ seats }) => newGame(seats), openMissions);
 }
 
 // Desktop keyboard play; ignored while a menu or dialog is open.

@@ -1,0 +1,212 @@
+import { test, expect, type Page, type TestInfo } from '@playwright/test';
+import { Solver } from '../src/ai/solve';
+import { legalActions } from '../src/engine/engine';
+import { decode } from '../src/engine/serialize';
+import type { Action, GameState } from '../src/engine/types';
+import { MISSIONS, goalText, missionById, pillText, type Mission } from '../src/missions';
+import { shot, tapCell, trackErrors } from './helpers';
+
+const ava = (page: Page) => page.evaluate(() => (window as any).__AVA__.getState() as GameState);
+const idle = (page: Page) => page.evaluate(() => (window as any).__AVA__.idle());
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+/** Play one Red action through real input (reserve tray + taps, second tap on touch). */
+async function play(page: Page, info: TestInfo, s: GameState, a: Action): Promise<void> {
+  if (a.kind === 'pass') throw new Error('no pass in missions');
+  if (a.kind === 'deploy') await page.locator('[data-testid="reserve-0"]').first().click();
+  else {
+    const from = s.spies.find((x) => x.id === a.spyId)!.pos!;
+    await tapCell(page, info, from.r, from.c);
+  }
+  await tapCell(page, info, a.to.r, a.to.c);
+  if (info.project.use.hasTouch) await tapCell(page, info, a.to.r, a.to.c);
+  await idle(page);
+}
+
+async function openMission(page: Page, m: Mission): Promise<void> {
+  await page.goto(`/?test=1&speed=0&mission=${m.id}`);
+  await page.evaluate(() => (window as any).__AVA__.ready);
+  await expect(page.locator('#briefing')).toBeVisible();
+  await expect(page.locator('[data-testid="briefing-goal"]')).toHaveText(goalText(m));
+  await page.click('#btn-briefing-go');
+  await expect(page.locator('#briefing')).toHaveCount(0);
+}
+
+/** Solve a mission move by move against the in-browser defender. */
+async function solve(page: Page, info: TestInfo, m: Mission): Promise<void> {
+  const start = decode(m.state);
+  const solver = new Solver(start, m.goal);
+  for (let left = m.moves; left > 0; left--) {
+    const s = await ava(page);
+    expect(s.current).toBe(0);
+    const pill = page.locator('#mission-pill');
+    await expect(pill).toHaveText(pillText(m, left));
+    const [a] = solver.solutions(s, left);
+    expect(a, `no forced line left in ${m.id}`).toBeTruthy();
+    await play(page, info, s, a!);
+    if (await page.locator('#mission-result').count()) break;
+  }
+  await expect(page.locator('#mission-result .stamp')).toHaveText('MISSION COMPLETE');
+  await expect(page.locator('#mission-pill')).toHaveCount(0);
+}
+
+test('every mission can be completed through real input against the defender', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'desktop', 'full sweep on desktop; touch covered below');
+  test.setTimeout(180_000);
+  const errors = trackErrors(page);
+  for (const m of MISSIONS) {
+    await openMission(page, m);
+    await solve(page, info, m);
+  }
+  // Progress survives a reload.
+  await page.goto('/?test=1&speed=0');
+  await page.evaluate(() => (window as any).__AVA__.ready);
+  await page.click('#btn-missions');
+  await expect(page.locator('[data-testid="missions-progress"]')).toHaveText(
+    `${MISSIONS.length} of ${MISSIONS.length} complete`,
+  );
+  await expect(page.locator('.mission-btn.done')).toHaveCount(MISSIONS.length);
+  expect(errors).toEqual([]);
+});
+
+test('menu → missions → first mission by touch/click, ticked afterwards', async ({
+  page,
+}, info) => {
+  const errors = trackErrors(page);
+  await page.goto('/?test=1&speed=0');
+  await page.evaluate(() => (window as any).__AVA__.ready);
+  await page.click('#btn-missions');
+  await expect(page.locator('#missions')).toBeVisible();
+  await expect(page.locator('[data-testid="missions-progress"]')).toHaveText(
+    `0 of ${MISSIONS.length} complete`,
+  );
+  await expect(page.locator('.mission-btn')).toHaveCount(MISSIONS.length);
+  await shot(page, info, 'missions-list');
+  const m = MISSIONS[0]!;
+  await page.click(`[data-mission="${m.id}"]`);
+  await expect(page.locator('#briefing')).toBeVisible();
+  await shot(page, info, 'mission-briefing');
+  await page.click('#btn-briefing-go');
+  await shot(page, info, 'mission-play');
+  // The goal pill must never cover the board.
+  const pill = (await page.locator('#mission-pill').boundingBox())!;
+  const board = (await page.locator('#board canvas').boundingBox())!;
+  expect(
+    pill.y + pill.height <= board.y ||
+      pill.y >= board.y + board.height ||
+      pill.x + pill.width <= board.x ||
+      pill.x >= board.x + board.width,
+  ).toBe(true);
+  expect(pill.x).toBeGreaterThanOrEqual(0);
+  expect(pill.x + pill.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  await solve(page, info, m);
+  await shot(page, info, 'mission-complete');
+  await page.click('#btn-mission-list');
+  await expect(page.locator(`[data-mission="${m.id}"]`)).toHaveClass(/done/);
+  await expect(page.locator('[data-testid="missions-progress"]')).toHaveText(
+    `1 of ${MISSIONS.length} complete`,
+  );
+  await page.click('#btn-missions-back');
+  await expect(page.locator('#menu')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('a two-move mission works by touch/click; Next opens the following mission', async ({
+  page,
+}, info) => {
+  const m = missionById('double-tap')!;
+  await openMission(page, m);
+  await solve(page, info, m);
+  await page.click('#btn-mission-next');
+  const next = MISSIONS[MISSIONS.indexOf(m) + 1]!;
+  await expect(page.locator('#briefing .stamp')).toHaveText(next.title.toUpperCase());
+});
+
+test('a wrong move is refuted: mission failed, Retry resets the position', async ({
+  page,
+}, info) => {
+  const m = missionById('grab-and-go')!;
+  await openMission(page, m);
+  const start = decode(m.state);
+  const solver = new Solver(start, m.goal);
+  const sols = solver.solutions(start, m.moves);
+  const wrong = legalActions(start).find(
+    (a) => a.kind === 'move' && !sols.some((x) => same(x, a)),
+  )!;
+  await play(page, info, await ava(page), wrong);
+  // The defender has answered; Red's last move cannot succeed any more.
+  const s = await ava(page);
+  expect(s.ply).toBe(start.ply + 2);
+  expect(solver.canForce(s, 1)).toBe(false);
+  await expect(page.locator('#mission-pill')).toHaveText(pillText(m, 1));
+  const any = legalActions(s).find((a) => a.kind === 'move')!;
+  await play(page, info, s, any);
+  await expect(page.locator('#mission-result .stamp')).toHaveText('MISSION FAILED');
+  await expect(page.locator('#btn-mission-next')).toHaveCount(0);
+  await shot(page, info, 'mission-failed');
+  // The board is frozen behind the result card.
+  expect((await ava(page)).ply).toBe(start.ply + 3);
+  await page.click('#btn-mission-retry');
+  await page.click('#btn-briefing-go');
+  expect(await page.evaluate(() => (window as any).__AVA__.encode())).toBe(m.state);
+  await expect(page.locator('#mission-pill')).toHaveText(pillText(m, 2));
+});
+
+test('pause → Restart restarts the mission; Quit leaves mission mode', async ({ page }, info) => {
+  const m = missionById('side-step')!;
+  await openMission(page, m);
+  const start = decode(m.state);
+  const [a] = new Solver(start, m.goal).solutions(start, m.moves);
+  await play(page, info, start, a!);
+  expect((await ava(page)).ply).toBe(start.ply + 2);
+  await page.click('#btn-menu');
+  await page.click('#btn-restart');
+  await page.click('#btn-briefing-go');
+  expect(await page.evaluate(() => (window as any).__AVA__.encode())).toBe(m.state);
+  await page.click('#btn-menu');
+  await page.click('#btn-quit');
+  await expect(page.locator('#menu')).toBeVisible();
+  await expect(page.locator('#mission-pill')).toHaveCount(0);
+});
+
+test('an unknown ?mission id falls back to a normal game', async ({ page }) => {
+  await page.goto('/?test=1&speed=0&mission=nope');
+  await page.evaluate(() => (window as any).__AVA__.ready);
+  await expect(page.locator('#briefing')).toHaveCount(0);
+  expect(await page.evaluate(() => (window as any).__AVA__.encode())).toBe(
+    'v1.0.0.0-0.51,54,01,04.2233',
+  );
+});
+
+test('the goal pill stays clear of the board at phone, landscape and tablet sizes', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'desktop', 'viewport sweep runs once');
+  const m = missionById('double-tap')!;
+  for (const [w, h] of [
+    [320, 568],
+    [360, 640],
+    [390, 844],
+    [667, 375],
+    [844, 390],
+    [1024, 768],
+    [1440, 900],
+  ] as const) {
+    await page.setViewportSize({ width: w, height: h });
+    await openMission(page, m);
+    await page.evaluate(() => (window as any).__AVA__.controller().refresh());
+    const pill = (await page.locator('#mission-pill').boundingBox())!;
+    const board = (await page.locator('#board canvas').boundingBox())!;
+    const clear =
+      pill.y + pill.height <= board.y + 1 ||
+      pill.y >= board.y + board.height - 1 ||
+      pill.x + pill.width <= board.x + 1 ||
+      pill.x >= board.x + board.width - 1;
+    expect(clear, `pill overlaps board at ${w}x${h}`).toBe(true);
+    expect(pill.x).toBeGreaterThanOrEqual(0);
+    expect(pill.x + pill.width).toBeLessThanOrEqual(w);
+    await page.screenshot({ path: `artifacts/screens/mission-pill-${w}x${h}.png` });
+  }
+});

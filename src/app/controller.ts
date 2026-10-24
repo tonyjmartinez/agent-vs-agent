@@ -50,6 +50,8 @@ export class Controller {
   busy = false;
   thinking = false;
   cursor: Cell | null = null;
+  /** Set by stop(): the board is frozen (no input, no bot moves) until the next start(). */
+  stopped = false;
   private generation = 0;
 
   constructor(private o: ControllerOpts) {
@@ -74,7 +76,7 @@ export class Controller {
   }
 
   private isHumanTurn(s = this.state): boolean {
-    return s.winner === null && this.o.seats[s.current]?.kind === 'human';
+    return !this.stopped && s.winner === null && this.o.seats[s.current]?.kind === 'human';
   }
 
   isHumanToMove(): boolean {
@@ -95,9 +97,19 @@ export class Controller {
     this.sel = emptySelection;
     this.busy = false;
     this.thinking = false;
+    this.stopped = false;
     this.o.view.sync(this.state);
     this.refresh();
     void this.maybeBot();
+  }
+
+  /** Freeze the game where it stands (e.g. a mission was decided): no more input or bot moves. */
+  stop(): void {
+    this.generation++;
+    this.stopped = true;
+    this.thinking = false;
+    this.sel = emptySelection;
+    this.refresh();
   }
 
   refresh(): void {
@@ -229,6 +241,7 @@ export class Controller {
     this.busy = false;
     this.refresh();
     this.o.onAction?.(state);
+    if (this.stopped) return;
     if (state.winner !== null) {
       this.o.onGameOver?.(state);
       return;
@@ -239,7 +252,7 @@ export class Controller {
   private async maybeBot(): Promise<void> {
     const s = this.state;
     const seat = this.o.seats[s.current];
-    if (s.winner !== null || seat?.kind !== 'bot') return;
+    if (this.stopped || s.winner !== null || seat?.kind !== 'bot') return;
     const gen = this.generation;
     this.thinking = true;
     this.refresh();
