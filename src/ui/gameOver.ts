@@ -35,6 +35,7 @@ export function showGameOver(
   seats: Seat[],
   stats: MatchStats,
   on: { rematch(): void; menu(): void },
+  record?: string,
 ): void {
   const humans = seats.map((x, i) => (x.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const w = s.winner;
@@ -56,6 +57,7 @@ export function showGameOver(
     <div class="stamp ${w === null || w === 'draw' ? '' : 'p' + w}" id="go-title">${title}</div>
     <p class="sub">${sub}</p>
     ${statsTable(stats)}
+    ${record ? `<p class="sub record" data-testid="record">${record}</p>` : ''}
     <div class="actions"><button class="btn primary" id="btn-rematch">Rematch</button><button class="btn" id="btn-go-menu">Menu</button></div>
   </div>`;
   wrap.querySelector('#btn-rematch')!.addEventListener('click', () => {

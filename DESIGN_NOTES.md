@@ -329,3 +329,13 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 
 - Mined two 3-move `win` puzzles (seeds 11 and 12, 400 games each, ~10 minutes in parallel): `long-odds` (2-1, Teal also carrying)
   and `overtime` (2-2, ply 74). All proof tests (`missions`, `hint`) cover them automatically; 18 missions now.
+
+## Iteration: Record vs the bots
+
+- `src/ui/record.ts`: per-bot-level wins/losses/draws in localStorage (`ava.record.v1`; junk ignored, never throws).
+  `humanResult(state, seats)` is the human's outcome in a finished 1-human-vs-1-bot game; hot-seat, bot-vs-bot and missions
+  (`run` set) never count. The game-over card shows "Record vs Hard: 3 wins · 1 loss" (`data-testid="record"`).
+- Decision: counted when the game-over card is shown, so an Undo from the card followed by a second finish counts twice.
+  Acceptable for a casual tally.
+- Covered by `src/ui/record.test.ts` and `e2e/record.spec.ts` (win/stack/other levels, loss from Teal's seat, hot-seat and
+  bot-vs-bot and mission untouched, corrupt storage, card fits 320x568 to 844x390).
