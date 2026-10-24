@@ -559,6 +559,34 @@ body {
   background: var(--mustard);
   color: var(--ink);
   border: 3px solid var(--ink);
+  font-family: inherit;
+  font-size: inherit;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.mission-pill.hintable {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.mission-pill.hintable::after {
+  content: '?';
+  display: inline-block;
+  margin-left: 8px;
+  width: 1.4em;
+  height: 1.4em;
+  line-height: 1.25em;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  font-size: 0.85em;
+}
+.mission-pill:disabled {
+  opacity: 1;
+  color: var(--ink);
+}
+.hint-tip {
+  margin-top: 0;
 }
 /* Landscape: the board spans the height, so park the pill at the top of the right-hand column. */
 @media (min-aspect-ratio: 1/1) {
