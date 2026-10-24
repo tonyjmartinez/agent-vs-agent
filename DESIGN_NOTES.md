@@ -240,6 +240,32 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - **Ideas left:** a "turns" label next to the headline ("2 turns" there means rounds, the table counts actions);
   longest carry / sprints used / closest call; sharing the debrief as an image.
 
+## Iteration: Daily mission
+
+- **What:** Missions list → **Daily mission** card (date, goal, ✓ when done) plus a **Streak: N days** line. One puzzle per
+  UTC date, the same for everyone, from a generated pool of 52 beyond the 13 curated missions.
+  `?mission=daily` opens it directly; `&day=YYYY-MM-DD` pins the date (tests; ignored unless a real calendar date).
+- **Pool:** `src/dailyPool.ts` is **generated**: `npx tsx scripts/dailyPool.ts` (700 games, seed 3, ~80 s). It mines with the
+  shared `scripts/mine.ts` (also used by `scripts/missions.ts`), skips curated missions, keeps one entry per position,
+  fills per goal/budget quotas (burn2 16, extract2 15, win2 7, burn1 6, extract1 4, win1 4) with the fewest working first
+  moves first, and allows at most three entries per forcing move so the pool isn't one idea. Regenerating changes the file.
+- **Day → puzzle (`src/daily.ts`):** `index = (dayNumber × step) mod N`, `step` = smallest integer ≥ 7 coprime with N. That is a
+  bijection: any N consecutive days show every entry exactly once, consecutive days never repeat. (First attempt had the
+  same *position* in the pool under two goals, so a 52-day window showed only 49 distinct boards; the test caught it and the
+  generator now keeps one entry per position.)
+- **Streak:** consecutive solved days counted back from today, or from yesterday if today isn't done, so it doesn't read 0
+  the morning after. Stored as a day list in `ava.daily.v1` (last 120, validated on read), separate from `ava.missions.v1`
+  so dailies never count toward "N of 13". Watching "Show solution" never credits a day.
+- **UI notes:** a daily has no "Next" button and its briefing says "Daily mission". The date in the stamp is wrapped in a
+  `nowrap` span (it used to break as "2026-05-" / "02" at 320 px; e2e asserts one client rect at 4 sizes).
+- **Proof:** every pool entry gets the full treatment in `src/daily.test.ts` (round-trip, forced, tight, ≤ ⅓ first moves
+  work, replay reaches the goal). Date and streak logic is tested across month, year and leap-day boundaries and for
+  invalid dates. E2E on a pinned date: solve → credited; streak 1 → 2 → gap → 0 → 1 and back; fail → solution → not credited →
+  real solve credited; different dates give different puzzles; 52 consecutive days of `?solution=1` all reach their goal.
+- **Known limits:** the clock is UTC, so the puzzle changes at 00:00 UTC for everyone (not local midnight). Midnight passing
+  while the list is open isn't noticed until it is reopened. The pool cycles every 52 days.
+- **Ideas left:** more debrief stats, 3-move missions (needs a faster solver or a node cap), share-the-puzzle link text.
+
 ## Later
 
 (ideas not in the plan go here)
