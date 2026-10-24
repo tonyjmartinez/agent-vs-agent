@@ -1,9 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
-import { dailyMission } from '../src/daily';
 import { missionById } from '../src/missions';
 import { shareText } from '../src/share';
 import { shot, trackErrors } from './helpers';
-import { openMission } from './missionHelpers';
 
 /** Replace the browser's share/clipboard with recorders (headless Chromium has no share sheet). */
 async function stub(page: Page, share: 'none' | 'ok' | 'abort'): Promise<void> {
@@ -73,12 +71,9 @@ test('the daily link is pinned to its date, and the result card shares too', asy
 }, info) => {
   await stub(page, 'none');
   const day = '2026-03-10';
-  const m = dailyMission(day);
-  await openMission(page, m, `mission=daily&day=${day}`);
-  await page.evaluate(() => (window as any).__AVA__.controller().stop());
   // Reach a result card cheaply via the solution replay.
   await page.goto(`/?test=1&speed=0&mission=daily&day=${day}&solution=1`);
-  await page.evaluate(() => (window as any).__AVA__.ready);
+  // Locators retry across a late reload; a bare evaluate here raced one on slow runs.
   await expect(page.locator('#mission-result .stamp')).toHaveText('SOLUTION');
   await page.click('#mission-result [data-testid="share-btn"]');
   await expect(page.locator('#mission-result [data-testid="share-note"]')).toHaveText(
