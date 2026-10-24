@@ -740,3 +740,65 @@ body {
     margin: 0 0 6px;
   }
 }
+
+/* Short portrait phones (320x568): trim the main menu so every button is on screen without scrolling. */
+@media (max-height: 620px) and (max-aspect-ratio: 1/1) {
+  .card.menu {
+    gap: 6px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .logo img {
+    height: 60px;
+    width: auto;
+  }
+  .card.menu .btn.big {
+    min-height: 46px;
+  }
+  .menu-section {
+    gap: 6px;
+    padding: 8px;
+  }
+}
+
+/* Short landscape phones: logo, title and tag line on the left, the Play vs Agent block on the right,
+   and the three other buttons side by side underneath. */
+@media (max-height: 460px) and (min-aspect-ratio: 1/1) {
+  .card.menu {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    width: min(680px, calc(100vw - 32px));
+    gap: 8px 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    align-content: center;
+  }
+  .card.menu .logo,
+  .card.menu .title-stamp,
+  .card.menu .tag-line {
+    grid-column: 1 / span 3;
+  }
+  .card.menu .logo img {
+    height: 56px;
+    width: auto;
+  }
+  .card.menu .menu-section {
+    grid-column: 4 / span 3;
+    grid-row: 1 / span 3;
+    align-content: center;
+  }
+  .card.menu .btn.big {
+    grid-row: 4;
+    min-height: 44px;
+    font-size: 16px;
+    padding: 0 8px;
+  }
+  .card.menu #btn-missions {
+    grid-column: 1 / span 2;
+  }
+  .card.menu #btn-hotseat {
+    grid-column: 3 / span 2;
+  }
+  .card.menu #btn-howto {
+    grid-column: 5 / span 2;
+  }
+}

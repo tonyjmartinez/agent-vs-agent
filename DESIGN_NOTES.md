@@ -363,3 +363,13 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   inside the card on 667x375 and 844x390 phones in landscape. The earlier "fits the viewport" sweeps only checked the card's box,
   not its inner scroll. Fix: at `max-height: 460px` landscape the card is a two-column grid (stamp left, debrief right), and both
   sweeps now also assert `scrollHeight <= clientHeight`.
+
+## Iteration: Overlay fit audit
+
+- `e2e/overlays.spec.ts` opens every overlay card (main menu, missions list, how to play, pause, mission briefing, mission result,
+  daily briefing) at 320x568, 360x640, 390x844, 667x375, 844x390 and 1024x768 and asserts the card is inside the viewport and,
+  unless it is a list meant to scroll (missions list, rules), has no inner scroll (`scrollHeight <= clientHeight`).
+- It found the main menu hiding 233-248px behind a scroll in landscape phones (Missions / Pass & Play / How to play below the
+  fold) and 43px on 320x568. Fixed in `styles.css`: short landscape = logo/title left, Play vs Agent block right, the three
+  buttons in one row; short portrait = tighter logo/gaps/buttons. Game-over cards got the same treatment earlier.
+- Rule of thumb: when adding any card, add it to this audit.
