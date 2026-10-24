@@ -346,3 +346,10 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   `addAction` stays before-state + events. Property-tested against an independent count over 300 random games, with a
   non-vacuity check (random play does sprint).
 - The debrief now has six rows; the existing landscape sweeps (stats and record cards, 667x375 / 844x390) still fit.
+
+## Iteration: Keyboard play with hints
+
+- Bug found by a new keyboard-only e2e: after the goal pill (a button) gave a hint it kept focus, and the global keydown
+  handler deliberately ignores Enter/Tab/Space while a button has focus, so Enter could not commit the move. `hint()` now
+  blurs the pill. `e2e/hintkeys.spec.ts` plays a 1-move and a whole 2-move mission by keyboard alone (focus pill, Enter,
+  arrows, Enter) on desktop.

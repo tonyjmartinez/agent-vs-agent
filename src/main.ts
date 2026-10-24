@@ -122,6 +122,9 @@ function openMissions(): void {
 /** Select the piece that starts a forcing line (never the destination). Nothing to point at → say so. */
 function hint(c: Controller): void {
   if (!run || run.demo || !c.isHumanToMove()) return;
+  // Keyboard play ignores Enter/Tab/Space while a button has focus, so hand focus back to the board.
+  const pill = document.getElementById('mission-pill');
+  if (document.activeElement === pill) pill?.blur();
   const left = run.m.moves - redMovesMade(c);
   const sel = hintSelection(run.solver, c.state, left);
   if (sel === null) {
