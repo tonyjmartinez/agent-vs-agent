@@ -12,7 +12,7 @@ export interface Mission {
   /** One-line hint shown in the briefing; never gives the move away. */
   brief: string;
   goal: Goal;
-  /** Red's moves allowed (1 or 2). */
+  /** Red's moves allowed (1 to 3). */
   moves: number;
   /** Compact state string (`engine/serialize.ts`), Red to move. */
   state: string;
@@ -124,6 +124,31 @@ export const MISSIONS: readonly Mission[] = [
     goal: 'win',
     moves: 2,
     state: 'v1.0.42.2-2.50,44,22*,04.33',
+  },
+  {
+    id: 'long-way-round',
+    title: 'Long Way Round',
+    brief:
+      'Teal is carrying a folder across the board. Take it, and keep running until it is home.',
+    goal: 'extract',
+    moves: 3,
+    state: 'v1.0.16.0-0.31,52,11,33*.22',
+  },
+  {
+    id: 'cornered',
+    title: 'Cornered',
+    brief: 'Both Teal agents hug the edges. Three quiet moves, one splash.',
+    goal: 'burn',
+    moves: 3,
+    state: 'v1.0.28.0-2.30,52,00,15.2233',
+  },
+  {
+    id: 'reserve-play',
+    title: 'Reserve Play',
+    brief: 'One agent is still in reserve and the score is level. Bring it on at the right moment.',
+    goal: 'burn',
+    moves: 3,
+    state: 'v1.0.20.1-1.41,x,00,43.2233',
   },
 ];
 

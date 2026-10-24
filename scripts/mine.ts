@@ -27,13 +27,17 @@ export interface Candidate {
 
 const GOALS: Goal[] = ['win', 'extract', 'burn'];
 
-export function* mine(games: number, seed0: number): Generator<Candidate> {
+export function* mine(
+  games: number,
+  seed0: number,
+  budgets: readonly number[] = [1, 2],
+): Generator<Candidate> {
   const seen = new Set<string>();
   for (let g = 0; g < games; g++) {
     const rng = mulberry32(seed0 * 7919 + g);
     let s: GameState = createGame(duelRules());
     while (s.winner === null) {
-      yield* consider(s, seen);
+      yield* consider(s, seen, budgets);
       // Red alternates easy/medium per game so both early skirmishes and late-game spots appear.
       const red = g % 2 ? 'medium' : 'easy';
       const level = s.ply < 4 ? 'random' : s.current === 0 ? red : 'medium';
@@ -46,7 +50,11 @@ export function* mine(games: number, seed0: number): Generator<Candidate> {
   }
 }
 
-function* consider(s: GameState, seen: Set<string>): Generator<Candidate> {
+function* consider(
+  s: GameState,
+  seen: Set<string>,
+  budgets: readonly number[],
+): Generator<Candidate> {
   if (s.current !== 0 || s.winner !== null || s.ply > 100 || (s.locks && s.locks.length)) return;
   const code = encode(s);
   if (seen.has(code)) return;
@@ -54,7 +62,7 @@ function* consider(s: GameState, seen: Set<string>): Generator<Candidate> {
   const fresh = decode(code);
   if (encode(fresh) !== code) return;
   for (const goal of GOALS) {
-    for (const moves of [1, 2]) {
+    for (const moves of budgets) {
       const solver = new Solver(fresh, goal);
       if (!solver.canForce(fresh, moves)) continue;
       if (moves > 1 && new Solver(fresh, goal).canForce(fresh, moves - 1)) continue;
