@@ -639,3 +639,15 @@ body {
   min-height: 1.4em;
   margin: 8px 0 0;
 }
+
+/* Short landscape screens: keep the whole debrief on screen without scrolling. */
+@media (max-height: 460px) {
+  .stats {
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .stats th,
+  .stats td {
+    padding: 1px 8px;
+  }
+}

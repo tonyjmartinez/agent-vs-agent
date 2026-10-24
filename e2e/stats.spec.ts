@@ -45,6 +45,7 @@ test('the game-over card shows exact match stats from a burn then a winning bank
     turns: [2, 1],
     burns: [1, 0],
     steals: [0, 0],
+    shoves: [0, 0],
     extractions: [1, 0],
   } as const;
   for (const [key, vals] of Object.entries(want)) {
@@ -58,8 +59,8 @@ test('the game-over card shows exact match stats from a burn then a winning bank
   await expect(page.locator('[data-testid="stats"] caption')).toHaveText('Match stats');
   await shot(page, info, 'game-over-stats');
   expect(await stats(page)).toEqual([
-    { turns: 2, burns: 1, burned: 0, steals: 0, extractions: 1 },
-    { turns: 1, burns: 0, burned: 1, steals: 0, extractions: 0 },
+    { turns: 2, burns: 1, burned: 0, steals: 0, shoves: 0, extractions: 1 },
+    { turns: 1, burns: 0, burned: 1, steals: 0, shoves: 0, extractions: 0 },
   ]);
   expect(errors).toEqual([]);
 });
@@ -127,6 +128,8 @@ test('vs the agent: stats stay consistent with the final score over a whole bot 
     ['burns', 1],
     ['steals', 0],
     ['steals', 1],
+    ['shoves', 0],
+    ['shoves', 1],
     ['extractions', 0],
     ['extractions', 1],
   ] as const) {
@@ -153,6 +156,10 @@ test('the stats card fits the viewport at phone, landscape and tablet sizes', as
     await move(page, info, [4, 1], [5, 1]);
     const card = page.locator('#game-over .card');
     await expect(card).toBeVisible();
+    // The whole card (stamp to buttons) must be on screen without scrolling.
+    const cb = (await card.boundingBox())!;
+    expect(cb.y, `card top cut off at ${w}x${h}`).toBeGreaterThanOrEqual(0);
+    expect(cb.y + cb.height, `card bottom cut off at ${w}x${h}`).toBeLessThanOrEqual(h);
     // Buttons must stay reachable: either the whole card fits, or it scrolls and the buttons are on screen.
     await page.locator('#btn-rematch').scrollIntoViewIfNeeded();
     const b = (await page.locator('#btn-rematch').boundingBox())!;
