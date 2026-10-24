@@ -139,6 +139,7 @@ export function showBriefing(root: HTMLElement, m: Mission, onGo: () => void): v
  */
 export function missionPill(text: string | null, onHint?: () => void): void {
   let el = document.getElementById('mission-pill') as HTMLButtonElement | null;
+  document.body.classList.toggle('in-mission', text !== null);
   if (text === null) {
     el?.remove();
     return;
