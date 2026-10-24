@@ -272,6 +272,8 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 
 - A no-repeat rule (positional superko) if humans also fall into steal loops.
 - Hot-reload snapshot for the artifact build, so an open game survives a republish.
+- Landscape phones (667x375): the mission pill sits over the top of the Red panel's name row (pre-existing; board is clear).
+  Park it in a free spot or shrink it.
 
 ## Iteration: Share a puzzle
 
