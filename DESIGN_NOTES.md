@@ -317,3 +317,10 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   HUD and a taller `--hud-h`, so the pill has its own row and the board only shrinks on short phones (320x568: 222px board).
   Landscape: the pill parks bottom-left under the Teal panel (the right column is full).
 - `e2e/missions.spec.ts` now also asserts the pill never overlaps a `.panel` or a control button at 320x568 ... 1440x900.
+
+## Iteration: Next-up mission
+
+- `nextUp(done)` (ui/missions.ts) = first incomplete mission in list order. The list tags it "Next up" (only once something is
+  done) and scrolls the card so it is centred, computed from bounding rects (`scrollIntoView` did not move the card).
+- A skipped mission stays "next" until done. `e2e/nextup.spec.ts` seeds `ava.missions.v1` to cover fresh, partial, gap and
+  all-done states.

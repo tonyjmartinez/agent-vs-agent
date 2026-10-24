@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { completedDays, completedMissions, markCompleted, markDayDone } from './missions';
+import { MISSIONS } from '../missions';
+import { completedDays, completedMissions, markCompleted, markDayDone, nextUp } from './missions';
 
 /** A tiny in-memory localStorage. */
 function fakeStorage(initial: Record<string, string> = {}) {
@@ -79,5 +80,19 @@ describe('mission progress storage', () => {
     expect(() => markDayDone('2026-03-10')).not.toThrow();
     expect([...completedMissions()]).toEqual([]);
     expect(() => markCompleted('x')).not.toThrow();
+  });
+});
+
+describe('nextUp', () => {
+  it('is the first incomplete mission in list order, wherever the gaps are', () => {
+    expect(nextUp(new Set())?.id).toBe(MISSIONS[0]!.id);
+    expect(nextUp(new Set([MISSIONS[0]!.id, MISSIONS[1]!.id]))?.id).toBe(MISSIONS[2]!.id);
+    // Skipping ahead leaves the earlier gap as the next one.
+    expect(nextUp(new Set([MISSIONS[0]!.id, MISSIONS[2]!.id]))?.id).toBe(MISSIONS[1]!.id);
+    // Unknown ids (e.g. from an older version) are ignored.
+    expect(nextUp(new Set(['retired-mission']))?.id).toBe(MISSIONS[0]!.id);
+  });
+  it('is undefined once everything is complete', () => {
+    expect(nextUp(new Set(MISSIONS.map((m) => m.id)))).toBeUndefined();
   });
 });
