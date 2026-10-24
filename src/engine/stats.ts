@@ -12,6 +12,8 @@ export interface PlayerStats {
   steals: number;
   /** Enemy spies this player shoved aside (burning or dropping one still counts as a shove). */
   shoves: number;
+  /** Two-square sprints by a carrier (a `moved` event covering two squares). */
+  dashes: number;
   /** Intel banked. */
   extractions: number;
 }
@@ -25,6 +27,7 @@ export const emptyStats = (players: number): MatchStats =>
     burned: 0,
     steals: 0,
     shoves: 0,
+    dashes: 0,
     extractions: 0,
   }));
 
@@ -45,6 +48,11 @@ export function addAction(stats: MatchStats, before: GameState, events: GameEven
         if (victim !== mover) next[mover]!.burns++; // bumping your own spy off is not a burn
         break;
       }
+      case 'moved':
+        if (Math.max(Math.abs(e.to.r - e.from.r), Math.abs(e.to.c - e.from.c)) === 2) {
+          next[mover]!.dashes++;
+        }
+        break;
       case 'bumped':
         if (ownerOf(e.spyId) !== mover) next[mover]!.shoves++;
         break;

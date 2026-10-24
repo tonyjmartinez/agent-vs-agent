@@ -8,6 +8,7 @@ const STAT_ROWS = [
   ['burns', 'Burns'],
   ['steals', 'Steals'],
   ['shoves', 'Shoves'],
+  ['dashes', 'Dashes'],
   ['extractions', 'Banked'],
 ] as const;
 

@@ -339,3 +339,10 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   Acceptable for a casual tally.
 - Covered by `src/ui/record.test.ts` and `e2e/record.spec.ts` (win/stack/other levels, loss from Teal's seat, hot-seat and
   bot-vs-bot and mission untouched, corrupt storage, card fits 320x568 to 844x390).
+
+## Iteration: Dashes stat
+
+- `PlayerStats.dashes`: `moved` events covering two squares (Chebyshev distance 2), i.e. carrier sprints. Event-only, so
+  `addAction` stays before-state + events. Property-tested against an independent count over 300 random games, with a
+  non-vacuity check (random play does sprint).
+- The debrief now has six rows; the existing landscape sweeps (stats and record cards, 667x375 / 844x390) still fit.

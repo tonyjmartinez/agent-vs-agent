@@ -46,6 +46,7 @@ test('the game-over card shows exact match stats from a burn then a winning bank
     burns: [1, 0],
     steals: [0, 0],
     shoves: [0, 0],
+    dashes: [0, 0],
     extractions: [1, 0],
   } as const;
   for (const [key, vals] of Object.entries(want)) {
@@ -59,8 +60,8 @@ test('the game-over card shows exact match stats from a burn then a winning bank
   await expect(page.locator('[data-testid="stats"] caption')).toHaveText('Match stats');
   await shot(page, info, 'game-over-stats');
   expect(await stats(page)).toEqual([
-    { turns: 2, burns: 1, burned: 0, steals: 0, shoves: 0, extractions: 1 },
-    { turns: 1, burns: 0, burned: 1, steals: 0, shoves: 0, extractions: 0 },
+    { turns: 2, burns: 1, burned: 0, steals: 0, shoves: 0, dashes: 0, extractions: 1 },
+    { turns: 1, burns: 0, burned: 1, steals: 0, shoves: 0, dashes: 0, extractions: 0 },
   ]);
   expect(errors).toEqual([]);
 });
@@ -130,6 +131,8 @@ test('vs the agent: stats stay consistent with the final score over a whole bot 
     ['steals', 1],
     ['shoves', 0],
     ['shoves', 1],
+    ['dashes', 0],
+    ['dashes', 1],
     ['extractions', 0],
     ['extractions', 1],
   ] as const) {
@@ -174,4 +177,18 @@ test('the stats card fits the viewport at phone, landscape and tablet sizes', as
     ).toBe(true);
     await page.screenshot({ path: `artifacts/screens/game-over-stats-${w}x${h}.png` });
   }
+});
+
+test('a winning sprint shows up as a dash on the card', async ({ page }, info) => {
+  // Match Point: Red's carrier at (3,3) sprints two squares south into Red HQ and banks the winning point.
+  await open(page, 'p0=human&p1=human&state=v1.0.34.2-2.51,33*,00,03.22');
+  await move(page, info, [3, 3], [5, 3]);
+  await expect(page.locator('#game-over')).toBeVisible();
+  await expect(page.locator('#game-over .stamp')).toHaveText('AGENT RED WINS');
+  await expect(cell(page, 'dashes', 0)).toHaveText('1');
+  await expect(cell(page, 'dashes', 1)).toHaveText('0');
+  await expect(cell(page, 'dashes', 0)).toHaveClass(/lead/);
+  await expect(cell(page, 'extractions', 0)).toHaveText('1');
+  expect((await stats(page))[0]).toMatchObject({ turns: 1, dashes: 1, extractions: 1 });
+  await shot(page, info, 'game-over-dash');
 });

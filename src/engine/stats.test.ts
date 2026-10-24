@@ -15,8 +15,8 @@ describe('addAction', () => {
   it('starts empty, one row per player, and never mutates its input', () => {
     const z = emptyStats(2);
     expect(z).toEqual([
-      { turns: 0, burns: 0, burned: 0, steals: 0, shoves: 0, extractions: 0 },
-      { turns: 0, burns: 0, burned: 0, steals: 0, shoves: 0, extractions: 0 },
+      { turns: 0, burns: 0, burned: 0, steals: 0, shoves: 0, dashes: 0, extractions: 0 },
+      { turns: 0, burns: 0, burned: 0, steals: 0, shoves: 0, dashes: 0, extractions: 0 },
     ]);
     const { s, events } = play('v1.0.0.0-0.22,54,02,04.33', 'p0a', 1, 2);
     const before = JSON.stringify(z);
@@ -28,8 +28,24 @@ describe('addAction', () => {
   it('counts a plain move as a turn only', () => {
     const { s, events } = play('v1.0.0.0-0.51,54,01,04.2233', 'p0a', 4, 1);
     const st = addAction(emptyStats(2), s, events);
-    expect(st[0]).toEqual({ turns: 1, burns: 0, burned: 0, steals: 0, shoves: 0, extractions: 0 });
-    expect(st[1]).toEqual({ turns: 0, burns: 0, burned: 0, steals: 0, shoves: 0, extractions: 0 });
+    expect(st[0]).toEqual({
+      turns: 1,
+      burns: 0,
+      burned: 0,
+      steals: 0,
+      shoves: 0,
+      dashes: 0,
+      extractions: 0,
+    });
+    expect(st[1]).toEqual({
+      turns: 0,
+      burns: 0,
+      burned: 0,
+      steals: 0,
+      shoves: 0,
+      dashes: 0,
+      extractions: 0,
+    });
   });
 
   it('credits a burn to the mover and a loss to the victim', () => {
@@ -76,6 +92,19 @@ describe('addAction', () => {
     expect(addAction(emptyStats(2), own.s, own.events)[0]!.shoves).toBe(0);
   });
 
+  it('counts a carrier sprint as a dash and a one-square step as nothing', () => {
+    // Red's carrier at (3,3) sprints two squares south to (5,3); Red's other spy steps one square.
+    const dash = play('v1.0.6.0-0.51,33*,12,04.22', 'p0b', 5, 3);
+    expect(dash.events.some((e) => e.t === 'moved')).toBe(true);
+    const st = addAction(emptyStats(2), dash.s, dash.events);
+    expect(st[0]).toMatchObject({ turns: 1, dashes: 1 });
+    expect(st[1]!.dashes).toBe(0);
+    const step = play('v1.0.6.0-0.51,33*,12,04.22', 'p0b', 4, 3);
+    expect(addAction(emptyStats(2), step.s, step.events)[0]!.dashes).toBe(0);
+    const other = play('v1.0.6.0-0.51,33*,12,04.22', 'p0a', 4, 1);
+    expect(addAction(emptyStats(2), other.s, other.events)[0]!.dashes).toBe(0);
+  });
+
   it('credits an extraction to the banking player', () => {
     const { s, events } = play('v1.0.0.0-0.41*,54,02,04.33', 'p0a', 5, 1);
     const st = addAction(emptyStats(2), s, events);
@@ -96,6 +125,7 @@ describe('addAction', () => {
 
 describe('stats over whole games (property)', () => {
   it('always agree with the engine: 300 seeded random games', () => {
+    let totalDashes = 0;
     for (let seed = 1; seed <= 300; seed++) {
       const rng = mulberry32(seed);
       let s = createGame(duelRules());
@@ -104,6 +134,7 @@ describe('stats over whole games (property)', () => {
       let droppedEvents = 0;
       let selfBurns = 0;
       let enemyShoves = 0;
+      let dashEvents = 0;
       while (s.winner === null) {
         const a = pick(rng, legalActions(s));
         const { state, events } = applyAction(s, a);
@@ -114,6 +145,12 @@ describe('stats over whole games (property)', () => {
             if (s.spies.find((x) => x.id === e.spyId)!.owner === s.current) selfBurns++;
           }
           if (e.t === 'dropped') droppedEvents++;
+          if (
+            e.t === 'moved' &&
+            Math.max(Math.abs(e.to.r - e.from.r), Math.abs(e.to.c - e.from.c)) === 2
+          ) {
+            dashEvents++;
+          }
           if (e.t === 'bumped' && s.spies.find((x) => x.id === e.spyId)!.owner !== s.current) {
             enemyShoves++;
           }
@@ -125,6 +162,10 @@ describe('stats over whole games (property)', () => {
         sum((p) => p.turns),
         `seed ${seed} turns`,
       ).toBe(s.ply);
+      expect(
+        sum((p) => p.dashes),
+        `seed ${seed} dashes`,
+      ).toBe(dashEvents);
       expect(
         sum((p) => p.shoves),
         `seed ${seed} shoves`,
@@ -143,6 +184,9 @@ describe('stats over whole games (property)', () => {
         `seed ${seed} burns`,
       ).toBe(burnedEvents - selfBurns);
       expect(sum((p) => p.steals)).toBeLessThanOrEqual(droppedEvents);
+      totalDashes += dashEvents;
     }
+    // The property is not vacuous: random play does sprint.
+    expect(totalDashes).toBeGreaterThan(0);
   });
 });
