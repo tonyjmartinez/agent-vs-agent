@@ -22,6 +22,22 @@ async function expectCardsFit(page: Page, what: string, w: number, h: number, sc
     expect.soft(b.x + b.width, `${at}: right edge`).toBeLessThanOrEqual(w);
     expect.soft(b.y, `${at}: top edge`).toBeGreaterThanOrEqual(0);
     expect.soft(b.y + b.height, `${at}: bottom edge`).toBeLessThanOrEqual(h);
+    // Every button on the card is a comfortable tap target (44px, the platform minimum).
+    for (const btn of await card.locator('button').all()) {
+      if (!(await btn.isVisible())) continue;
+      const bb = (await btn.boundingBox())!;
+      const label = (
+        (await btn.innerText()) ||
+        (await btn.getAttribute('aria-label')) ||
+        '?'
+      ).trim();
+      expect
+        .soft(bb.height, `${at}: "${label}" is ${Math.round(bb.height)}px tall`)
+        .toBeGreaterThanOrEqual(43.5);
+      expect
+        .soft(bb.width, `${at}: "${label}" is ${Math.round(bb.width)}px wide`)
+        .toBeGreaterThanOrEqual(43.5);
+    }
     if (!scrolls) {
       const overflow = await card.evaluate((e) => e.scrollHeight - e.clientHeight);
       expect
@@ -68,5 +84,24 @@ test('menus, briefings and result cards never hide behind an inner scroll', asyn
     await page.goto('/?test=1&speed=0&mission=daily&day=2026-05-02');
     await page.evaluate(() => (window as any).__AVA__.ready);
     await expectCardsFit(page, 'daily briefing', w, h);
+  }
+});
+
+test('in-game controls (Undo, Menu, sound, reserve tray) are comfortable tap targets', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'desktop', 'viewport sweep runs once');
+  for (const [w, h] of SIZES) {
+    await page.setViewportSize({ width: w, height: h });
+    await page.goto('/?test=1&speed=0&p0=human&p1=human');
+    await page.evaluate(() => (window as any).__AVA__.ready);
+    for (const sel of ['#btn-undo', '#btn-menu', '#btn-sound']) {
+      const b = (await page.locator(sel).boundingBox())!;
+      expect.soft(b.height, `${sel} height at ${w}x${h}`).toBeGreaterThanOrEqual(43.5);
+      expect.soft(b.width, `${sel} width at ${w}x${h}`).toBeGreaterThanOrEqual(43.5);
+      expect.soft(b.x, `${sel} left edge at ${w}x${h}`).toBeGreaterThanOrEqual(0);
+      expect.soft(b.x + b.width, `${sel} right edge at ${w}x${h}`).toBeLessThanOrEqual(w);
+      expect.soft(b.y + b.height, `${sel} bottom edge at ${w}x${h}`).toBeLessThanOrEqual(h);
+    }
   }
 });
