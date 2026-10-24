@@ -121,6 +121,7 @@ export function showBriefing(root: HTMLElement, m: Mission, onGo: () => void): v
     <div class="stamp" id="briefing-title">${stampTitle(m.title)}</div>
     <p class="goal" data-testid="briefing-goal">${goalText(m)}</p>
     <p class="sub">${esc(m.brief)}</p>
+    <p class="sub hint-tip">Stuck? Tap the goal pill for a hint.</p>
     <div class="actions">${SHARE_HTML}<button class="btn primary" id="btn-briefing-go">Start</button></div>
     ${SHARE_NOTE_HTML}
   </div>`;
@@ -132,21 +133,28 @@ export function showBriefing(root: HTMLElement, m: Mission, onGo: () => void): v
   root.append(wrap);
 }
 
-/** The goal pill shown while a mission is in play (or removed with `null`). */
-export function missionPill(text: string | null): void {
-  let el = document.getElementById('mission-pill');
+/**
+ * The goal pill shown while a mission is in play (or removed with `null`). With `onHint` it is a button:
+ * tapping it asks for a hint. Its text is only ever the goal text.
+ */
+export function missionPill(text: string | null, onHint?: () => void): void {
+  let el = document.getElementById('mission-pill') as HTMLButtonElement | null;
   if (text === null) {
     el?.remove();
     return;
   }
   if (!el) {
-    el = document.createElement('div');
+    el = document.createElement('button');
+    el.type = 'button';
     el.id = 'mission-pill';
     el.className = 'coach mission-pill';
-    el.setAttribute('role', 'status');
     document.body.append(el);
   }
   el.textContent = text;
+  el.disabled = !onHint;
+  el.title = onHint ? 'Tap for a hint' : '';
+  el.classList.toggle('hintable', !!onHint);
+  el.onclick = onHint ? () => onHint() : null;
 }
 
 export type MissionOutcome = 'complete' | 'failed' | 'solution';

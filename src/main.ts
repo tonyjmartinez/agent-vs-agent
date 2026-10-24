@@ -1,6 +1,7 @@
 import '@fontsource/fredoka/500.css';
 import '@fontsource/fredoka/700.css';
 import './ui/styles.css';
+import { hintSelection } from './hint';
 import { Solver, goalMet } from './ai/solve';
 import { BotClient } from './app/botClient';
 import { Controller } from './app/controller';
@@ -117,10 +118,23 @@ function openMissions(): void {
   showMissions(overlayRoot, { pick: (m) => startMission(m), back: () => toMenu() }, today());
 }
 
+/** Select the piece that starts a forcing line (never the destination). Nothing to point at → say so. */
+function hint(c: Controller): void {
+  if (!run || run.demo || !c.isHumanToMove()) return;
+  const left = run.m.moves - redMovesMade(c);
+  const sel = hintSelection(run.solver, c.state, left);
+  if (sel === null) {
+    missionPill('Out of reach · Menu → Restart', () => hint(c));
+    return;
+  }
+  c.select({ selected: sel, pending: null });
+}
+
 function coach(c: Controller): void {
   if (run) {
     missionPill(
       run.demo ? 'Solution · watch the line' : pillText(run.m, run.m.moves - redMovesMade(c)),
+      run.demo ? undefined : () => hint(c),
     );
   }
   let el = document.getElementById('coach');

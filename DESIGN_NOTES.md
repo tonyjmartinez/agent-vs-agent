@@ -299,3 +299,14 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - The `?solution=1` replay can finish before the budget when the replayed defender doesn't fight at full strength
   (`cornered` ends after 2 Red moves), so the e2e ply check is "odd and ≤ 2·moves−1" (exactly 1 for 1-move missions).
 - The daily pool stays 1-2 moves: 3-move entries would need re-proving the pool and a different day→puzzle cycle length.
+
+## Iteration: Mission hints
+
+- The goal pill is now a `<button>` (text unchanged, so goal text stays readable; a `?` badge is CSS-only). Tapping it selects the
+  piece that starts a forcing line (`src/hint.ts`: `hintSelection`, spy id or `'reserve'`), never the destination. The player
+  still has to find the target square from the highlighted dots.
+- Out of reach (a wrong move was already refuted): the pill reads "Out of reach · Menu → Restart" until the next refresh.
+- No hint during the `?solution=1` replay (the pill is disabled). Hints do not affect credit: a hinted solve still completes the
+  mission (decision: hints teach; there is no scoring to protect).
+- Tests: `src/hint.test.ts` (every mission: the selected piece has a forcing move among its legal moves, the line can be followed
+  through the defender's replies, null after a refuted wrong move); `e2e/hint.spec.ts` solves all 16 missions by hints alone.
