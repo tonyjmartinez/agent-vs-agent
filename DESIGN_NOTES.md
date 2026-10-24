@@ -272,3 +272,12 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 
 - A no-repeat rule (positional superko) if humans also fall into steal loops.
 - Hot-reload snapshot for the artifact build, so an open game survives a republish.
+
+## Iteration: Share a puzzle
+
+- `src/share.ts` (pure, unit-tested): `missionLink` (curated: `?mission=<id>`; daily: `?mission=daily&day=<date>` so an old link
+  stays the same puzzle), `shareText` (goal + link, never the state or brief), `shareMission` (native share sheet, else
+  clipboard; a dismissed sheet is success; nothing available → "Could not share").
+- Share button on the briefing and every result card; status line `data-testid="share-note"` (role=status).
+- E2E (`e2e/share.spec.ts`) stubs `navigator.share`/`clipboard`, checks the exact text, that the link reopens the same
+  position, the daily date pin, and 320x568 / 667x375 fit.

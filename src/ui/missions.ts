@@ -1,5 +1,6 @@
 import { dailyMission, isDayKey, streak } from '../daily';
 import { MISSIONS, goalText, type Mission } from '../missions';
+import { shareMission, type ShareResult } from '../share';
 import { load, save } from './storage';
 
 const KEY = 'ava.missions.v1';
@@ -91,6 +92,24 @@ export function showMissions(
   root.append(wrap);
 }
 
+const SHARE_NOTE: Record<ShareResult, string> = {
+  shared: 'Shared.',
+  copied: 'Link copied.',
+  failed: 'Could not share. Copy the page address instead.',
+};
+
+/** Wire the card's Share button: native sheet or clipboard, with a polite status line. */
+function wireShare(wrap: HTMLElement, m: Mission): void {
+  const note = wrap.querySelector<HTMLElement>('[data-testid="share-note"]')!;
+  wrap.querySelector('[data-testid="share-btn"]')!.addEventListener('click', async () => {
+    const r = await shareMission(m, location.href, navigator);
+    note.textContent = SHARE_NOTE[r];
+  });
+}
+
+const SHARE_HTML = `<button class="btn" data-testid="share-btn">Share</button>`;
+const SHARE_NOTE_HTML = `<p class="sub share-note" data-testid="share-note" role="status"></p>`;
+
 /** Briefing before a mission starts. */
 export function showBriefing(root: HTMLElement, m: Mission, onGo: () => void): void {
   const n = MISSIONS.indexOf(m) + 1;
@@ -102,8 +121,10 @@ export function showBriefing(root: HTMLElement, m: Mission, onGo: () => void): v
     <div class="stamp" id="briefing-title">${stampTitle(m.title)}</div>
     <p class="goal" data-testid="briefing-goal">${goalText(m)}</p>
     <p class="sub">${esc(m.brief)}</p>
-    <div class="actions"><button class="btn primary" id="btn-briefing-go">Start</button></div>
+    <div class="actions">${SHARE_HTML}<button class="btn primary" id="btn-briefing-go">Start</button></div>
+    ${SHARE_NOTE_HTML}
   </div>`;
+  wireShare(wrap, m);
   wrap.querySelector('#btn-briefing-go')!.addEventListener('click', () => {
     wrap.remove();
     onGo();
@@ -161,8 +182,11 @@ export function showMissionResult(
       <button class="btn${outcome === 'complete' ? '' : ' primary'}" id="btn-mission-retry">Retry</button>
       ${solution ? '<button class="btn" id="btn-mission-solution">Show solution</button>' : ''}
       <button class="btn" id="btn-mission-list">Missions</button>
+      ${SHARE_HTML}
     </div>
+    ${SHARE_NOTE_HTML}
   </div>`;
+  wireShare(wrap, m);
   const bind = (id: string, f: () => void) =>
     wrap.querySelector(id)?.addEventListener('click', () => {
       wrap.remove();
