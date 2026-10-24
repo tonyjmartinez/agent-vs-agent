@@ -26,7 +26,7 @@ export interface HudView {
   bottom: PlayerId;
 }
 
-const levelName: Record<string, string> = {
+export const levelName: Record<string, string> = {
   random: 'Rookie',
   easy: 'Easy',
   medium: 'Medium',
