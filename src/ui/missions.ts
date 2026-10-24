@@ -36,6 +36,12 @@ export function markDayDone(day: string): void {
 export const nextUp = (done: ReadonlySet<string>): Mission | undefined =>
   MISSIONS.find((m) => !done.has(m.id));
 
+/** Forget every completed mission and every solved daily (the streak with them). */
+export function resetProgress(): void {
+  save(KEY, []);
+  save(DAILY_KEY, []);
+}
+
 const esc = (t: string) => t.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** Stamp text, with any date kept on one line (a date that wraps at its hyphens reads as two numbers). */
@@ -78,6 +84,7 @@ export function showMissions(
       ).join('')}
     </ol>
     <button class="btn big" id="btn-missions-back">Back</button>
+    <button class="btn danger" id="btn-missions-reset" data-testid="reset-progress">Reset progress</button>
   </div>`;
   wrap.querySelectorAll<HTMLButtonElement>('[data-mission]').forEach((b) =>
     b.addEventListener('click', () => {
@@ -89,6 +96,18 @@ export function showMissions(
   wrap.querySelector('[data-testid="daily-btn"]')!.addEventListener('click', () => {
     wrap.remove();
     on.pick(daily);
+  });
+  // Two taps, so a stray tap never wipes a streak; leaving the list disarms it.
+  const reset = wrap.querySelector<HTMLButtonElement>('#btn-missions-reset')!;
+  reset.addEventListener('click', () => {
+    if (reset.dataset.armed !== '1') {
+      reset.dataset.armed = '1';
+      reset.textContent = 'Tap again to erase all progress';
+      return;
+    }
+    resetProgress();
+    wrap.remove();
+    showMissions(root, on, today);
   });
   wrap.querySelector('#btn-missions-back')!.addEventListener('click', () => {
     wrap.remove();
