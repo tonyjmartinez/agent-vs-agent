@@ -386,3 +386,12 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   disarms it, so there is no timer to test around). `resetProgress()` empties `ava.missions.v1` and `ava.daily.v1` (completed
   missions and the daily streak) and re-renders the list. The bot record (`ava.record.v1`) is deliberately not touched.
 - `e2e/reset.spec.ts` seeds progress, covers arm / disarm / confirm, checks the stored values, and the reload.
+
+## Iteration: Longest carry
+
+- `longestCarry`: the longest run of a player's own turns that each *started* with a carrier of theirs on the board. Using the
+  turn's start state keeps `addAction` event/before-only: the banking move counts as a carry turn, and a carrier that was
+  knocked loose ends the run (the next turn starts empty-handed). `carry` is the internal run counter; only `longestCarry` is shown.
+- Property-tested against an independent recount over 300 random games; targeted test walks a carrier home and a restart.
+- The seventh debrief row made the vs-bot card scroll on 320x568, so short portrait phones get a tighter game-over card
+  and the three buttons shrink a little under 380px width. The fit sweeps (inner scroll included) pass at all sizes.

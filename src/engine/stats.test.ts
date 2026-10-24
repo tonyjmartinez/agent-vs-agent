@@ -15,8 +15,28 @@ describe('addAction', () => {
   it('starts empty, one row per player, and never mutates its input', () => {
     const z = emptyStats(2);
     expect(z).toEqual([
-      { turns: 0, burns: 0, burned: 0, steals: 0, shoves: 0, dashes: 0, extractions: 0 },
-      { turns: 0, burns: 0, burned: 0, steals: 0, shoves: 0, dashes: 0, extractions: 0 },
+      {
+        turns: 0,
+        burns: 0,
+        burned: 0,
+        steals: 0,
+        shoves: 0,
+        dashes: 0,
+        carry: 0,
+        longestCarry: 0,
+        extractions: 0,
+      },
+      {
+        turns: 0,
+        burns: 0,
+        burned: 0,
+        steals: 0,
+        shoves: 0,
+        dashes: 0,
+        carry: 0,
+        longestCarry: 0,
+        extractions: 0,
+      },
     ]);
     const { s, events } = play('v1.0.0.0-0.22,54,02,04.33', 'p0a', 1, 2);
     const before = JSON.stringify(z);
@@ -35,6 +55,8 @@ describe('addAction', () => {
       steals: 0,
       shoves: 0,
       dashes: 0,
+      carry: 0,
+      longestCarry: 0,
       extractions: 0,
     });
     expect(st[1]).toEqual({
@@ -44,6 +66,8 @@ describe('addAction', () => {
       steals: 0,
       shoves: 0,
       dashes: 0,
+      carry: 0,
+      longestCarry: 0,
       extractions: 0,
     });
   });
@@ -105,6 +129,40 @@ describe('addAction', () => {
     expect(addAction(emptyStats(2), other.s, other.events)[0]!.dashes).toBe(0);
   });
 
+  it('counts consecutive turns that start with intel in hand, and restarts after it is lost', () => {
+    // Red carrier at (2,1) walks (3,1), (4,1), then banks at (5,1); Teal shuffles a far spy in between.
+    let s = decode('v1.0.0.0-0.21*,45,03,05.33');
+    let st = emptyStats(2);
+    const red = (r: number, c: number) => {
+      const a = { kind: 'move', spyId: 'p0a', to: { r, c } } as const;
+      const { state, events } = applyAction(s, a);
+      st = addAction(st, s, events);
+      s = state;
+    };
+    const teal = () => {
+      const a = legalActions(s).find((x) => x.kind === 'move' && x.spyId === 'p1a')!;
+      const { state, events } = applyAction(s, a);
+      st = addAction(st, s, events);
+      s = state;
+    };
+    red(3, 1);
+    expect(st[0]).toMatchObject({ carry: 1, longestCarry: 1 });
+    teal();
+    red(4, 1);
+    expect(st[0]).toMatchObject({ carry: 2, longestCarry: 2 });
+    teal();
+    red(5, 1); // banks: the turn still started with intel in hand
+    expect(st[0]).toMatchObject({ carry: 3, longestCarry: 3, extractions: 1 });
+    // Teal never carried.
+    expect(st[1]).toMatchObject({ carry: 0, longestCarry: 0 });
+    // Next Red turn starts empty-handed: the run restarts, the record stays.
+    teal();
+    const a = legalActions(s).find((x) => x.kind === 'move')!;
+    const { events } = applyAction(s, a);
+    st = addAction(st, s, events);
+    expect(st[0]).toMatchObject({ carry: 0, longestCarry: 3 });
+  });
+
   it('credits an extraction to the banking player', () => {
     const { s, events } = play('v1.0.0.0-0.41*,54,02,04.33', 'p0a', 5, 1);
     const st = addAction(emptyStats(2), s, events);
@@ -135,10 +193,19 @@ describe('stats over whole games (property)', () => {
       let selfBurns = 0;
       let enemyShoves = 0;
       let dashEvents = 0;
+      const run = [0, 0];
+      const best = [0, 0];
       while (s.winner === null) {
         const a = pick(rng, legalActions(s));
         const { state, events } = applyAction(s, a);
         stats = addAction(stats, s, events);
+        {
+          const me = s.current;
+          if (s.spies.some((x) => x.owner === me && x.carrying && x.pos)) {
+            run[me]!++;
+            best[me] = Math.max(best[me]!, run[me]!);
+          } else run[me] = 0;
+        }
         for (const e of events) {
           if (e.t === 'burned') {
             burnedEvents++;
@@ -162,6 +229,11 @@ describe('stats over whole games (property)', () => {
         sum((p) => p.turns),
         `seed ${seed} turns`,
       ).toBe(s.ply);
+      expect(
+        stats.map((p) => p.longestCarry),
+        `seed ${seed} longest carry`,
+      ).toEqual(best);
+      for (const p of stats) expect(p.longestCarry).toBeLessThanOrEqual(p.turns);
       expect(
         sum((p) => p.dashes),
         `seed ${seed} dashes`,

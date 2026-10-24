@@ -47,6 +47,7 @@ test('the game-over card shows exact match stats from a burn then a winning bank
     steals: [0, 0],
     shoves: [0, 0],
     dashes: [0, 0],
+    longestCarry: [2, 0], // Red held its folder for the burn turn and the banking turn
     extractions: [1, 0],
   } as const;
   for (const [key, vals] of Object.entries(want)) {
@@ -60,8 +61,28 @@ test('the game-over card shows exact match stats from a burn then a winning bank
   await expect(page.locator('[data-testid="stats"] caption')).toHaveText('Match stats');
   await shot(page, info, 'game-over-stats');
   expect(await stats(page)).toEqual([
-    { turns: 2, burns: 1, burned: 0, steals: 0, shoves: 0, dashes: 0, extractions: 1 },
-    { turns: 1, burns: 0, burned: 1, steals: 0, shoves: 0, dashes: 0, extractions: 0 },
+    {
+      turns: 2,
+      burns: 1,
+      burned: 0,
+      steals: 0,
+      shoves: 0,
+      dashes: 0,
+      carry: 2,
+      longestCarry: 2,
+      extractions: 1,
+    },
+    {
+      turns: 1,
+      burns: 0,
+      burned: 1,
+      steals: 0,
+      shoves: 0,
+      dashes: 0,
+      carry: 0,
+      longestCarry: 0,
+      extractions: 0,
+    },
   ]);
   expect(errors).toEqual([]);
 });
@@ -133,6 +154,8 @@ test('vs the agent: stats stay consistent with the final score over a whole bot 
     ['shoves', 1],
     ['dashes', 0],
     ['dashes', 1],
+    ['longestCarry', 0],
+    ['longestCarry', 1],
     ['extractions', 0],
     ['extractions', 1],
   ] as const) {
@@ -193,6 +216,12 @@ test('a winning sprint shows up as a dash on the card', async ({ page }, info) =
   await expect(cell(page, 'dashes', 1)).toHaveText('0');
   await expect(cell(page, 'dashes', 0)).toHaveClass(/lead/);
   await expect(cell(page, 'extractions', 0)).toHaveText('1');
-  expect((await stats(page))[0]).toMatchObject({ turns: 1, dashes: 1, extractions: 1 });
+  await expect(cell(page, 'longestCarry', 0)).toHaveText('1');
+  expect((await stats(page))[0]).toMatchObject({
+    turns: 1,
+    dashes: 1,
+    longestCarry: 1,
+    extractions: 1,
+  });
   await shot(page, info, 'game-over-dash');
 });

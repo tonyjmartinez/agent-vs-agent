@@ -818,3 +818,34 @@ body {
   border-style: solid;
   opacity: 1;
 }
+
+/* Short portrait phones (320x568): the longest debrief (vs a bot, with record and share) still fits without scrolling. */
+@media (max-height: 620px) and (max-aspect-ratio: 1/1) {
+  #game-over .card {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+  #game-over .stamp {
+    margin: 4px auto 8px;
+    font-size: 26px;
+  }
+  #game-over .sub {
+    margin-bottom: 8px;
+  }
+  #game-over .stats {
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  #game-over .stats th,
+  #game-over .stats td {
+    padding: 2px 8px;
+  }
+}
+
+/* Three buttons (Rematch, Menu, Share) side by side on the narrowest phones. */
+@media (max-width: 380px) {
+  #game-over .actions .btn {
+    padding: 0 6px;
+    font-size: 15px;
+  }
+}

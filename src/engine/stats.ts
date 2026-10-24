@@ -14,6 +14,10 @@ export interface PlayerStats {
   shoves: number;
   /** Two-square sprints by a carrier (a `moved` event covering two squares). */
   dashes: number;
+  /** Turns in a row that started with this player holding intel (internal run counter; resets when the intel is lost or banked). */
+  carry: number;
+  /** The longest such run: how long this player held on to intel. */
+  longestCarry: number;
   /** Intel banked. */
   extractions: number;
 }
@@ -28,6 +32,8 @@ export const emptyStats = (players: number): MatchStats =>
     steals: 0,
     shoves: 0,
     dashes: 0,
+    carry: 0,
+    longestCarry: 0,
     extractions: 0,
   }));
 
@@ -40,6 +46,12 @@ export function addAction(stats: MatchStats, before: GameState, events: GameEven
   const mover: PlayerId = before.current;
   const ownerOf = (id: string): PlayerId => before.spies.find((s) => s.id === id)!.owner;
   next[mover]!.turns++;
+  // A turn "carries" when the mover starts it with intel in hand (so the banking move counts, a stolen carry restarts).
+  const me = next[mover]!;
+  if (before.spies.some((x) => x.owner === mover && x.carrying && x.pos)) {
+    me.carry++;
+    me.longestCarry = Math.max(me.longestCarry, me.carry);
+  } else me.carry = 0;
   for (const e of events) {
     switch (e.t) {
       case 'burned': {
