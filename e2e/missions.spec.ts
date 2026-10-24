@@ -164,6 +164,18 @@ test('the goal pill stays clear of the board at phone, landscape and tablet size
       pill.x + pill.width <= board.x + 1 ||
       pill.x >= board.x + board.width - 1;
     expect(clear, `pill overlaps board at ${w}x${h}`).toBe(true);
+    // ...and it never covers a player panel or a control button either.
+    for (const other of await page.locator('.panel, .controls .btn').all()) {
+      const o = (await other.boundingBox())!;
+      const apart =
+        pill.y + pill.height <= o.y + 1 ||
+        pill.y >= o.y + o.height - 1 ||
+        pill.x + pill.width <= o.x + 1 ||
+        pill.x >= o.x + o.width - 1;
+      expect(apart, `pill overlaps ${await other.evaluate((e) => e.className)} at ${w}x${h}`).toBe(
+        true,
+      );
+    }
     expect(pill.x).toBeGreaterThanOrEqual(0);
     expect(pill.x + pill.width).toBeLessThanOrEqual(w);
     await page.screenshot({ path: `artifacts/screens/mission-pill-${w}x${h}.png` });

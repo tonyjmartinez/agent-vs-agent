@@ -272,8 +272,6 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 
 - A no-repeat rule (positional superko) if humans also fall into steal loops.
 - Hot-reload snapshot for the artifact build, so an open game survives a republish.
-- Landscape phones (667x375): the mission pill sits over the top of the Red panel's name row (pre-existing; board is clear).
-  Park it in a free spot or shrink it.
 
 ## Iteration: Share a puzzle
 
@@ -312,3 +310,10 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   mission (decision: hints teach; there is no scoring to protect).
 - Tests: `src/hint.test.ts` (every mission: the selected piece has a forcing move among its legal moves, the line can be followed
   through the defender's replies, null after a refuted wrong move); `e2e/hint.spec.ts` solves all 16 missions by hints alone.
+
+## Iteration: Mission pill layout
+
+- Fixed the goal pill covering HUD panels. Portrait: `body.in-mission` (toggled by `missionPill`) reserves a 62px band above the
+  HUD and a taller `--hud-h`, so the pill has its own row and the board only shrinks on short phones (320x568: 222px board).
+  Landscape: the pill parks bottom-left under the Teal panel (the right column is full).
+- `e2e/missions.spec.ts` now also asserts the pill never overlaps a `.panel` or a control button at 320x568 ... 1440x900.
