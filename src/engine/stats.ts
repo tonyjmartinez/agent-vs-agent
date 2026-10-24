@@ -10,6 +10,8 @@ export interface PlayerStats {
   burned: number;
   /** Enemy carriers this player bumped into dropping their intel. */
   steals: number;
+  /** Enemy spies this player shoved aside (burning or dropping one still counts as a shove). */
+  shoves: number;
   /** Intel banked. */
   extractions: number;
 }
@@ -22,6 +24,7 @@ export const emptyStats = (players: number): MatchStats =>
     burns: 0,
     burned: 0,
     steals: 0,
+    shoves: 0,
     extractions: 0,
   }));
 
@@ -42,6 +45,9 @@ export function addAction(stats: MatchStats, before: GameState, events: GameEven
         if (victim !== mover) next[mover]!.burns++; // bumping your own spy off is not a burn
         break;
       }
+      case 'bumped':
+        if (ownerOf(e.spyId) !== mover) next[mover]!.shoves++;
+        break;
       case 'dropped':
         if (ownerOf(e.spyId) !== mover) next[mover]!.steals++;
         break;

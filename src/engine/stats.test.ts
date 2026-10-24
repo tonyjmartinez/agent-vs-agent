@@ -15,8 +15,8 @@ describe('addAction', () => {
   it('starts empty, one row per player, and never mutates its input', () => {
     const z = emptyStats(2);
     expect(z).toEqual([
-      { turns: 0, burns: 0, burned: 0, steals: 0, extractions: 0 },
-      { turns: 0, burns: 0, burned: 0, steals: 0, extractions: 0 },
+      { turns: 0, burns: 0, burned: 0, steals: 0, shoves: 0, extractions: 0 },
+      { turns: 0, burns: 0, burned: 0, steals: 0, shoves: 0, extractions: 0 },
     ]);
     const { s, events } = play('v1.0.0.0-0.22,54,02,04.33', 'p0a', 1, 2);
     const before = JSON.stringify(z);
@@ -28,8 +28,8 @@ describe('addAction', () => {
   it('counts a plain move as a turn only', () => {
     const { s, events } = play('v1.0.0.0-0.51,54,01,04.2233', 'p0a', 4, 1);
     const st = addAction(emptyStats(2), s, events);
-    expect(st[0]).toEqual({ turns: 1, burns: 0, burned: 0, steals: 0, extractions: 0 });
-    expect(st[1]).toEqual({ turns: 0, burns: 0, burned: 0, steals: 0, extractions: 0 });
+    expect(st[0]).toEqual({ turns: 1, burns: 0, burned: 0, steals: 0, shoves: 0, extractions: 0 });
+    expect(st[1]).toEqual({ turns: 0, burns: 0, burned: 0, steals: 0, shoves: 0, extractions: 0 });
   });
 
   it('credits a burn to the mover and a loss to the victim', () => {
@@ -63,6 +63,19 @@ describe('addAction', () => {
     expect(addAction(emptyStats(2), own.s, own.events)[0]!.steals).toBe(0);
   });
 
+  it('counts a shove for each enemy spy bumped, not for your own or a blocked bump', () => {
+    // Teal carrier at (3,3); Red arrives at (3,2) and bumps it east.
+    const enemy = play('v1.0.0.0-0.31,54,33*,04.22', 'p0a', 3, 2);
+    expect(enemy.events.some((e) => e.t === 'bumped')).toBe(true);
+    const st = addAction(emptyStats(2), enemy.s, enemy.events);
+    expect(st[0]!.shoves).toBe(1);
+    expect(st[1]!.shoves).toBe(0);
+    // Red's own spy at (3,3) shoved by Red's other spy: not a shove.
+    const own = play('v1.0.0.0-0.31,33*,02,04.22', 'p0a', 3, 2);
+    expect(own.events.some((e) => e.t === 'bumped')).toBe(true);
+    expect(addAction(emptyStats(2), own.s, own.events)[0]!.shoves).toBe(0);
+  });
+
   it('credits an extraction to the banking player', () => {
     const { s, events } = play('v1.0.0.0-0.41*,54,02,04.33', 'p0a', 5, 1);
     const st = addAction(emptyStats(2), s, events);
@@ -90,6 +103,7 @@ describe('stats over whole games (property)', () => {
       let burnedEvents = 0;
       let droppedEvents = 0;
       let selfBurns = 0;
+      let enemyShoves = 0;
       while (s.winner === null) {
         const a = pick(rng, legalActions(s));
         const { state, events } = applyAction(s, a);
@@ -100,6 +114,9 @@ describe('stats over whole games (property)', () => {
             if (s.spies.find((x) => x.id === e.spyId)!.owner === s.current) selfBurns++;
           }
           if (e.t === 'dropped') droppedEvents++;
+          if (e.t === 'bumped' && s.spies.find((x) => x.id === e.spyId)!.owner !== s.current) {
+            enemyShoves++;
+          }
         }
         s = state;
       }
@@ -108,6 +125,10 @@ describe('stats over whole games (property)', () => {
         sum((p) => p.turns),
         `seed ${seed} turns`,
       ).toBe(s.ply);
+      expect(
+        sum((p) => p.shoves),
+        `seed ${seed} shoves`,
+      ).toBe(enemyShoves);
       expect(
         sum((p) => p.extractions),
         `seed ${seed} extractions`,

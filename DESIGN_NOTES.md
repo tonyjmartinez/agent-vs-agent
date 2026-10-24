@@ -281,3 +281,10 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - Share button on the briefing and every result card; status line `data-testid="share-note"` (role=status).
 - E2E (`e2e/share.spec.ts`) stubs `navigator.share`/`clipboard`, checks the exact text, that the link reopens the same
   position, the daily date pin, and 320x568 / 667x375 fit.
+
+## Iteration: Shoves stat
+
+- `PlayerStats.shoves`: enemy spies bumped by the mover (`bumped` events; shoving your own spy does not count). A burn is
+  its own event, so a pure burn is a burn, not a shove. Invariant-tested over random games (`stats.test.ts`).
+- The extra debrief row overflowed 375px-high landscape screens, so `styles.css` tightens the stats table under
+  `max-height: 460px`; the e2e viewport sweep now asserts the whole card (stamp to buttons) is on screen.
