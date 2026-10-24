@@ -634,3 +634,8 @@ body {
 .nowrap {
   white-space: nowrap;
 }
+
+.share-note {
+  min-height: 1.4em;
+  margin: 8px 0 0;
+}
