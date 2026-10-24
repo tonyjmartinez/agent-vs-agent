@@ -156,6 +156,8 @@ test('the goal pill stays clear of the board at phone, landscape and tablet size
     await page.setViewportSize({ width: w, height: h });
     await openMission(page, m);
     await page.evaluate(() => (window as any).__AVA__.controller().refresh());
+    // Web fonts change how the pill wraps; measure the settled layout, not the fallback-font one.
+    await page.evaluate(() => document.fonts.ready);
     const pill = (await page.locator('#mission-pill').boundingBox())!;
     const board = (await page.locator('#board canvas').boundingBox())!;
     const clear =
