@@ -130,6 +130,7 @@ export class Controller {
       reserveSelected: this.sel.selected === 'reserve',
       thinking: this.thinking,
       canUndo: this.canUndo(),
+      stopped: this.stopped,
       bottom: this.bottomSeat,
     });
     this.o.view.relayout();

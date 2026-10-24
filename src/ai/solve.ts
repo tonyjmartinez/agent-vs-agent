@@ -35,6 +35,11 @@ export class Solver {
     private me: PlayerId = start.current,
   ) {}
 
+  /** The solving side (the player the goal is for). */
+  get player(): PlayerId {
+    return this.me;
+  }
+
   /** `s` has `me` to move. */
   canForce(s: GameState, moves: number): boolean {
     if (moves <= 0 || s.winner !== null || s.current !== this.me) return false;
@@ -66,6 +71,15 @@ export class Solver {
   /** All first moves (for `me`, to move in `s`) that force the goal within `moves`. */
   solutions(s: GameState, moves: number): Action[] {
     return legalActions(s).filter((a) => this.forcesAfter(applyTrusted(s, a).state, moves - 1));
+  }
+
+  /**
+   * One step of a solution replay in `s`: the solving side plays a forced move, the other side defends
+   * as hard as it can. `left` is the solver's budget minus the moves it has already made (the same number
+   * on both sides' turns). The defender's replies never beat a forced line, so the replay reaches the goal.
+   */
+  demoStep(s: GameState, left: number): Action {
+    return s.current === this.me ? this.solutions(s, left)[0]! : this.defend(s, left);
   }
 
   /**

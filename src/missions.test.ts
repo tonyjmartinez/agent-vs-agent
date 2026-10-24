@@ -74,6 +74,29 @@ describe('missions', () => {
   });
 });
 
+describe('solution replay', () => {
+  it.each(MISSIONS.map((m) => [m.id, m] as const))(
+    '%s: the replay reaches the goal within budget, whatever the defender does',
+    (_id, m) => {
+      const start = decode(m.state);
+      const solver = new Solver(start, m.goal);
+      expect(solver.player).toBe(0);
+      let s = start;
+      let redMoves = 0;
+      for (let guard = 0; guard < 8 && !goalMet(start, s, m.goal, 0); guard++) {
+        expect(s.winner).toBeNull();
+        expect(redMoves).toBeLessThan(m.moves);
+        // `left` is the budget minus Red moves already made, for both sides.
+        const a = solver.demoStep(s, m.moves - redMoves);
+        if (s.current === 0) redMoves++;
+        s = applyTrusted(s, a).state;
+      }
+      expect(goalMet(start, s, m.goal, 0)).toBe(true);
+      expect(redMoves).toBeLessThanOrEqual(m.moves);
+    },
+  );
+});
+
 describe('solver', () => {
   const s = decode('v1.0.4.0-0.52,34,02,15.2233');
 

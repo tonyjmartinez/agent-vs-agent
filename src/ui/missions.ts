@@ -94,23 +94,38 @@ export function missionPill(text: string | null): void {
   el.textContent = text;
 }
 
-/** Result card: complete (Next / Missions) or failed (Retry / Missions). */
+export type MissionOutcome = 'complete' | 'failed' | 'solution';
+
+/**
+ * Result card. Complete → Next / Retry / Missions. Failed → Retry / Show solution / Missions.
+ * Solution (after a replay) → Retry / Missions; it never counts as completing the mission.
+ */
 export function showMissionResult(
   root: HTMLElement,
   m: Mission,
-  success: boolean,
-  on: { next?(): void; retry(): void; list(): void },
+  outcome: MissionOutcome,
+  on: { next?(): void; retry(): void; solution?(): void; list(): void },
 ): void {
   const wrap = document.createElement('div');
   wrap.className = 'overlay';
   wrap.id = 'mission-result';
-  const next = success && on.next;
+  const next = outcome === 'complete' && on.next;
+  const solution = outcome === 'failed' && on.solution;
+  const stamp = { complete: 'MISSION COMPLETE', failed: 'MISSION FAILED', solution: 'SOLUTION' }[
+    outcome
+  ];
+  const sub = {
+    complete: 'nicely done.',
+    failed: 'Teal found the answer. Try another approach.',
+    solution: 'that is the forced line. Now try it yourself.',
+  }[outcome];
   wrap.innerHTML = `<div class="card stamp-card" role="dialog" aria-modal="true" aria-labelledby="result-title">
-    <div class="stamp ${success ? 'p0' : 'p1'}" id="result-title">${success ? 'MISSION COMPLETE' : 'MISSION FAILED'}</div>
-    <p class="sub">${esc(m.title)}: ${success ? 'nicely done.' : 'Teal found the answer. Try another approach.'}</p>
+    <div class="stamp ${outcome === 'complete' ? 'p0' : outcome === 'failed' ? 'p1' : ''}" id="result-title">${stamp}</div>
+    <p class="sub">${esc(m.title)}: ${sub}</p>
     <div class="actions">
       ${next ? '<button class="btn primary" id="btn-mission-next">Next</button>' : ''}
-      <button class="btn${success ? '' : ' primary'}" id="btn-mission-retry">Retry</button>
+      <button class="btn${outcome === 'complete' ? '' : ' primary'}" id="btn-mission-retry">Retry</button>
+      ${solution ? '<button class="btn" id="btn-mission-solution">Show solution</button>' : ''}
       <button class="btn" id="btn-mission-list">Missions</button>
     </div>
   </div>`;
@@ -120,6 +135,7 @@ export function showMissionResult(
       f();
     });
   if (next) bind('#btn-mission-next', next);
+  if (solution) bind('#btn-mission-solution', solution);
   bind('#btn-mission-retry', on.retry);
   bind('#btn-mission-list', on.list);
   root.append(wrap);

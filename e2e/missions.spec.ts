@@ -1,5 +1,5 @@
 import { test, expect, type Page, type TestInfo } from '@playwright/test';
-import { Solver } from '../src/ai/solve';
+import { Solver, goalMet } from '../src/ai/solve';
 import { legalActions } from '../src/engine/engine';
 import { decode } from '../src/engine/serialize';
 import type { Action, GameState } from '../src/engine/types';
@@ -145,6 +145,9 @@ test('a wrong move is refuted: mission failed, Retry resets the position', async
   await play(page, info, s, any);
   await expect(page.locator('#mission-result .stamp')).toHaveText('MISSION FAILED');
   await expect(page.locator('#btn-mission-next')).toHaveCount(0);
+  // A decided mission shows no active turn behind the card.
+  await expect(page.locator('.panel.active')).toHaveCount(0);
+  await expect(page.locator('.panel .status')).toHaveText(['', '']);
   await shot(page, info, 'mission-failed');
   // The board is frozen behind the result card.
   expect((await ava(page)).ply).toBe(start.ply + 3);
@@ -209,4 +212,102 @@ test('the goal pill stays clear of the board at phone, landscape and tablet size
     expect(pill.x + pill.width).toBeLessThanOrEqual(w);
     await page.screenshot({ path: `artifacts/screens/mission-pill-${w}x${h}.png` });
   }
+});
+
+test('?solution=1 replays every forced line to its goal, never crediting the mission', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'desktop', 'full sweep runs once');
+  test.setTimeout(120_000);
+  const errors = trackErrors(page);
+  for (const m of MISSIONS) {
+    await page.goto(`/?test=1&speed=0&mission=${m.id}&solution=1`);
+    await page.evaluate(() => (window as any).__AVA__.ready);
+    await expect(page.locator('#briefing')).toHaveCount(0);
+    await expect(page.locator('#mission-result .stamp')).toHaveText('SOLUTION');
+    await expect(page.locator('#mission-pill')).toHaveCount(0);
+    await expect(page.locator('#btn-mission-solution')).toHaveCount(0);
+    await expect(page.locator('#btn-mission-next')).toHaveCount(0);
+    const start = decode(m.state);
+    const end = await ava(page);
+    expect(goalMet(start, end, m.goal, 0), `${m.id} did not reach its goal`).toBe(true);
+    expect(end.ply - start.ply, `${m.id} ply count`).toBe(2 * m.moves - 1);
+  }
+  // None of that counted as progress.
+  await page.goto('/?test=1&speed=0');
+  await page.evaluate(() => (window as any).__AVA__.ready);
+  await page.click('#btn-missions');
+  await expect(page.locator('[data-testid="missions-progress"]')).toHaveText(
+    `0 of ${MISSIONS.length} complete`,
+  );
+  expect(errors).toEqual([]);
+});
+
+test('failed → Show solution → Retry → solve it yourself: only the real solve is credited', async ({
+  page,
+}, info) => {
+  const m = missionById('grab-and-go')!;
+  await openMission(page, m);
+  const start = decode(m.state);
+  const solver = new Solver(start, m.goal);
+  const sols = solver.solutions(start, m.moves);
+  const wrong = legalActions(start).find(
+    (a) => a.kind === 'move' && !sols.some((x) => same(x, a)),
+  )!;
+  await play(page, info, await ava(page), wrong);
+  await play(
+    page,
+    info,
+    await ava(page),
+    legalActions(await ava(page)).find((a) => a.kind === 'move')!,
+  );
+  await expect(page.locator('#mission-result .stamp')).toHaveText('MISSION FAILED');
+  await expect(page.locator('#btn-mission-solution')).toBeVisible();
+  await shot(page, info, 'mission-failed-solution-btn');
+
+  await page.click('#btn-mission-solution');
+  await expect(page.locator('#mission-result .stamp')).toHaveText('SOLUTION');
+  await expect(page.locator('.panel.active')).toHaveCount(0);
+  await shot(page, info, 'mission-solution');
+  expect(goalMet(start, await ava(page), m.goal, 0)).toBe(true);
+  await expect(page.locator('#btn-mission-next')).toHaveCount(0);
+  await expect(page.locator('#btn-mission-solution')).toHaveCount(0);
+
+  // The replay is not credited.
+  await page.click('#btn-mission-list');
+  await expect(page.locator('[data-testid="missions-progress"]')).toHaveText(
+    `0 of ${MISSIONS.length} complete`,
+  );
+  await page.click(`[data-mission="${m.id}"]`);
+  await page.click('#btn-briefing-go');
+  expect(await page.evaluate(() => (window as any).__AVA__.encode())).toBe(m.state);
+  await solve(page, info, m);
+  await page.click('#btn-mission-list');
+  await expect(page.locator('[data-testid="missions-progress"]')).toHaveText(
+    `1 of ${MISSIONS.length} complete`,
+  );
+});
+
+test('while a solution plays the board is locked, with a watching pill', async ({ page }, info) => {
+  const m = missionById('double-tap')!;
+  await page.goto(`/?test=1&speed=1&mission=${m.id}&solution=1`);
+  await page.evaluate(() => (window as any).__AVA__.ready);
+  await expect(page.locator('#mission-pill')).toHaveText('Solution · watch the line');
+  const start = decode(m.state);
+  // Poke the board mid-replay: nothing may be selected, and the replay still ends on the goal.
+  const from = start.spies.find((x) => x.owner === 0 && x.pos)!.pos!;
+  await tapCell(page, info, from.r, from.c);
+  const sel = await page.evaluate(() => (window as any).__AVA__.controller().sel);
+  expect(sel.selected).toBeNull();
+  await expect(page.locator('#mission-result .stamp')).toHaveText('SOLUTION', { timeout: 15_000 });
+  expect(goalMet(start, await ava(page), m.goal, 0)).toBe(true);
+});
+
+test('?solution=1 without a mission is ignored', async ({ page }) => {
+  await page.goto('/?test=1&speed=0&solution=1');
+  await page.evaluate(() => (window as any).__AVA__.ready);
+  await expect(page.locator('#mission-result')).toHaveCount(0);
+  expect(await page.evaluate(() => (window as any).__AVA__.encode())).toBe(
+    'v1.0.0.0-0.51,54,01,04.2233',
+  );
 });

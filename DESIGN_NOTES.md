@@ -198,7 +198,25 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   it sits over Teal's score pips, and on a short landscape phone over the top of your panel. It never covers the
   board and ignores pointer events.
 - **Ideas:** a daily mission (seeded by date), 3-move missions (needs a faster solver or a node cap), missions with
-  `?rules=` variants, a "show solution" button after a fail.
+  `?rules=` variants.
+
+## Iteration: Show solution (mission replay)
+
+- **What:** the MISSION FAILED card has **Show solution**. It restarts the position (no briefing) and replays the forced
+  line with both seats automated: Red plays `solutions(...)[0]`, Teal plays `defend(...)`. It ends on a **SOLUTION** card
+  (Retry / Missions) and is **never credited**: only a real solve calls `markCompleted`. `?mission=<id>&solution=1` starts
+  the replay directly (used by the e2e sweep and handy for sharing a link to a solution).
+- **One pure entry point:** `Solver.demoStep(s, left)`, with `left` = budget minus Red moves already made (the same number
+  on both sides' turns). The replay seats are bots whose chooser is that function, so pacing (450 ms thinking beat) and the
+  animation path are the normal ones. `src/missions.test.ts` replays all 13 in Vitest against the defender.
+- **Input is locked** during the replay for free: neither seat is human. The pill reads "Solution · watch the line".
+- **Bug found by e2e:** an auto-playing game with no user gesture (this replay from a URL, or bot-vs-bot) made
+  `navigator.vibrate` log a Chrome intervention error on every drop or burn. `mayVibrate()` in `ui/sound.ts` now skips
+  haptics until `navigator.userActivation.hasBeenActive` (unit-tested). The e2e sweep asserts zero console errors.
+- **HUD fix:** a frozen game (decided mission) now shows no active turn (`HudView.stopped`); it used to keep saying
+  "Agent Teal's move" behind the result card.
+- **Known wart:** during a replay both panels read "Agent Red / Hard" and "Agent Teal / Hard" (they really are bot seats).
+- **Ideas left:** daily mission, 3-move missions, a post-game stats debrief.
 
 ## Later
 
