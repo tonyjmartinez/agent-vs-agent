@@ -24,7 +24,7 @@ import {
 import { dailyMission, dayKey } from './daily';
 import { MISSIONS, missionById, pillText, type Mission } from './missions';
 import type { GameState } from './engine/types';
-import { humanResult, recordLine, recordResult } from './ui/record';
+import { humanResult, recordLine, recordResult, resultShareText } from './ui/record';
 import { load, save } from './ui/storage';
 import { PhaserBoardView } from './view/PhaserBoardView';
 
@@ -217,6 +217,7 @@ async function boot(): Promise<void> {
         controller!.stats,
         { rematch: () => newGame(), menu: () => toMenu() },
         record,
+        run ? undefined : (resultShareText(s, controller!.seats, location.href) ?? undefined),
       );
     },
     onAction: (s) => {

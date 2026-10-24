@@ -163,6 +163,10 @@ test('the stats card fits the viewport at phone, landscape and tablet sizes', as
     const cb = (await card.boundingBox())!;
     expect(cb.y, `card top cut off at ${w}x${h}`).toBeGreaterThanOrEqual(0);
     expect(cb.y + cb.height, `card bottom cut off at ${w}x${h}`).toBeLessThanOrEqual(h);
+    expect(
+      await card.evaluate((e) => e.scrollHeight <= e.clientHeight + 1),
+      `card scrolls at ${w}x${h}`,
+    ).toBe(true);
     // Buttons must stay reachable: either the whole card fits, or it scrolls and the buttons are on screen.
     await page.locator('#btn-rematch').scrollIntoViewIfNeeded();
     const b = (await page.locator('#btn-rematch').boundingBox())!;
