@@ -1,6 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MISSIONS } from '../missions';
-import { completedDays, completedMissions, markCompleted, markDayDone, nextUp } from './missions';
+import {
+  completedDays,
+  completedMissions,
+  markCompleted,
+  markDayDone,
+  nextUp,
+  resetProgress,
+} from './missions';
 
 /** A tiny in-memory localStorage. */
 function fakeStorage(initial: Record<string, string> = {}) {
@@ -94,5 +101,23 @@ describe('nextUp', () => {
   });
   it('is undefined once everything is complete', () => {
     expect(nextUp(new Set(MISSIONS.map((m) => m.id)))).toBeUndefined();
+  });
+});
+
+describe('resetProgress', () => {
+  it('clears missions and dailies together, and leaves the bot record alone', () => {
+    const store = fakeStorage({ 'ava.record.v1': JSON.stringify({ hard: { w: 2, l: 1, d: 0 } }) });
+    vi.stubGlobal('localStorage', store);
+    markCompleted('double-tap');
+    markDayDone('2026-03-10');
+    markDayDone('2026-03-11');
+    resetProgress();
+    expect([...completedMissions()]).toEqual([]);
+    expect(completedDays()).toEqual([]);
+    expect(store.data.get('ava.record.v1')).toBe(JSON.stringify({ hard: { w: 2, l: 1, d: 0 } }));
+    // Progress can start again afterwards.
+    markCompleted('side-step');
+    expect([...completedMissions()]).toEqual(['side-step']);
+    vi.unstubAllGlobals();
   });
 });

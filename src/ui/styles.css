@@ -802,3 +802,19 @@ body {
     grid-column: 5 / span 2;
   }
 }
+
+.btn.danger {
+  margin-top: 8px;
+  width: 100%;
+  background: transparent;
+  box-shadow: none;
+  border-style: dashed;
+  font-size: 14px;
+  opacity: 0.85;
+}
+.btn.danger[data-armed='1'] {
+  background: var(--red);
+  color: #fff;
+  border-style: solid;
+  opacity: 1;
+}

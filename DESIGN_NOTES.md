@@ -379,3 +379,10 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - `e2e/overlays.spec.ts` also asserts every button on every overlay card is at least 44x44 (platform minimum) at six viewport
   sizes, and that Undo / Menu / sound stay at least 44px and on screen in a live game. No product change was needed: all of them
   already pass, so this is a regression guard (a button that shrinks or wraps below 44px fails the suite).
+
+## Iteration: Reset progress
+
+- Missions list has a "Reset progress" button (two taps: the first arms it and changes the label; going Back and returning
+  disarms it, so there is no timer to test around). `resetProgress()` empties `ava.missions.v1` and `ava.daily.v1` (completed
+  missions and the daily streak) and re-renders the list. The bot record (`ava.record.v1`) is deliberately not touched.
+- `e2e/reset.spec.ts` seeds progress, covers arm / disarm / confirm, checks the stored values, and the reload.
