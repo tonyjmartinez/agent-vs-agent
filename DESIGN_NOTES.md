@@ -373,3 +373,9 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   fold) and 43px on 320x568. Fixed in `styles.css`: short landscape = logo/title left, Play vs Agent block right, the three
   buttons in one row; short portrait = tighter logo/gaps/buttons. Game-over cards got the same treatment earlier.
 - Rule of thumb: when adding any card, add it to this audit.
+
+## Iteration: Tap-target audit
+
+- `e2e/overlays.spec.ts` also asserts every button on every overlay card is at least 44x44 (platform minimum) at six viewport
+  sizes, and that Undo / Menu / sound stay at least 44px and on screen in a live game. No product change was needed: all of them
+  already pass, so this is a regression guard (a button that shrinks or wraps below 44px fails the suite).
