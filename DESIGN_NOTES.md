@@ -218,6 +218,28 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - **Known wart:** during a replay both panels read "Agent Red / Hard" and "Agent Teal / Hard" (they really are bot seats).
 - **Ideas left:** daily mission, 3-move missions, a post-game stats debrief.
 
+## Iteration: Match stats debrief
+
+- **What:** the game-over card shows a per-player table: **Turns** (actions taken), **Burns** (enemy spies you shoved off),
+  **Steals** (enemy carriers you bumped into dropping their intel), **Banked** (intel extracted). The strict leader of a
+  row is highlighted; tied rows (including 0 vs 0) aren't.
+- **Pure core:** `src/engine/stats.ts`: `emptyStats(n)` and `addAction(stats, before, events)` (immutable). Spy owners come
+  from the state *before* the action, because events carry spy ids only. Rules: bumping your own spy off is **not** a burn
+  (it still counts as that player's *burned*); dropping your own carrier isn't a steal; an extraction is credited to the spy's
+  **owner**, not the mover (a bumped spy can land on intel in its own zone and bank for its owner).
+- **Controller:** `statsLog` is index-aligned with `history`, so Undo rewinds the stats and `start()` resets them.
+  `controller.stats` is what `main.ts` hands to `showGameOver`.
+- **Proof:** unit tests for each rule above, plus a property test over 300 seeded random games: Σturns = final ply,
+  Σbanked = Σscores (and per player), Σburned = burned events, Σburns = burned events minus self-burns, Σsteals ≤ drops.
+  E2E: a scripted burn → Teal move → winning bank checks the card cell by cell; undo returns the stats to exactly the
+  earlier snapshot (one ply per undo in hotseat); a rematch starts at zero; a medium-vs-easy game's table matches
+  `controller.stats` and the final score; the card fits 6 viewport sizes with the buttons on screen.
+- **Test gotcha:** while the game-over card is up it covers the HUD Undo button, so e2e triggers the real handler with a
+  programmatic click (`#btn-undo`.click()). Calling `controller.undo()` directly skips the handler that removes the card and
+  leaves an overlay swallowing taps. Users can't undo from the card at all (Rematch / Menu only).
+- **Ideas left:** a "turns" label next to the headline ("2 turns" there means rounds, the table counts actions);
+  longest carry / sprints used / closest call; sharing the debrief as an image.
+
 ## Later
 
 (ideas not in the plan go here)
