@@ -32,6 +32,10 @@ export function markDayDone(day: string): void {
   save(DAILY_KEY, days);
 }
 
+/** The first mission not completed yet, in list order (the one to play next); `undefined` when all are done. */
+export const nextUp = (done: ReadonlySet<string>): Mission | undefined =>
+  MISSIONS.find((m) => !done.has(m.id));
+
 const esc = (t: string) => t.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** Stamp text, with any date kept on one line (a date that wraps at its hyphens reads as two numbers). */
@@ -49,6 +53,7 @@ export function showMissions(
   const daily = dailyMission(today);
   const dailyDone = days.includes(today);
   const run = streak(days, today);
+  const next = nextUp(done);
   const wrap = document.createElement('div');
   wrap.className = 'overlay menu-overlay';
   wrap.id = 'missions';
@@ -65,9 +70,9 @@ export function showMissions(
         (
           m,
           i,
-        ) => `<li><button class="btn mission-btn${done.has(m.id) ? ' done' : ''}" data-mission="${m.id}">
+        ) => `<li><button class="btn mission-btn${done.has(m.id) ? ' done' : ''}${m === next ? ' next' : ''}" data-mission="${m.id}"${m === next && done.size > 0 ? ' aria-describedby="next-up"' : ''}>
           <span class="mission-no">${i + 1}</span>
-          <span class="mission-text"><b>${esc(m.title)}</b><small>${goalText(m)}</small></span>
+          <span class="mission-text"><b>${esc(m.title)}</b><small>${goalText(m)}</small>${m === next && done.size > 0 ? '<span class="next-tag" id="next-up">Next up</span>' : ''}</span>
           <span class="mission-tick" aria-label="${done.has(m.id) ? 'complete' : 'not done'}">${done.has(m.id) ? '✓' : ''}</span>
         </button></li>`,
       ).join('')}
@@ -90,6 +95,14 @@ export function showMissions(
     on.back();
   });
   root.append(wrap);
+  // A long list opens at the mission to play next, not at the top.
+  const nextBtn = wrap.querySelector<HTMLElement>('.mission-btn.next');
+  const card = wrap.querySelector<HTMLElement>('.card');
+  if (done.size > 0 && nextBtn && card) {
+    const n = nextBtn.getBoundingClientRect();
+    const c = card.getBoundingClientRect();
+    card.scrollTop += n.top - c.top - (c.height - n.height) / 2;
+  }
 }
 
 const SHARE_NOTE: Record<ShareResult, string> = {

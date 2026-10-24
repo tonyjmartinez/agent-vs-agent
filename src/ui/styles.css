@@ -551,6 +551,20 @@ body {
   color: var(--teal);
   text-align: center;
 }
+.next-tag {
+  width: fit-content;
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--mustard);
+  font-size: 12px;
+  font-weight: 700;
+}
+.mission-btn.next {
+  border-color: var(--plum);
+}
 .mission-btn.done {
   background: color-mix(in srgb, var(--teal) 14%, var(--paper));
 }
