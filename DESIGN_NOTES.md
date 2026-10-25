@@ -395,3 +395,12 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - Property-tested against an independent recount over 300 random games; targeted test walks a carrier home and a restart.
 - The seventh debrief row made the vs-bot card scroll on 320x568, so short portrait phones get a tighter game-over card
   and the three buttons shrink a little under 380px width. The fit sweeps (inner scroll included) pass at all sizes.
+
+## Iteration: three more 2-move missions
+
+- Mined (seed 21, 60 games, 2-move budget) and added `flank` (burn), `run-the-gauntlet` (extract, with a defender) and `level-at-two`
+  (win), placed before the 3-move missions so the list still never drops in move budget. Candidates already used by the daily
+  pool or the curated list are skipped (`daily.test.ts` forbids overlap). All proof, hint and e2e suites run over `MISSIONS`,
+  so they cover the new ones automatically. 21 missions now.
+- Mining throughput note: 60 games of 2-move mining took ~2 minutes and produced ~176 candidates, many near-duplicates (same
+  skirmish, different ply); curating by variety (goal, defender present, score state) matters more than volume.
