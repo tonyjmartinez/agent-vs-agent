@@ -403,3 +403,10 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   `sprintWin` (the only winning move is a two-square carrier sprint; the test first proves no one-square step wins) and
   `stopTheSprint` (Teal at match point can sprint home next turn; only 2 of Red's 12 moves knock the folder loose in time,
   and a sanity test proves most moves lose). Both bots pass; no AI change was needed. Test-only regression guard.
+
+## Iteration: README mission count
+
+- The README said 13 missions; there are 18. `src/missions.test.ts` now checks that the README line
+  `**Missions:** N tactical puzzles` matches `MISSIONS.length`, so the count can't drift again.
+- Environment note: the sandbox's preinstalled Chromium (1248) is missing system libraries (libnss3, libnspr4,
+  libasound), so `npm run e2e` cannot run here. This PR is unit-tested only.
