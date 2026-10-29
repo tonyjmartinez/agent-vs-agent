@@ -92,3 +92,40 @@ test('when every mission is done nothing is tagged', async ({ page }) => {
     `All ${MISSIONS.length} missions complete. Nice work.`,
   );
 });
+
+test('winning the last mission says the whole set is complete, on the result card at 360px', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const errors = trackErrors(page);
+  const last = MISSIONS[MISSIONS.length - 1]!;
+  await seed(
+    page,
+    MISSIONS.slice(0, -1).map((m) => m.id),
+  );
+  await openMission(page, last);
+  await solve(page, info, last);
+  const card = page.locator('#mission-result');
+  await expect(card).toBeVisible();
+  await expect(card.locator('p.sub:not(.share-note)')).toContainText(
+    `All ${MISSIONS.length} missions complete. Nice work.`,
+  );
+  await expect(card.locator('p.sub:not(.share-note)')).toBeInViewport();
+  expect(errors).toEqual([]);
+});
+
+test('winning the second-to-last mission (16 of 18 done) does not claim the set is complete', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const second = MISSIONS[MISSIONS.length - 2]!;
+  await seed(
+    page,
+    MISSIONS.filter((m) => m.id !== second.id && m.id !== MISSIONS.at(-1)!.id).map((m) => m.id),
+  );
+  await openMission(page, second);
+  await solve(page, info, second);
+  const card = page.locator('#mission-result');
+  await expect(card).toBeVisible();
+  await expect(card.locator('p.sub:not(.share-note)')).not.toContainText('missions complete');
+});
