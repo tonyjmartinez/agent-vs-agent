@@ -102,6 +102,7 @@ function judgeMission(c: Controller, s: GameState): void {
   endMission();
   let prevBest: number | undefined;
   let extra = '';
+  let finish = '';
   if (success && !r.demo) {
     if (r.m.daily) {
       const day = r.m.id.slice('daily-'.length);
@@ -114,7 +115,7 @@ function judgeMission(c: Controller, s: GameState): void {
       // The win that completes the whole set says so on the card, not only on the list.
       const done = completedMissions();
       const finished = MISSIONS.filter((m) => done.has(m.id)).length;
-      if (finished >= MISSIONS.length) extra = progressText(finished, MISSIONS.length);
+      if (finished >= MISSIONS.length) finish = progressText(finished, MISSIONS.length);
     }
   } else if (failed && r.m.daily && !r.demo) extra = dailyMissedText();
   // The daily mission isn't part of the list, so it has no "next".
@@ -131,7 +132,7 @@ function judgeMission(c: Controller, s: GameState): void {
     },
     success ? redMovesMade(c) : undefined,
     success && !r.demo && !r.m.daily && isNewBest(redMovesMade(c), prevBest),
-    !r.demo ? extra : '',
+    r.m.daily ? (!r.demo ? extra : '') : finish,
   );
 }
 

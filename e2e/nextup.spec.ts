@@ -114,7 +114,7 @@ test('winning the last mission says the whole set is complete, on the result car
   expect(errors).toEqual([]);
 });
 
-test('winning a mission that is not the last one does not claim the set is complete', async ({
+test('winning the second-to-last mission (16 of 18 done) does not claim the set is complete', async ({
   page,
 }, info) => {
   await page.setViewportSize({ width: 360, height: 740 });
