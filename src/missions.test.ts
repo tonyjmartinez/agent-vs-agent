@@ -3,9 +3,28 @@ import { describe, expect, it } from 'vitest';
 import { Solver, goalMet } from './ai/solve';
 import { applyTrusted, legalActions } from './engine/engine';
 import { decode, encode } from './engine/serialize';
-import { MISSIONS, bestText, goalText, missionById, pillText, solvedText } from './missions';
+import {
+  MISSIONS,
+  bestText,
+  goalText,
+  isNewBest,
+  missionById,
+  pillText,
+  solvedText,
+} from './missions';
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+describe('isNewBest (strictly better than a stored best)', () => {
+  it('is true only when the win beats an existing best', () => {
+    expect(isNewBest(2, 3)).toBe(true);
+    expect(isNewBest(2, 2)).toBe(false);
+    expect(isNewBest(3, 2)).toBe(false);
+  });
+  it('is false for a first win (nothing to beat yet)', () => {
+    expect(isNewBest(1, undefined)).toBe(false);
+  });
+});
 
 describe('bestText (the mission-list line for a completed mission)', () => {
   it('shows the fewest moves against the budget', () => {

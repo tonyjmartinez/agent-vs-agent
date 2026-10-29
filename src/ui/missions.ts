@@ -226,6 +226,7 @@ export function showMissionResult(
   outcome: MissionOutcome,
   on: { next?(): void; retry(): void; solution?(): void; list(): void },
   used?: number,
+  newBest = false,
 ): void {
   const wrap = document.createElement('div');
   wrap.className = 'overlay';
@@ -236,7 +237,13 @@ export function showMissionResult(
     outcome
   ];
   const sub = {
-    complete: used === undefined ? 'nicely done.' : `nicely done. ${solvedText(used, m.moves)}`,
+    complete: [
+      'nicely done.',
+      newBest ? 'New best!' : '',
+      used === undefined ? '' : solvedText(used, m.moves),
+    ]
+      .filter(Boolean)
+      .join(' '),
     failed: 'Teal found the answer. Try another approach.',
     solution: 'that is the forced line. Now try it yourself.',
   }[outcome];
