@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { Solver, goalMet } from './ai/solve';
-import { dailyMission, dailyStreakText, dayKey, dayNumber, isDayKey, prevDay, streak } from './daily';
+import {
+  dailyMissedText,
+  dailyMission,
+  dailyStreakText,
+  dayKey,
+  dayNumber,
+  isDayKey,
+  prevDay,
+  streak,
+} from './daily';
 import { DAILY_POOL } from './dailyPool';
 import { applyTrusted, legalActions } from './engine/engine';
 import { decode, encode } from './engine/serialize';
@@ -179,6 +188,14 @@ describe('streak', () => {
     expect(streak(['2026-12-30', '2026-12-31', '2027-01-01'], '2027-01-01')).toBe(3);
     expect(streak(['2028-02-28', '2028-02-29', '2028-03-01'], '2028-03-01')).toBe(3);
     expect(streak(['2027-02-28', '2027-03-01'], '2027-03-01')).toBe(2);
+  });
+});
+
+describe('dailyMissedText (the failed daily result card line)', () => {
+  it('names the daily and says what to do next', () => {
+    expect(dailyMissedText()).toMatch(/^Daily missed\./);
+    expect(dailyMissedText()).toMatch(/Retry it now/);
+    expect(dailyMissedText()).not.toMatch(/Teal found the answer/);
   });
 });
 

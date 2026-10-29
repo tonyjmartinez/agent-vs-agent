@@ -256,7 +256,7 @@ export function showMissionResult(
     ]
       .filter(Boolean)
       .join(' '),
-    failed: 'Teal found the answer. Try another approach.',
+    failed: extra || 'Teal found the answer. Try another approach.',
     solution: 'that is the forced line. Now try it yourself.',
   }[outcome];
   wrap.innerHTML = `<div class="card stamp-card" role="dialog" aria-modal="true" aria-labelledby="result-title">
