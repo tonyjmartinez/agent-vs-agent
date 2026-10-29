@@ -180,6 +180,10 @@ const GOAL_TEXT: Record<Goal, string> = {
 export const solvedText = (used: number, budget: number): string =>
   `Solved in ${used} of ${budget} ${budget === 1 ? 'move' : 'moves'}.`;
 
+/** A win that strictly beats the stored best is a "New best!". A first win is not (there is nothing to beat yet). */
+export const isNewBest = (used: number, prevBest: number | undefined): boolean =>
+  prevBest !== undefined && used < prevBest;
+
 /** Mission-list line for a completed mission: the fewest Red moves it has been solved in. */
 export const bestText = (best: number, budget: number): string =>
   `Best: ${best} of ${budget} ${budget === 1 ? 'move' : 'moves'}`;

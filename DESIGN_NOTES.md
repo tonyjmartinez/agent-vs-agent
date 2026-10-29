@@ -430,3 +430,9 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   never a worse win). The mission list shows "Best: N of M moves" under a completed mission (`bestText`). Reset progress clears it.
 - Assumption: only curated missions (not the daily, which is not in the list) and not Show-solution replays are recorded.
 - E2E not run in the sandbox (friction #28); the unit tests cover storage and text.
+
+## Iteration: New best on the result card
+
+- Problem: the best line (PR #30) only appeared in the list later; a player who beat their own best got no feedback at the moment of winning.
+- Change: a curated, non-demo win that uses strictly fewer Red moves than the stored best says "nicely done. New best! Solved in N of M moves." (`isNewBest` in `src/missions.ts`). A first win is not a "New best" (nothing to beat). Daily wins never show it.
+- E2E (`e2e/newbest.spec.ts`, runs in the sandbox now that the browser works): beats-best, does-not-beat, first-win cases; desktop + mobile pass.

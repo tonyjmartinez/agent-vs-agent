@@ -15,6 +15,7 @@ import { Sound } from './ui/sound';
 import { showMenu, showPause } from './ui/menu';
 import {
   markCompleted,
+  bestMoves,
   recordBest,
   markDayDone,
   missionPill,
@@ -23,7 +24,7 @@ import {
   showMissions,
 } from './ui/missions';
 import { dailyMission, dayKey } from './daily';
-import { MISSIONS, missionById, pillText, type Mission } from './missions';
+import { MISSIONS, isNewBest, missionById, pillText, type Mission } from './missions';
 import type { GameState } from './engine/types';
 import { humanResult, recordLine, recordResult, resultShareText } from './ui/record';
 import { load, save } from './ui/storage';
@@ -97,10 +98,12 @@ function judgeMission(c: Controller, s: GameState): void {
   if (!success && !failed) return;
   c.stop();
   endMission();
+  let prevBest: number | undefined;
   if (success && !r.demo) {
     if (r.m.daily) markDayDone(r.m.id.slice('daily-'.length));
     else {
       markCompleted(r.m.id);
+      prevBest = bestMoves()[r.m.id];
       recordBest(r.m.id, redMovesMade(c));
     }
   }
@@ -117,6 +120,7 @@ function judgeMission(c: Controller, s: GameState): void {
       list: () => openMissions(),
     },
     success ? redMovesMade(c) : undefined,
+    success && !r.demo && !r.m.daily && isNewBest(redMovesMade(c), prevBest),
   );
 }
 
