@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { Solver, goalMet } from './ai/solve';
 import { applyTrusted, legalActions } from './engine/engine';
@@ -7,6 +8,11 @@ import { MISSIONS, goalText, missionById, pillText } from './missions';
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 describe('missions', () => {
+  it('README advertises the real mission count', () => {
+    const readme = readFileSync('README.md', 'utf8');
+    expect(readme).toContain(`**Missions:** ${MISSIONS.length} tactical puzzles`);
+  });
+
   it('have unique kebab-case ids and are ordered easy → hard (move budget never drops)', () => {
     const ids = MISSIONS.map((m) => m.id);
     expect(new Set(ids).size).toBe(ids.length);
