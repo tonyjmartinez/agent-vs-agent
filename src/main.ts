@@ -102,12 +102,18 @@ function judgeMission(c: Controller, s: GameState): void {
   }
   // The daily mission isn't part of the list, so it has no "next".
   const nextM = r.m.daily ? undefined : MISSIONS[MISSIONS.indexOf(r.m) + 1];
-  showMissionResult(overlayRoot, r.m, success ? (r.demo ? 'solution' : 'complete') : 'failed', {
-    next: nextM ? () => startMission(nextM) : undefined,
-    retry: () => startMission(r.m),
-    solution: () => startMission(r.m, true),
-    list: () => openMissions(),
-  });
+  showMissionResult(
+    overlayRoot,
+    r.m,
+    success ? (r.demo ? 'solution' : 'complete') : 'failed',
+    {
+      next: nextM ? () => startMission(nextM) : undefined,
+      retry: () => startMission(r.m),
+      solution: () => startMission(r.m, true),
+      list: () => openMissions(),
+    },
+    success ? redMovesMade(c) : undefined,
+  );
 }
 
 /** The date the daily mission is for: the clock (UTC), or `?day=` in tests. */
