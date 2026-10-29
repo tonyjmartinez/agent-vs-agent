@@ -1,5 +1,5 @@
 import { dailyMission, isDayKey, streak } from '../daily';
-import { MISSIONS, bestText, goalText, solvedText, type Mission } from '../missions';
+import { MISSIONS, bestText, goalText, progressText, solvedText, type Mission } from '../missions';
 import { shareMission, type ShareResult } from '../share';
 import { load, save } from './storage';
 
@@ -94,7 +94,7 @@ export function showMissions(
       <span class="mission-tick" aria-label="${dailyDone ? 'done today' : 'not done today'}">${dailyDone ? '✓' : ''}</span>
     </button>
     <p class="sub" data-testid="daily-streak">Streak: ${run} day${run === 1 ? '' : 's'}</p>
-    <p class="sub" data-testid="missions-progress">${done.size} of ${MISSIONS.length} complete</p>
+    <p class="sub" data-testid="missions-progress">${progressText(done.size, MISSIONS.length)}</p>
     <ol class="mission-list">
       ${MISSIONS.map(
         (

@@ -21,7 +21,7 @@ test('every mission can be completed through real input against the defender', a
   await page.evaluate(() => (window as any).__AVA__.ready);
   await page.click('#btn-missions');
   await expect(page.locator('[data-testid="missions-progress"]')).toHaveText(
-    `${MISSIONS.length} of ${MISSIONS.length} complete`,
+    `All ${MISSIONS.length} missions complete. Nice work.`,
   );
   await expect(page.locator('.mission-btn.done')).toHaveCount(MISSIONS.length);
   expect(errors).toEqual([]);

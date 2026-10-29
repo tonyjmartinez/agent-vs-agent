@@ -6,6 +6,7 @@ import { decode, encode } from './engine/serialize';
 import {
   MISSIONS,
   bestText,
+  progressText,
   goalText,
   isNewBest,
   missionById,
@@ -173,5 +174,14 @@ describe('solver', () => {
     expect(goalMet(s, s, 'burn', 0)).toBe(false);
     const burned = { ...s, spies: s.spies.map((x) => (x.id === 'p1a' ? { ...x, pos: null } : x)) };
     expect(goalMet(s, burned, 'burn', 0)).toBe(true);
+  });
+});
+
+describe('progressText', () => {
+  it('counts up while missions remain and names the finish when all are done', () => {
+    expect(progressText(0, 18)).toBe('0 of 18 complete');
+    expect(progressText(17, 18)).toBe('17 of 18 complete');
+    expect(progressText(18, 18)).toBe('All 18 missions complete. Nice work.');
+    expect(progressText(0, 0)).toBe('0 of 0 complete');
   });
 });

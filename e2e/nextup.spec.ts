@@ -75,6 +75,6 @@ test('when every mission is done nothing is tagged', async ({ page }) => {
   await expect(page.locator('.mission-btn.next')).toHaveCount(0);
   await expect(page.locator('.next-tag')).toHaveCount(0);
   await expect(page.locator('[data-testid="missions-progress"]')).toHaveText(
-    `${MISSIONS.length} of ${MISSIONS.length} complete`,
+    `All ${MISSIONS.length} missions complete. Nice work.`,
   );
 });
