@@ -227,6 +227,7 @@ export function showMissionResult(
   on: { next?(): void; retry(): void; solution?(): void; list(): void },
   used?: number,
   newBest = false,
+  extra = '',
 ): void {
   const wrap = document.createElement('div');
   wrap.className = 'overlay';
@@ -241,6 +242,7 @@ export function showMissionResult(
       'nicely done.',
       newBest ? 'New best!' : '',
       used === undefined ? '' : solvedText(used, m.moves),
+      extra,
     ]
       .filter(Boolean)
       .join(' '),

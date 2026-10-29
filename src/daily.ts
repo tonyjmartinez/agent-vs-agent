@@ -52,6 +52,10 @@ export function dailyMission(key: string): Mission {
   };
 }
 
+/** Result-card line after a daily win: the streak it extends ("Daily streak: 1 day." / "N days."). */
+export const dailyStreakText = (n: number): string =>
+  `Daily streak: ${n} ${n === 1 ? 'day' : 'days'}.`;
+
 /**
  * Consecutive days completed, counted back from `today` (or from yesterday if today isn't done yet, so a streak
  * doesn't read 0 the morning after). Duplicates and order in `done` don't matter.
