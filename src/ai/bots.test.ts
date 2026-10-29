@@ -75,6 +75,65 @@ describe('bots', () => {
     },
   );
 
+  // Shipped rules (sprint + fumble). The fixtures above turn both off, so these pin the bots on the real game.
+  const shipped = { rules: { sprint: true, fumble: true } };
+
+  // Red carrier at (3,1), two rows from home with (4,1) and (5,1) empty: only a sprint banks it this turn.
+  const sprintWin = board(
+    `
+    . T . . T .
+    . . . . . .
+    . . . i . .
+    . R* . . . .
+    . . . . . .
+    . . . . R .`,
+    { scores: [2, 0], ...shipped },
+  );
+
+  test.each(['medium', 'hard'] as Level[])('%s sprints home for the win', (lvl) => {
+    // Non-vacuity: no one-square move wins here, so a win means the bot used the sprint.
+    const steps = legalActions(sprintWin).filter(
+      (a) =>
+        a.kind === 'move' &&
+        a.spyId === 'p0a' &&
+        Math.abs(a.to.r - 3) <= 1 &&
+        Math.abs(a.to.c - 1) <= 1,
+    );
+    expect(steps.length).toBeGreaterThan(0);
+    for (const a of steps) expect(applyAction(sprintWin, a).state.winner).toBeNull();
+    const { action } = chooseAction(sprintWin, lvl, 1, fast);
+    expect(applyAction(sprintWin, action).state.winner).toBe(0);
+  });
+
+  // Teal is at match point with a carrier at (2,3): next turn it sprints to (0,3) or (0,1)/(0,5) and wins.
+  // Red must knock the folder loose (fumble then stops the instant re-grab) or otherwise stop every sprint.
+  const stopTheSprint = board(
+    `
+    . . . . . .
+    . . . . . .
+    . . . T* . .
+    . . . . . .
+    . . . . R .
+    . R . . . T`,
+    { scores: [0, 2], ...shipped },
+  );
+
+  test('a quiet move against the sprint threat loses (fixture sanity)', () => {
+    const losing = legalActions(stopTheSprint).filter((a) => {
+      const after = applyAction(stopTheSprint, a).state;
+      return legalActions(after).some((r) => applyAction(after, r).state.winner === 1);
+    });
+    expect(losing.length).toBeGreaterThan(legalActions(stopTheSprint).length / 2);
+  });
+
+  test.each(['medium', 'hard'] as Level[])('%s stops a sprint to the winning point', (lvl) => {
+    const { action } = chooseAction(stopTheSprint, lvl, 2, fast);
+    const after = applyAction(stopTheSprint, action).state;
+    for (const reply of legalActions(after)) {
+      expect(applyAction(after, reply).state.winner, JSON.stringify({ action, reply })).not.toBe(1);
+    }
+  });
+
   test('evaluation is symmetric at the start', () => {
     const s = createGame(duelRules());
     expect(evaluate(s, 0)).toBeCloseTo(-evaluate(s, 1) + 0, 5);
