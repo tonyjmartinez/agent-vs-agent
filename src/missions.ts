@@ -192,6 +192,14 @@ export const bestText = (best: number, budget: number): string =>
 export const pillText = (m: Pick<Mission, 'goal'>, left: number): string =>
   `${GOAL_TEXT[m.goal]} · ${left} move${left === 1 ? '' : 's'} left`;
 
+/** Fresh-profile hint pointing at the first mission; empty once any mission is complete (hidden). */
+export function firstHintText(
+  done: number,
+  first: Pick<Mission, 'title' | 'goal' | 'moves'> | undefined,
+): string {
+  return done === 0 && first ? `Start with mission 1: ${first.title}. ${goalText(first)}.` : '';
+}
+
 /** Mission list progress line; the full set gets a clear finish note. */
 export function progressText(done: number, total: number): string {
   return done >= total && total > 0

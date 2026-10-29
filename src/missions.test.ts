@@ -6,6 +6,7 @@ import { decode, encode } from './engine/serialize';
 import {
   MISSIONS,
   bestText,
+  firstHintText,
   progressText,
   goalText,
   isNewBest,
@@ -39,6 +40,17 @@ describe('solvedText (the result card line for a won mission)', () => {
     expect(solvedText(1, 1)).toBe('Solved in 1 of 1 move.');
     expect(solvedText(1, 2)).toBe('Solved in 1 of 2 moves.');
     expect(solvedText(3, 3)).toBe('Solved in 3 of 3 moves.');
+  });
+});
+
+describe('firstHintText (fresh-profile pointer to mission 1)', () => {
+  const first = MISSIONS[0]!;
+  it('points at mission 1 only while nothing is complete', () => {
+    expect(firstHintText(0, first)).toBe(
+      `Start with mission 1: ${first.title}. ${goalText(first)}.`,
+    );
+    expect(firstHintText(1, first)).toBe('');
+    expect(firstHintText(0, undefined)).toBe('');
   });
 });
 
