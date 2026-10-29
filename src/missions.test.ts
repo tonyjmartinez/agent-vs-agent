@@ -3,9 +3,17 @@ import { describe, expect, it } from 'vitest';
 import { Solver, goalMet } from './ai/solve';
 import { applyTrusted, legalActions } from './engine/engine';
 import { decode, encode } from './engine/serialize';
-import { MISSIONS, goalText, missionById, pillText } from './missions';
+import { MISSIONS, goalText, missionById, pillText, solvedText } from './missions';
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+describe('solvedText (the result card line for a won mission)', () => {
+  it('says how many of the budgeted Red moves were used', () => {
+    expect(solvedText(1, 1)).toBe('Solved in 1 of 1 move.');
+    expect(solvedText(1, 2)).toBe('Solved in 1 of 2 moves.');
+    expect(solvedText(3, 3)).toBe('Solved in 3 of 3 moves.');
+  });
+});
 
 describe('missions', () => {
   it('README advertises the real mission count', () => {

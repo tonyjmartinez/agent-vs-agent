@@ -1,5 +1,5 @@
 import { dailyMission, isDayKey, streak } from '../daily';
-import { MISSIONS, goalText, type Mission } from '../missions';
+import { MISSIONS, goalText, solvedText, type Mission } from '../missions';
 import { shareMission, type ShareResult } from '../share';
 import { load, save } from './storage';
 
@@ -201,6 +201,7 @@ export function showMissionResult(
   m: Mission,
   outcome: MissionOutcome,
   on: { next?(): void; retry(): void; solution?(): void; list(): void },
+  used?: number,
 ): void {
   const wrap = document.createElement('div');
   wrap.className = 'overlay';
@@ -211,7 +212,7 @@ export function showMissionResult(
     outcome
   ];
   const sub = {
-    complete: 'nicely done.',
+    complete: used === undefined ? 'nicely done.' : `nicely done. ${solvedText(used, m.moves)}`,
     failed: 'Teal found the answer. Try another approach.',
     solution: 'that is the forced line. Now try it yourself.',
   }[outcome];

@@ -410,3 +410,14 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   `**Missions:** N tactical puzzles` matches `MISSIONS.length`, so the count can't drift again.
 - Environment note: the sandbox's preinstalled Chromium (1248) is missing system libraries (libnss3, libnspr4,
   libasound), so `npm run e2e` cannot run here. This PR is unit-tested only.
+
+## Iteration: Solved-in line on the mission result card
+
+- Problem: a won mission said only "nicely done.", so a player could not tell whether they found the tightest line or
+  used the whole budget, and had no reason to replay for a cleaner solution.
+- Change: `solvedText(used, budget)` (`src/missions.ts`, pure, tested) adds "Solved in N of M moves." to the complete card.
+  `N` is the Red moves made (`redMovesMade`), `M` is the mission's move budget. Solution replays are not credited and keep
+  their own line.
+- Not verified in a browser: the sandbox can't launch Chromium (friction #28). Only the stamps are asserted by e2e, so the
+  new subtitle doesn't break existing specs. Needs a visual check on phone width when the browser works.
+- Ideas left: a best-moves record per mission (needs storage and a migration story), a par badge.

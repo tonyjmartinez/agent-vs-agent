@@ -176,6 +176,10 @@ const GOAL_TEXT: Record<Goal, string> = {
   burn: 'Burn a Teal agent',
 };
 
+/** Result-card line for a won mission: Red moves used against the budget. */
+export const solvedText = (used: number, budget: number): string =>
+  `Solved in ${used} of ${budget} ${budget === 1 ? 'move' : 'moves'}.`;
+
 /** In-play pill: goal and Red moves remaining. */
 export const pillText = (m: Pick<Mission, 'goal'>, left: number): string =>
   `${GOAL_TEXT[m.goal]} · ${left} move${left === 1 ? '' : 's'} left`;
