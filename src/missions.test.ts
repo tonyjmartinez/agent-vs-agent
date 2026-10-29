@@ -3,9 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { Solver, goalMet } from './ai/solve';
 import { applyTrusted, legalActions } from './engine/engine';
 import { decode, encode } from './engine/serialize';
-import { MISSIONS, goalText, missionById, pillText, solvedText } from './missions';
+import { MISSIONS, bestText, goalText, missionById, pillText, solvedText } from './missions';
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+describe('bestText (the mission-list line for a completed mission)', () => {
+  it('shows the fewest moves against the budget', () => {
+    expect(bestText(1, 1)).toBe('Best: 1 of 1 move');
+    expect(bestText(2, 3)).toBe('Best: 2 of 3 moves');
+  });
+});
 
 describe('solvedText (the result card line for a won mission)', () => {
   it('says how many of the budgeted Red moves were used', () => {
