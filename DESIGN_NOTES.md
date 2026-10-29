@@ -395,3 +395,11 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - Property-tested against an independent recount over 300 random games; targeted test walks a carrier home and a restart.
 - The seventh debrief row made the vs-bot card scroll on 320x568, so short portrait phones get a tighter game-over card
   and the three buttons shrink a little under 380px width. The fit sweeps (inner scroll included) pass at all sizes.
+
+## Iteration: Bot tactics under the shipped rules
+
+- The bot tactical fixtures (`src/ai/bots.test.ts`) all ran with sprint and fumble off (the `board()` fixture default), so
+  nothing pinned the bots on the game people actually play. Added two shipped-rules fixtures for medium and hard:
+  `sprintWin` (the only winning move is a two-square carrier sprint; the test first proves no one-square step wins) and
+  `stopTheSprint` (Teal at match point can sprint home next turn; only 2 of Red's 12 moves knock the folder loose in time,
+  and a sanity test proves most moves lose). Both bots pass; no AI change was needed. Test-only regression guard.
