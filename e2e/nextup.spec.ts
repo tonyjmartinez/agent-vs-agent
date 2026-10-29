@@ -113,3 +113,19 @@ test('winning the last mission says the whole set is complete, on the result car
   await expect(card.locator('p.sub:not(.share-note)')).toBeInViewport();
   expect(errors).toEqual([]);
 });
+
+test('winning a mission that is not the last one does not claim the set is complete', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const second = MISSIONS[MISSIONS.length - 2]!;
+  await seed(
+    page,
+    MISSIONS.filter((m) => m.id !== second.id && m.id !== MISSIONS.at(-1)!.id).map((m) => m.id),
+  );
+  await openMission(page, second);
+  await solve(page, info, second);
+  const card = page.locator('#mission-result');
+  await expect(card).toBeVisible();
+  await expect(card.locator('p.sub:not(.share-note)')).not.toContainText('missions complete');
+});

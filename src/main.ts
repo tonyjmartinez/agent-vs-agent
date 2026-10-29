@@ -112,8 +112,9 @@ function judgeMission(c: Controller, s: GameState): void {
       prevBest = bestMoves()[r.m.id];
       recordBest(r.m.id, redMovesMade(c));
       // The win that completes the whole set says so on the card, not only on the list.
-      const done = completedMissions().size;
-      if (done >= MISSIONS.length) extra = progressText(done, MISSIONS.length);
+      const done = completedMissions();
+      const finished = MISSIONS.filter((m) => done.has(m.id)).length;
+      if (finished >= MISSIONS.length) extra = progressText(finished, MISSIONS.length);
     }
   } else if (failed && r.m.daily && !r.demo) extra = dailyMissedText();
   // The daily mission isn't part of the list, so it has no "next".
