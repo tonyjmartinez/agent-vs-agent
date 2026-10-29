@@ -421,3 +421,12 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - Not verified in a browser: the sandbox can't launch Chromium (friction #28). Only the stamps are asserted by e2e, so the
   new subtitle doesn't break existing specs. Needs a visual check on phone width when the browser works.
 - Ideas left: a best-moves record per mission (needs storage and a migration story), a par badge.
+
+## Iteration: Best moves on the mission list
+
+- Problem: a completed mission ticked ✓ and then looked finished. "Solved in N of M" showed only once, on the result card, so
+  nothing invited a replay to tighten the win.
+- Change: `ava.missionBest.v1` stores the fewest Red moves per completed curated mission (`recordBest` keeps the lower value,
+  never a worse win). The mission list shows "Best: N of M moves" under a completed mission (`bestText`). Reset progress clears it.
+- Assumption: only curated missions (not the daily, which is not in the list) and not Show-solution replays are recorded.
+- E2E not run in the sandbox (friction #28); the unit tests cover storage and text.

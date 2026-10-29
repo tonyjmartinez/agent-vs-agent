@@ -1,5 +1,5 @@
 import { dailyMission, isDayKey, streak } from '../daily';
-import { MISSIONS, goalText, solvedText, type Mission } from '../missions';
+import { MISSIONS, bestText, goalText, solvedText, type Mission } from '../missions';
 import { shareMission, type ShareResult } from '../share';
 import { load, save } from './storage';
 
@@ -15,6 +15,28 @@ export function markCompleted(id: string): void {
   const done = completedMissions();
   done.add(id);
   save(KEY, [...done]);
+}
+
+const BEST_KEY = 'ava.missionBest.v1';
+
+/** Fewest Red moves each completed mission was solved in (id → moves), kept as a replay goal. */
+export function bestMoves(): Record<string, number> {
+  const v = load<unknown>(BEST_KEY, {});
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+  const out: Record<string, number> = {};
+  for (const [id, n] of Object.entries(v)) {
+    if (typeof n === 'number' && Number.isInteger(n) && n >= 1) out[id] = n;
+  }
+  return out;
+}
+
+/** Keep the lower of the stored best and `used`; a worse win never overwrites a better one. */
+export function recordBest(id: string, used: number): void {
+  const best = bestMoves();
+  if (best[id] === undefined || used < best[id]) {
+    best[id] = used;
+    save(BEST_KEY, best);
+  }
 }
 
 const DAILY_KEY = 'ava.daily.v1';
@@ -39,6 +61,7 @@ export const nextUp = (done: ReadonlySet<string>): Mission | undefined =>
 /** Forget every completed mission and every solved daily (the streak with them). */
 export function resetProgress(): void {
   save(KEY, []);
+  save(BEST_KEY, {});
   save(DAILY_KEY, []);
 }
 
@@ -55,6 +78,7 @@ export function showMissions(
   today: string,
 ): void {
   const done = completedMissions();
+  const best = bestMoves();
   const days = completedDays();
   const daily = dailyMission(today);
   const dailyDone = days.includes(today);
@@ -78,7 +102,7 @@ export function showMissions(
           i,
         ) => `<li><button class="btn mission-btn${done.has(m.id) ? ' done' : ''}${m === next ? ' next' : ''}" data-mission="${m.id}"${m === next && done.size > 0 ? ' aria-describedby="next-up"' : ''}>
           <span class="mission-no">${i + 1}</span>
-          <span class="mission-text"><b>${esc(m.title)}</b><small>${goalText(m)}</small>${m === next && done.size > 0 ? '<span class="next-tag" id="next-up">Next up</span>' : ''}</span>
+          <span class="mission-text"><b>${esc(m.title)}</b><small>${goalText(m)}</small>${done.has(m.id) && best[m.id] !== undefined ? `<small class="best" data-testid="best-${m.id}">${bestText(best[m.id]!, m.moves)}</small>` : ''}${m === next && done.size > 0 ? '<span class="next-tag" id="next-up">Next up</span>' : ''}</span>
           <span class="mission-tick" aria-label="${done.has(m.id) ? 'complete' : 'not done'}">${done.has(m.id) ? '✓' : ''}</span>
         </button></li>`,
       ).join('')}

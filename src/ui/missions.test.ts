@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MISSIONS } from '../missions';
 import {
+  bestMoves,
   completedDays,
   completedMissions,
   markCompleted,
   markDayDone,
   nextUp,
+  recordBest,
   resetProgress,
 } from './missions';
 
@@ -18,6 +20,29 @@ function fakeStorage(initial: Record<string, string> = {}) {
     setItem: (k: string, v: string) => void data.set(k, v),
   };
 }
+
+describe('best moves per mission', () => {
+  beforeEach(() => vi.stubGlobal('localStorage', fakeStorage()));
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('keeps the fewest Red moves, never a worse win', () => {
+    expect(bestMoves()).toEqual({});
+    recordBest('side-step', 3);
+    recordBest('side-step', 2);
+    recordBest('side-step', 3);
+    expect(bestMoves()).toEqual({ 'side-step': 2 });
+  });
+
+  it('drops junk in storage', () => {
+    localStorage.setItem(
+      'ava.missionBest.v1',
+      JSON.stringify({ a: 1, b: 0, c: 2.5, d: 'x', e: 4 }),
+    );
+    expect(bestMoves()).toEqual({ a: 1, e: 4 });
+    localStorage.setItem('ava.missionBest.v1', JSON.stringify([1, 2]));
+    expect(bestMoves()).toEqual({});
+  });
+});
 
 describe('mission progress storage', () => {
   let store: ReturnType<typeof fakeStorage>;

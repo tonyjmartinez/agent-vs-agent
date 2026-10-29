@@ -180,6 +180,10 @@ const GOAL_TEXT: Record<Goal, string> = {
 export const solvedText = (used: number, budget: number): string =>
   `Solved in ${used} of ${budget} ${budget === 1 ? 'move' : 'moves'}.`;
 
+/** Mission-list line for a completed mission: the fewest Red moves it has been solved in. */
+export const bestText = (best: number, budget: number): string =>
+  `Best: ${best} of ${budget} ${budget === 1 ? 'move' : 'moves'}`;
+
 /** In-play pill: goal and Red moves remaining. */
 export const pillText = (m: Pick<Mission, 'goal'>, left: number): string =>
   `${GOAL_TEXT[m.goal]} · ${left} move${left === 1 ? '' : 's'} left`;

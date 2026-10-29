@@ -15,6 +15,7 @@ import { Sound } from './ui/sound';
 import { showMenu, showPause } from './ui/menu';
 import {
   markCompleted,
+  recordBest,
   markDayDone,
   missionPill,
   showBriefing,
@@ -98,7 +99,10 @@ function judgeMission(c: Controller, s: GameState): void {
   endMission();
   if (success && !r.demo) {
     if (r.m.daily) markDayDone(r.m.id.slice('daily-'.length));
-    else markCompleted(r.m.id);
+    else {
+      markCompleted(r.m.id);
+      recordBest(r.m.id, redMovesMade(c));
+    }
   }
   // The daily mission isn't part of the list, so it has no "next".
   const nextM = r.m.daily ? undefined : MISSIONS[MISSIONS.indexOf(r.m) + 1];
