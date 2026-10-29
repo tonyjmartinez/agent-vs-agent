@@ -17,13 +17,14 @@ import {
   markCompleted,
   bestMoves,
   recordBest,
+  completedDays,
   markDayDone,
   missionPill,
   showBriefing,
   showMissionResult,
   showMissions,
 } from './ui/missions';
-import { dailyMission, dayKey } from './daily';
+import { dailyMission, dailyStreakText, dayKey, streak } from './daily';
 import { MISSIONS, isNewBest, missionById, pillText, type Mission } from './missions';
 import type { GameState } from './engine/types';
 import { humanResult, recordLine, recordResult, resultShareText } from './ui/record';
@@ -99,9 +100,13 @@ function judgeMission(c: Controller, s: GameState): void {
   c.stop();
   endMission();
   let prevBest: number | undefined;
+  let extra = '';
   if (success && !r.demo) {
-    if (r.m.daily) markDayDone(r.m.id.slice('daily-'.length));
-    else {
+    if (r.m.daily) {
+      const day = r.m.id.slice('daily-'.length);
+      markDayDone(day);
+      extra = dailyStreakText(streak(completedDays(), day));
+    } else {
       markCompleted(r.m.id);
       prevBest = bestMoves()[r.m.id];
       recordBest(r.m.id, redMovesMade(c));
@@ -121,6 +126,7 @@ function judgeMission(c: Controller, s: GameState): void {
     },
     success ? redMovesMade(c) : undefined,
     success && !r.demo && !r.m.daily && isNewBest(redMovesMade(c), prevBest),
+    success && !r.demo && r.m.daily ? extra : '',
   );
 }
 

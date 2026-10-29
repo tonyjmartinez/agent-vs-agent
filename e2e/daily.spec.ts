@@ -40,6 +40,9 @@ test('the daily mission opens from a link, solves through real input, and is cre
   // A daily has no "next mission".
   await expect(page.locator('#btn-mission-next')).toHaveCount(0);
   await expect(page.locator('#btn-mission-retry')).toBeVisible();
+  // The win card says the daily is done and what the streak now is.
+  await expect(page.locator('#mission-result p.sub:not(.share-note)')).toContainText('Daily streak: 1 day.');
+  await shot(page, info, 'daily-result');
 
   await page.click('#btn-mission-list');
   await expect(dailyBtn(page)).toHaveClass(/done/);
