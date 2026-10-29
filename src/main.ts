@@ -14,6 +14,7 @@ import { Hud } from './ui/hud';
 import { Sound } from './ui/sound';
 import { showMenu, showPause } from './ui/menu';
 import {
+  completedMissions,
   markCompleted,
   bestMoves,
   recordBest,
@@ -25,7 +26,7 @@ import {
   showMissions,
 } from './ui/missions';
 import { dailyMissedText, dailyMission, dailyStreakText, dayKey, streak } from './daily';
-import { MISSIONS, isNewBest, missionById, pillText, type Mission } from './missions';
+import { MISSIONS, isNewBest, missionById, pillText, progressText, type Mission } from './missions';
 import type { GameState } from './engine/types';
 import { humanResult, recordLine, recordResult, resultShareText } from './ui/record';
 import { load, save } from './ui/storage';
@@ -110,6 +111,9 @@ function judgeMission(c: Controller, s: GameState): void {
       markCompleted(r.m.id);
       prevBest = bestMoves()[r.m.id];
       recordBest(r.m.id, redMovesMade(c));
+      // The win that completes the whole set says so on the card, not only on the list.
+      const done = completedMissions().size;
+      if (done >= MISSIONS.length) extra = progressText(done, MISSIONS.length);
     }
   } else if (failed && r.m.daily && !r.demo) extra = dailyMissedText();
   // The daily mission isn't part of the list, so it has no "next".
@@ -126,7 +130,7 @@ function judgeMission(c: Controller, s: GameState): void {
     },
     success ? redMovesMade(c) : undefined,
     success && !r.demo && !r.m.daily && isNewBest(redMovesMade(c), prevBest),
-    !r.demo && r.m.daily ? extra : '',
+    extra,
   );
 }
 
