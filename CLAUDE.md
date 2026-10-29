@@ -16,7 +16,10 @@ Spec: `PLAN.md` (source of truth). Decisions + sim tables: `DESIGN_NOTES.md`.
 - Phaser 4 (not 3!). Read `node_modules/phaser/skills/<topic>/SKILL.md` before Phaser code; grep `node_modules/phaser/types/phaser.d.ts` when a type fails.
 - Always `view.sync(state)` after `view.play(events)`; sprites are never the truth.
 - After visual changes regenerate screenshots and look at them (desktop + phone).
-- Container: `@playwright/test@1.56.1` matches preinstalled Chromium. Never run `playwright install` here.
+- Browser (sandbox): `@playwright/test@1.56.1` runs Chromium 141 through a wrapper. The harness sets `PW_CHROMIUM` and `CHROMIUM` to
+  `/home/tonyjmartinez/.cache/pi-durable-browser/chromium` (`playwright.config.ts` reads `PW_CHROMIUM`). If e2e fails with "Target page,
+  context or browser has been closed", check that `PW_CHROMIUM` is that wrapper; `~/.cache/ms-playwright` and `/opt/pw-browsers` lack the
+  system libraries. Do not run `playwright install` in this repo.
 
 ## Handoff (living memory: read first, update last)
 
