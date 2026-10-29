@@ -192,6 +192,13 @@ export const bestText = (best: number, budget: number): string =>
 export const pillText = (m: Pick<Mission, 'goal'>, left: number): string =>
   `${GOAL_TEXT[m.goal]} · ${left} move${left === 1 ? '' : 's'} left`;
 
+/** Mission list progress line; the full set gets a clear finish note. */
+export function progressText(done: number, total: number): string {
+  return done >= total && total > 0
+    ? `All ${total} missions complete. Nice work.`
+    : `${done} of ${total} complete`;
+}
+
 export function goalText(m: Pick<Mission, 'goal' | 'moves'>): string {
   return `${GOAL_TEXT[m.goal]} in ${m.moves} move${m.moves > 1 ? 's' : ''}`;
 }
