@@ -131,7 +131,7 @@ function judgeMission(c: Controller, s: GameState): void {
     },
     success ? redMovesMade(c) : undefined,
     success && !r.demo && !r.m.daily && isNewBest(redMovesMade(c), prevBest),
-    extra,
+    !r.demo ? extra : '',
   );
 }
 
