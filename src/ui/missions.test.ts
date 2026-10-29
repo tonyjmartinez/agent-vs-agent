@@ -33,6 +33,14 @@ describe('best moves per mission', () => {
     expect(bestMoves()).toEqual({ 'side-step': 2 });
   });
 
+  it('reset progress clears the best records too', () => {
+    markCompleted('side-step');
+    recordBest('side-step', 2);
+    resetProgress();
+    expect(bestMoves()).toEqual({});
+    expect([...completedMissions()]).toEqual([]);
+  });
+
   it('drops junk in storage', () => {
     localStorage.setItem(
       'ava.missionBest.v1',
