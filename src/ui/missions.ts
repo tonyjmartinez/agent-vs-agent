@@ -1,5 +1,13 @@
 import { dailyMission, isDayKey, streak } from '../daily';
-import { MISSIONS, bestText, goalText, progressText, solvedText, type Mission } from '../missions';
+import {
+  MISSIONS,
+  bestText,
+  firstHintText,
+  goalText,
+  progressText,
+  solvedText,
+  type Mission,
+} from '../missions';
 import { shareMission, type ShareResult } from '../share';
 import { load, save } from './storage';
 
@@ -84,6 +92,7 @@ export function showMissions(
   const dailyDone = days.includes(today);
   const run = streak(days, today);
   const next = nextUp(done);
+  const firstHint = firstHintText(done.size, MISSIONS[0]);
   const wrap = document.createElement('div');
   wrap.className = 'overlay menu-overlay';
   wrap.id = 'missions';
@@ -95,6 +104,7 @@ export function showMissions(
     </button>
     <p class="sub" data-testid="daily-streak">Streak: ${run} day${run === 1 ? '' : 's'}</p>
     <p class="sub" data-testid="missions-progress">${progressText(done.size, MISSIONS.length)}</p>
+    ${firstHint ? `<p class="sub" data-testid="first-hint">${esc(firstHint)}</p>` : ''}
     <ol class="mission-list">
       ${MISSIONS.map(
         (

@@ -28,6 +28,20 @@ test('a fresh list highlights nothing special: no "Next up" tag, first mission i
   await expect(page.locator('.mission-btn.next')).toHaveAttribute('data-mission', MISSIONS[0]!.id);
 });
 
+test('a fresh profile is pointed at mission 1 at 360px', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await openList(page);
+  const hint = page.locator('[data-testid="first-hint"]');
+  await expect(hint).toContainText(`Start with mission 1: ${MISSIONS[0]!.title}`);
+  await expect(hint).toBeInViewport();
+});
+
+test('the first-mission hint is gone once any mission is complete', async ({ page }) => {
+  await seed(page, [MISSIONS[0]!.id]);
+  await openList(page);
+  await expect(page.locator('[data-testid="first-hint"]')).toHaveCount(0);
+});
+
 test('with progress, the list opens at the next mission, which is tagged and on screen', async ({
   page,
 }, info) => {
