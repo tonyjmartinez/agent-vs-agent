@@ -36,6 +36,19 @@ test('a fresh profile is pointed at mission 1 at 360px', async ({ page }) => {
   await expect(hint).toBeInViewport();
 });
 
+test('once every mission is solved, the list points at a real bot match, on screen at 360px', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await seed(page, MISSIONS.map((m) => m.id));
+  await openList(page);
+  const hint = page.locator('[data-testid="bot-hint"]');
+  await expect(hint).toContainText('Play vs Agent');
+  await expect(hint).toBeInViewport();
+  await expect(page.locator('[data-testid="first-hint"]')).toHaveCount(0);
+  await shot(page, info, 'botHint-360');
+});
+
 test('the first-mission hint is gone once any mission is complete', async ({ page }) => {
   await seed(page, [MISSIONS[0]!.id]);
   await openList(page);

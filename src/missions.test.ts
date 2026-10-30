@@ -7,6 +7,7 @@ import {
   firstWinText,
   MISSIONS,
   bestText,
+  botHintText,
   firstHintText,
   progressText,
   goalText,
@@ -49,6 +50,14 @@ describe('firstWinText (first ever win card line)', () => {
     expect(firstWinText).toContain('Your first win.');
     expect(firstWinText).toContain('Next');
     expect(firstWinText).toContain('list');
+  });
+});
+
+describe('botHintText (pointer to a real match once the set is solved)', () => {
+  it('shows only when every mission is complete', () => {
+    expect(botHintText(MISSIONS.length, MISSIONS.length)).toContain('Play vs Agent');
+    expect(botHintText(MISSIONS.length - 1, MISSIONS.length)).toBe('');
+    expect(botHintText(0, 0)).toBe('');
   });
 });
 

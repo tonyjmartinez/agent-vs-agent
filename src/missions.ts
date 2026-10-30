@@ -225,6 +225,10 @@ export function firstHintText(
   return done === 0 && first ? `Start with mission 1: ${first.title}. ${goalText(first)}.` : '';
 }
 
+/** Mission-list pointer once every curated mission is solved: the next step is a real bot match. */
+export const botHintText = (done: number, total: number): string =>
+  total > 0 && done === total ? 'Ready for a real match? Try Play vs Agent, starting on Easy.' : '';
+
 /** Shown on the card of a player's first ever mission win: where to go next. */
 export const firstWinText =
   'Your first win. Tap Next for the next mission, or pick any mission from the list.';
