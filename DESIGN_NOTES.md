@@ -436,3 +436,12 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - Problem: the best line (PR #30) only appeared in the list later; a player who beat their own best got no feedback at the moment of winning.
 - Change: a curated, non-demo win that uses strictly fewer Red moves than the stored best says "nicely done. New best! Solved in N of M moves." (`isNewBest` in `src/missions.ts`). A first win is not a "New best" (nothing to beat). Daily wins never show it.
 - E2E (`e2e/newbest.spec.ts`, runs in the sandbox now that the browser works): beats-best, does-not-beat, first-win cases; desktop + mobile pass.
+
+## Iteration: three more 2-move missions
+
+- Mined (seed 21, 60 games, 2-move budget) and added `flank` (burn), `run-the-gauntlet` (extract, with a defender) and `level-at-two`
+  (win), placed before the 3-move missions so the list still never drops in move budget. Candidates already used by the daily
+  pool or the curated list are skipped (`daily.test.ts` forbids overlap). All proof, hint and e2e suites run over `MISSIONS`,
+  so they cover the new ones automatically. 21 missions now.
+- Mining throughput note: 60 games of 2-move mining took ~2 minutes and produced ~176 candidates, many near-duplicates (same
+  skirmish, different ply); curating by variety (goal, defender present, score state) matters more than volume.

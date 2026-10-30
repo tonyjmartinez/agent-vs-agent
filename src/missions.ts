@@ -126,6 +126,31 @@ export const MISSIONS: readonly Mission[] = [
     state: 'v1.0.42.2-2.50,44,22*,04.33',
   },
   {
+    id: 'flank',
+    title: 'Flank',
+    brief: 'Both Teal agents are still near home. Two quiet moves, then put one over the edge.',
+    goal: 'burn',
+    moves: 2,
+    state: 'v1.0.6.0-0.31,54,00,15.2233',
+  },
+  {
+    id: 'run-the-gauntlet',
+    title: 'Run the Gauntlet',
+    brief: 'Your carrier is deep in enemy territory and a defender is circling. Pick your route.',
+    goal: 'extract',
+    moves: 2,
+    state: 'v1.0.26.1-1.55,22*,00,43.33',
+  },
+  {
+    id: 'level-at-two',
+    title: 'Level at Two',
+    brief:
+      'Two points each and deep into the game. One agent is out wide: make the last two moves count.',
+    goal: 'win',
+    moves: 2,
+    state: 'v1.0.32.2-2.44,50,00,03.2233',
+  },
+  {
     id: 'long-way-round',
     title: 'Long Way Round',
     brief:
