@@ -2,6 +2,7 @@ import { dailyMission, isDayKey, streak } from '../daily';
 import {
   MISSIONS,
   bestText,
+  botHintText,
   firstHintText,
   goalText,
   progressText,
@@ -93,6 +94,7 @@ export function showMissions(
   const run = streak(days, today);
   const next = nextUp(done);
   const firstHint = firstHintText(done.size, MISSIONS[0]);
+  const botHint = botHintText(done.size, MISSIONS.length);
   const wrap = document.createElement('div');
   wrap.className = 'overlay menu-overlay';
   wrap.id = 'missions';
@@ -105,6 +107,7 @@ export function showMissions(
     <p class="sub" data-testid="daily-streak">Streak: ${run} day${run === 1 ? '' : 's'}</p>
     <p class="sub" data-testid="missions-progress">${progressText(done.size, MISSIONS.length)}</p>
     ${firstHint ? `<p class="sub" data-testid="first-hint">${esc(firstHint)}</p>` : ''}
+    ${botHint ? `<p class="sub" data-testid="bot-hint">${esc(botHint)}</p>` : ''}
     <ol class="mission-list">
       ${MISSIONS.map(
         (
