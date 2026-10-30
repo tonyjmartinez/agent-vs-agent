@@ -60,6 +60,9 @@ export const dailyStreakText = (n: number): string =>
 export const streakStartText = (n: number): string | null =>
   n === 0 ? "Solve today's daily to start a streak." : null;
 
+/** Daily button line once today's daily is solved: one puzzle a day, so the next one comes tomorrow. */
+export const dailyDoneText = (): string => 'Done. Next daily tomorrow.';
+
 /** Result-card line after a missed daily: names the daily and says what to do next (retry now, or tomorrow). */
 export const dailyMissedText = (): string =>
   'Daily missed. Retry it now, or come back tomorrow for a new puzzle.';

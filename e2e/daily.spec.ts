@@ -270,3 +270,20 @@ test('at 360px the zero-streak hint replaces the streak line and stays on screen
   expect(box.x).toBeGreaterThanOrEqual(0);
   expect(box.x + box.width).toBeLessThanOrEqual(360);
 });
+
+test('at 360px a solved daily says the next one is tomorrow, on screen', async ({ page }, info) => {
+  const errors = trackErrors(page);
+  const day = '2026-03-10';
+  const m = dailyMission(day);
+  await page.setViewportSize({ width: 360, height: 740 });
+  await openMission(page, m, url(day));
+  await solve(page, info, m);
+  await page.click('#btn-mission-list');
+  await expect(dailyBtn(page)).toHaveClass(/done/);
+  const sub = dailyBtn(page).locator('small');
+  await expect(sub).toHaveText(`${day} · Done. Next daily tomorrow.`);
+  const box = (await dailyBtn(page).boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(360);
+  expect(errors).toEqual([]);
+});

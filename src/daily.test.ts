@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Solver, goalMet } from './ai/solve';
 import {
   dailyMissedText,
+  dailyDoneText,
   streakStartText,
   dailyMission,
   dailyStreakText,
@@ -213,5 +214,11 @@ describe('streakStartText', () => {
     expect(streakStartText(0)).toBe("Solve today's daily to start a streak.");
     expect(streakStartText(1)).toBeNull();
     expect(streakStartText(5)).toBeNull();
+  });
+});
+
+describe('dailyDoneText', () => {
+  it('says the next daily comes tomorrow once today is solved', () => {
+    expect(dailyDoneText()).toBe('Done. Next daily tomorrow.');
   });
 });
