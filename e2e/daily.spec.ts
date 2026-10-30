@@ -65,7 +65,7 @@ test('the list shows today’s daily, and tapping it starts that date’s puzzle
   await list(page, day);
   await expect(dailyBtn(page)).not.toHaveClass(/done/);
   await expect(dailyBtn(page)).toContainText(goalText(dailyMission(day)));
-  await expect(streakText(page)).toHaveText('Streak: 0 days');
+  await expect(streakText(page)).toHaveText("Solve today's daily to start a streak.");
   await shot(page, info, 'daily-list');
   await dailyBtn(page).click();
   await expect(page.locator('#briefing .stamp')).toHaveText(`DAILY ${day}`);
@@ -96,7 +96,7 @@ test('streak: counts consecutive days, survives the morning after, and resets af
   await expect(dailyBtn(page)).toHaveClass(/done/);
   // Day 4 (day 3 missed): the streak is gone until today is solved.
   await list(page, d4);
-  await expect(streakText(page)).toHaveText('Streak: 0 days');
+  await expect(streakText(page)).toHaveText("Solve today's daily to start a streak.");
   await expect(dailyBtn(page)).not.toHaveClass(/done/);
   await dailyBtn(page).click();
   await page.click('#btn-briefing-go');
@@ -138,7 +138,7 @@ test('failing the daily, then watching the solution, credits nothing; a real sol
   expect(goalMet(start, await ava(page), m.goal, 0)).toBe(true);
   await page.click('#btn-mission-list');
   await expect(dailyBtn(page)).not.toHaveClass(/done/);
-  await expect(streakText(page)).toHaveText('Streak: 0 days');
+  await expect(streakText(page)).toHaveText("Solve today's daily to start a streak.");
 
   await openMission(page, m, url(day));
   await solve(page, info, m);
@@ -256,4 +256,17 @@ test('the daily card and list fit small phones and landscape', async ({ page }, 
     expect(stamp.x + stamp.width).toBeLessThanOrEqual(w);
     await page.screenshot({ path: `artifacts/screens/daily-briefing-${w}x${h}.png` });
   }
+});
+
+test('at 360px the zero-streak hint replaces the streak line and stays on screen', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await list(page, '2026-05-02');
+  const hint = streakText(page);
+  await expect(hint).toHaveText("Solve today's daily to start a streak.");
+  await expect(hint).toBeVisible();
+  const box = (await hint.boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(360);
 });
