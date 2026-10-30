@@ -58,9 +58,18 @@ export function humanResult(
   return { level, outcome: s.winner === humans[0] ? 'win' : 'loss' };
 }
 
-export function recordLine(level: BotLevel, t: Tally): string {
+/**
+ * True when this result is the player's first ever win against any agent level, given the records
+ * as they were before the game. Only the first win gets the note, so it is a one-off onboarding cue.
+ */
+export function isFirstAgentWin(before: Records, outcome: Outcome): boolean {
+  return outcome === 'win' && Object.values(before).every((t) => !t || t.w === 0);
+}
+
+export function recordLine(level: BotLevel, t: Tally, firstWin = false): string {
   const draws = t.d ? ` · ${t.d} ${t.d === 1 ? 'draw' : 'draws'}` : '';
-  return `Record vs ${levelName[level] ?? level}: ${t.w} ${t.w === 1 ? 'win' : 'wins'} · ${t.l} ${t.l === 1 ? 'loss' : 'losses'}${draws}`;
+  const line = `Record vs ${levelName[level] ?? level}: ${t.w} ${t.w === 1 ? 'win' : 'wins'} · ${t.l} ${t.l === 1 ? 'loss' : 'losses'}${draws}`;
+  return firstWin ? `First agent win! ${line}` : line;
 }
 
 /**
