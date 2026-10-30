@@ -177,6 +177,16 @@ function hint(c: Controller): void {
   c.select({ selected: sel, pending: null });
 }
 
+/**
+ * The first prompt of a first game. Before any move it also says the goal, since the rules card is
+ * one tap away and players rarely open it. Short on purpose: the bubble must stay on one line at 320px.
+ */
+function coachFirstTurn(c: Controller): string {
+  const act = lastTouch ? 'Tap' : 'Click';
+  if (c.history.length === 1) return `Goal: ${c.state.rules.intelToWin} intel. ${act} a spy.`;
+  return `${act} one of your spies`;
+}
+
 function coach(c: Controller): void {
   if (run) {
     missionPill(
@@ -201,9 +211,7 @@ function coach(c: Controller): void {
     document.body.append(el);
   }
   el.textContent = !c.sel.selected
-    ? lastTouch
-      ? 'Tap one of your spies'
-      : 'Click one of your spies'
+    ? coachFirstTurn(c)
     : !c.sel.pending
       ? lastTouch
         ? 'Tap a dot to preview the move'

@@ -476,6 +476,8 @@ body {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
+  /* Fixed at left 50%, so without this the pill shrinks to half the screen and wraps (320px: 160px wide). */
+  width: max-content;
   bottom: max(16px, env(safe-area-inset-bottom));
   z-index: 5;
   background: var(--ink);
