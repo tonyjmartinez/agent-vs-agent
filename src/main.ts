@@ -26,7 +26,15 @@ import {
   showMissions,
 } from './ui/missions';
 import { dailyMissedText, dailyMission, dailyStreakText, dayKey, streak } from './daily';
-import { MISSIONS, isNewBest, missionById, pillText, progressText, type Mission } from './missions';
+import {
+  MISSIONS,
+  firstWinText,
+  isNewBest,
+  missionById,
+  pillText,
+  progressText,
+  type Mission,
+} from './missions';
 import type { GameState } from './engine/types';
 import { humanResult, recordLine, recordResult, resultShareText } from './ui/record';
 import { load, save } from './ui/storage';
@@ -109,6 +117,7 @@ function judgeMission(c: Controller, s: GameState): void {
       markDayDone(day);
       extra = dailyStreakText(streak(completedDays(), day));
     } else {
+      const firstWin = completedMissions().size === 0;
       markCompleted(r.m.id);
       prevBest = bestMoves()[r.m.id];
       recordBest(r.m.id, redMovesMade(c));
@@ -116,6 +125,7 @@ function judgeMission(c: Controller, s: GameState): void {
       const done = completedMissions();
       const finished = MISSIONS.filter((m) => done.has(m.id)).length;
       if (finished >= MISSIONS.length) finish = progressText(finished, MISSIONS.length);
+      else if (firstWin) finish = firstWinText;
     }
   } else if (failed && r.m.daily && !r.demo) extra = dailyMissedText();
   // The daily mission isn't part of the list, so it has no "next".

@@ -129,3 +129,18 @@ test('winning the second-to-last mission (16 of 18 done) does not claim the set 
   await expect(card).toBeVisible();
   await expect(card.locator('p.sub:not(.share-note)')).not.toContainText('missions complete');
 });
+
+test('the first ever win says where to go next, on the result card at 360px', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const errors = trackErrors(page);
+  const first = MISSIONS[0]!;
+  await openMission(page, first);
+  await solve(page, info, first);
+  const card = page.locator('#mission-result');
+  await expect(card).toBeVisible();
+  await expect(card.locator('p.sub:not(.share-note)')).toContainText('Your first win.');
+  await expect(card.locator('p.sub:not(.share-note)')).toBeInViewport();
+  expect(errors).toEqual([]);
+});
