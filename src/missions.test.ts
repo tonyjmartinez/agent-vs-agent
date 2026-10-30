@@ -4,6 +4,7 @@ import { Solver, goalMet } from './ai/solve';
 import { applyTrusted, legalActions } from './engine/engine';
 import { decode, encode } from './engine/serialize';
 import {
+  firstWinText,
   MISSIONS,
   bestText,
   firstHintText,
@@ -40,6 +41,14 @@ describe('solvedText (the result card line for a won mission)', () => {
     expect(solvedText(1, 1)).toBe('Solved in 1 of 1 move.');
     expect(solvedText(1, 2)).toBe('Solved in 1 of 2 moves.');
     expect(solvedText(3, 3)).toBe('Solved in 3 of 3 moves.');
+  });
+});
+
+describe('firstWinText (first ever win card line)', () => {
+  it('says the first win and where to go next', () => {
+    expect(firstWinText).toContain('Your first win.');
+    expect(firstWinText).toContain('Next');
+    expect(firstWinText).toContain('list');
   });
 });
 
