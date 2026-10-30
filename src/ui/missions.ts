@@ -1,4 +1,4 @@
-import { dailyMission, isDayKey, streak, streakStartText } from '../daily';
+import { dailyDoneText, dailyMission, isDayKey, streak, streakStartText } from '../daily';
 import {
   MISSIONS,
   bestText,
@@ -102,7 +102,7 @@ export function showMissions(
   wrap.innerHTML = `<div class="card menu missions" role="dialog" aria-modal="true" aria-labelledby="missions-title">
     <h2 id="missions-title" class="title">Missions</h2>
     <button class="btn daily-btn${dailyDone ? ' done' : ''}" data-testid="daily-btn">
-      <span class="mission-text"><b>Daily mission</b><small>${today} · ${goalText(daily)}</small></span>
+      <span class="mission-text"><b>Daily mission</b><small>${today} · ${dailyDone ? dailyDoneText() : goalText(daily)}</small></span>
       <span class="mission-tick" aria-label="${dailyDone ? 'done today' : 'not done today'}">${dailyDone ? '✓' : ''}</span>
     </button>
     <p class="sub" data-testid="daily-streak">${startHint ? esc(startHint) : `Streak: ${run} day${run === 1 ? '' : 's'}`}</p>
