@@ -97,7 +97,7 @@ function startMission(m: Mission, demo = false): void {
     return;
   }
   controller?.start(start, [{ kind: 'human' }, { kind: 'bot', level: 'hard' }]);
-  showBriefing(overlayRoot, m, () => controller?.refresh());
+  showBriefing(overlayRoot, m, () => controller?.refresh(), bestMoves()[m.id]);
 }
 
 function endMission(): void {
