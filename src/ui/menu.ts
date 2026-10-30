@@ -9,6 +9,14 @@ export interface MenuChoice {
 
 const KEY = 'ava.menu.v1';
 
+/** One line under the difficulty buttons so a first-time player knows what each level means. */
+export const LEVEL_HINT: Record<BotLevel, string> = {
+  random: 'Random: loose moves. Good for learning the rules.',
+  easy: 'Easy: simple moves. A good first match.',
+  medium: 'Medium: looks two moves ahead.',
+  hard: 'Hard: looks furthest ahead. A real challenge.',
+};
+
 /** Start menu: Play vs Agent (Easy/Medium/Hard), Pass & Play, How to play. */
 export function showMenu(
   root: HTMLElement,
@@ -36,6 +44,7 @@ export function showMenu(
           )
           .join('')}
       </div>
+      <p class="level-hint" id="level-hint" data-testid="level-hint">${LEVEL_HINT[last.level]}</p>
       <button class="btn primary big" id="btn-play-bot">Play vs Agent</button>
     </div>
     <button class="btn big" id="btn-missions">Missions</button>
@@ -46,6 +55,7 @@ export function showMenu(
   wrap.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach((b) =>
     b.addEventListener('click', () => {
       level = b.dataset.level as BotLevel;
+      wrap.querySelector('#level-hint')!.textContent = LEVEL_HINT[level];
       wrap.querySelectorAll('.seg-btn').forEach((x) => {
         x.classList.toggle('on', x === b);
         x.setAttribute('aria-checked', String(x === b));
