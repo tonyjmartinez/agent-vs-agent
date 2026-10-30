@@ -181,13 +181,17 @@ const SHARE_HTML = `<button class="btn" data-testid="share-btn">Share</button>`;
 const SHARE_NOTE_HTML = `<p class="sub share-note" data-testid="share-note" role="status"></p>`;
 
 /** Briefing before a mission starts. */
-export function showBriefing(root: HTMLElement, m: Mission, onGo: () => void): void {
+export function showBriefing(root: HTMLElement, m: Mission, onGo: () => void, best?: number): void {
   const n = MISSIONS.indexOf(m) + 1;
+  // A replay shows the fewest moves it was solved in, on the label line (no extra height; bestText is too long here).
+  const label = m.daily
+    ? 'Daily mission'
+    : `Mission ${n} of ${MISSIONS.length}${best !== undefined ? ` · Best ${best} of ${m.moves}` : ''}`;
   const wrap = document.createElement('div');
   wrap.className = 'overlay';
   wrap.id = 'briefing';
   wrap.innerHTML = `<div class="card stamp-card" role="dialog" aria-modal="true" aria-labelledby="briefing-title">
-    <div class="menu-label">${m.daily ? 'Daily mission' : `Mission ${n} of ${MISSIONS.length}`}</div>
+    <div class="menu-label" data-testid="briefing-label">${esc(label)}</div>
     <div class="stamp" id="briefing-title">${stampTitle(m.title)}</div>
     <p class="goal" data-testid="briefing-goal">${goalText(m)}</p>
     <p class="sub">${esc(m.brief)}</p>
