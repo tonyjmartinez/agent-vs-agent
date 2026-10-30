@@ -5,6 +5,7 @@
 - Phase 1 (rules engine): done (stacked on Phase 0).
 - Phase 2 (playable hotseat, plain shapes): done (stacked on Phase 1).
 - Phase 3 (bots + sim + bot seats): done (stacked on Phase 2).
+- Phase 4 (menus and onboarding): done (stacked on Phase 3).
 
 ## Decisions
 - Phaser 4.2.1 renders WebGL in headless Chromium once launched with `--use-angle=swiftshader --enable-unsafe-swiftshader`
@@ -59,5 +60,13 @@ Diagnosis log:
 median game is the 120-ply cap (target: draws < 8%, median 24-60 plies); drops per game are ~36 (constant stealing).
 Seat 0 beats seat 1 about 26% to 21%. Knobs to try first per PLAN 9: lower `intelToWin`, raise `intelOnBoard`,
 `firstMoveNoBump`; also consider a rule that stops the immediate steal-back loop.
+
+## Phase 4 decisions
+- Menu choices navigate (`location.search = ...`) instead of re-mounting in place: a clean Phaser boot and no teardown bugs.
+  Test/tuning params (`test, speed, seed, confirm, coach`) are carried across menu and game URLs.
+- Coach marks rewrite their DOM only when the stage changes: hover-driven refreshes were swallowing clicks on the Dismiss button (found by e2e).
+- Undo/Rematch while a bot is thinking bump a generation counter so the bot's stale move is discarded.
+- Rules card is a scrolling dialog with a sticky "Got it"; diagrams are inline SVG generated in `ui/diagrams.ts`.
+- Still plain (Phase 6): art, sound, "Quit to menu" confirmation, game-over "Menu" button.
 
 ## Later

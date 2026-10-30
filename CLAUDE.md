@@ -30,9 +30,13 @@ npm run typecheck && npm test && npm run build   # names per PLAN.md section 4.1
 
 Each run is a fresh agent. Before stopping, update this section and `DESIGN_NOTES.md` so the next run can continue.
 
-- **Status:** Phases 0-3 are done and open for review, unmerged, as stacked PRs (#1 scaffold, #2 engine, #3 hotseat,
-  then Phase 3 bots). Next: Phase 4 (start menu, rules card, coach marks, pause menu, localStorage), then Phase 5
-  (balance: the sim shows long, drawish games, see DESIGN_NOTES.md).
+- **Status:** Phases 0-4 are done and open for review, unmerged, as stacked PRs (#1 scaffold, #2 engine, #3 hotseat,
+  #4 bots, then Phase 4 menus). Next: Phase 5 (balance: the sim shows long, drawish games, see DESIGN_NOTES.md; also
+  move bots to a Web Worker), then Phase 6 (art/juice), Phase 7 (ship).
+- **Menus:** a bare URL (or `?menu=1`) shows the start menu (`src/ui/menu.ts`); picking a mode reloads with
+  `?play=1&p1=bot:<level>` (`app/navigation.ts`). Any of `test/state/p0/p1/play` skips the menu. Last mode and
+  "coach marks done" live in localStorage (`app/storage.ts`, never throws). Coach marks are off under `?test=1` unless `?coach=1`.
+  In-game Menu button opens the pause dialog (resume/restart/rules/quit). Rules card with SVG diagrams: `ui/rulesCard.ts`, `ui/diagrams.ts`.
 - **Bots/sim** (`src/ai/`): `makeBot(level, seed, budget?)` for random/easy/medium/hard (`choose`, `reset`);
   `evaluate.ts` weights in `W`; `search.ts` alpha-beta + TT; medium/hard penalise repeated positions (`REPEAT_PENALTY`).
   `npm run sim -- --games N --p0 hard --p1 medium --swap [--nodes 5000] [--rules '{...}']` (use `--nodes` for quick,
