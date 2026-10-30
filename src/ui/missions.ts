@@ -1,4 +1,4 @@
-import { dailyMission, isDayKey, streak } from '../daily';
+import { dailyMission, isDayKey, streak, streakStartText } from '../daily';
 import {
   MISSIONS,
   bestText,
@@ -92,6 +92,7 @@ export function showMissions(
   const daily = dailyMission(today);
   const dailyDone = days.includes(today);
   const run = streak(days, today);
+  const startHint = streakStartText(run);
   const next = nextUp(done);
   const firstHint = firstHintText(done.size, MISSIONS[0]);
   const botHint = botHintText(done.size, MISSIONS.length);
@@ -104,7 +105,7 @@ export function showMissions(
       <span class="mission-text"><b>Daily mission</b><small>${today} · ${goalText(daily)}</small></span>
       <span class="mission-tick" aria-label="${dailyDone ? 'done today' : 'not done today'}">${dailyDone ? '✓' : ''}</span>
     </button>
-    <p class="sub" data-testid="daily-streak">Streak: ${run} day${run === 1 ? '' : 's'}</p>
+    <p class="sub" data-testid="daily-streak">${startHint ? esc(startHint) : `Streak: ${run} day${run === 1 ? '' : 's'}`}</p>
     <p class="sub" data-testid="missions-progress">${progressText(done.size, MISSIONS.length)}</p>
     ${firstHint ? `<p class="sub" data-testid="first-hint">${esc(firstHint)}</p>` : ''}
     ${botHint ? `<p class="sub" data-testid="bot-hint">${esc(botHint)}</p>` : ''}

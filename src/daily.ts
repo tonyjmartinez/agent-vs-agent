@@ -56,6 +56,10 @@ export function dailyMission(key: string): Mission {
 export const dailyStreakText = (n: number): string =>
   `Daily streak: ${n} ${n === 1 ? 'day' : 'days'}.`;
 
+/** List line when the streak is 0: says how to start one (today's daily counts; `null` once a streak exists). */
+export const streakStartText = (n: number): string | null =>
+  n === 0 ? "Solve today's daily to start a streak." : null;
+
 /** Result-card line after a missed daily: names the daily and says what to do next (retry now, or tomorrow). */
 export const dailyMissedText = (): string =>
   'Daily missed. Retry it now, or come back tomorrow for a new puzzle.';

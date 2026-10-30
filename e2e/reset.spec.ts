@@ -57,7 +57,7 @@ test('reset needs two taps, wipes missions and streak, and keeps the bot record'
   await page.locator('[data-testid="reset-progress"]').click();
   await page.locator('[data-testid="reset-progress"]').click();
   await expect(progress).toHaveText(`0 of ${MISSIONS.length} complete`);
-  await expect(streak).toHaveText('Streak: 0 days');
+  await expect(streak).toHaveText("Solve today's daily to start a streak.");
   await expect(page.locator('.mission-btn.done')).toHaveCount(0);
   await expect(page.locator('.next-tag')).toHaveCount(0);
   await expect(page.locator('[data-testid="daily-btn"]')).not.toHaveClass(/done/);

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Solver, goalMet } from './ai/solve';
 import {
   dailyMissedText,
+  streakStartText,
   dailyMission,
   dailyStreakText,
   dayKey,
@@ -204,5 +205,13 @@ describe('dailyStreakText (the daily result card line)', () => {
     expect(dailyStreakText(1)).toBe('Daily streak: 1 day.');
     expect(dailyStreakText(2)).toBe('Daily streak: 2 days.');
     expect(dailyStreakText(12)).toBe('Daily streak: 12 days.');
+  });
+});
+
+describe('streakStartText', () => {
+  it('invites a first daily only when the streak is 0', () => {
+    expect(streakStartText(0)).toBe("Solve today's daily to start a streak.");
+    expect(streakStartText(1)).toBeNull();
+    expect(streakStartText(5)).toBeNull();
   });
 });
