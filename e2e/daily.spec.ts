@@ -40,6 +40,11 @@ test('the daily mission opens from a link, solves through real input, and is cre
   // A daily has no "next mission".
   await expect(page.locator('#btn-mission-next')).toHaveCount(0);
   await expect(page.locator('#btn-mission-retry')).toBeVisible();
+  // The win card says the daily is done and what the streak now is.
+  await expect(page.locator('#mission-result p.sub:not(.share-note)')).toContainText(
+    'Daily streak: 1 day.',
+  );
+  await shot(page, info, 'daily-result');
 
   await page.click('#btn-mission-list');
   await expect(dailyBtn(page)).toHaveClass(/done/);
@@ -140,6 +145,41 @@ test('failing the daily, then watching the solution, credits nothing; a real sol
   await page.click('#btn-mission-list');
   await expect(dailyBtn(page)).toHaveClass(/done/);
   await expect(streakText(page)).toHaveText('Streak: 1 day');
+});
+
+test('a missed daily names the daily and says what to do next, at 360px', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const day = '2026-07-05';
+  const m = dailyMission(day);
+  await openMission(page, m, url(day));
+  const start = decode(m.state);
+  const solver = new Solver(start, m.goal);
+  const sols = solver.solutions(start, m.moves);
+  const wrong = legalActions(start).find(
+    (a) => a.kind === 'move' && !sols.some((x) => same(x, a)),
+  )!;
+  await play(page, info, await ava(page), wrong);
+  while (!(await page.locator('#mission-result').count())) {
+    const s = await ava(page);
+    await play(
+      page,
+      info,
+      s,
+      legalActions(s).find((a) => a.kind === 'move')!,
+    );
+  }
+  await expect(page.locator('#mission-result .stamp')).toHaveText('MISSION FAILED');
+  const sub = page.locator('#mission-result p.sub:not(.share-note)');
+  await expect(sub).toContainText(
+    'Daily missed. Retry it now, or come back tomorrow for a new puzzle.',
+  );
+  await expect(sub).not.toContainText('Teal found the answer');
+  const box = (await page.locator('#mission-result .card').boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(360);
+  await shot(page, info, 'daily-missed');
 });
 
 test('different dates give different puzzles; the same date gives the same one every time', async ({

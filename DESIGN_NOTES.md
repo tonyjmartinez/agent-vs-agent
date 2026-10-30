@@ -396,6 +396,47 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - The seventh debrief row made the vs-bot card scroll on 320x568, so short portrait phones get a tighter game-over card
   and the three buttons shrink a little under 380px width. The fit sweeps (inner scroll included) pass at all sizes.
 
+## Iteration: Bot tactics under the shipped rules
+
+- The bot tactical fixtures (`src/ai/bots.test.ts`) all ran with sprint and fumble off (the `board()` fixture default), so
+  nothing pinned the bots on the game people actually play. Added two shipped-rules fixtures for medium and hard:
+  `sprintWin` (the only winning move is a two-square carrier sprint; the test first proves no one-square step wins) and
+  `stopTheSprint` (Teal at match point can sprint home next turn; only 2 of Red's 12 moves knock the folder loose in time,
+  and a sanity test proves most moves lose). Both bots pass; no AI change was needed. Test-only regression guard.
+
+## Iteration: README mission count
+
+- The README said 13 missions; there are 18. `src/missions.test.ts` now checks that the README line
+  `**Missions:** N tactical puzzles` matches `MISSIONS.length`, so the count can't drift again.
+- Environment note: the sandbox's preinstalled Chromium (1248) is missing system libraries (libnss3, libnspr4,
+  libasound), so `npm run e2e` cannot run here. This PR is unit-tested only.
+
+## Iteration: Solved-in line on the mission result card
+
+- Problem: a won mission said only "nicely done.", so a player could not tell whether they found the tightest line or
+  used the whole budget, and had no reason to replay for a cleaner solution.
+- Change: `solvedText(used, budget)` (`src/missions.ts`, pure, tested) adds "Solved in N of M moves." to the complete card.
+  `N` is the Red moves made (`redMovesMade`), `M` is the mission's move budget. Solution replays are not credited and keep
+  their own line.
+- Not verified in a browser: the sandbox can't launch Chromium (friction #28). Only the stamps are asserted by e2e, so the
+  new subtitle doesn't break existing specs. Needs a visual check on phone width when the browser works.
+- Ideas left: a best-moves record per mission (needs storage and a migration story), a par badge.
+
+## Iteration: Best moves on the mission list
+
+- Problem: a completed mission ticked ✓ and then looked finished. "Solved in N of M" showed only once, on the result card, so
+  nothing invited a replay to tighten the win.
+- Change: `ava.missionBest.v1` stores the fewest Red moves per completed curated mission (`recordBest` keeps the lower value,
+  never a worse win). The mission list shows "Best: N of M moves" under a completed mission (`bestText`). Reset progress clears it.
+- Assumption: only curated missions (not the daily, which is not in the list) and not Show-solution replays are recorded.
+- E2E not run in the sandbox (friction #28); the unit tests cover storage and text.
+
+## Iteration: New best on the result card
+
+- Problem: the best line (PR #30) only appeared in the list later; a player who beat their own best got no feedback at the moment of winning.
+- Change: a curated, non-demo win that uses strictly fewer Red moves than the stored best says "nicely done. New best! Solved in N of M moves." (`isNewBest` in `src/missions.ts`). A first win is not a "New best" (nothing to beat). Daily wins never show it.
+- E2E (`e2e/newbest.spec.ts`, runs in the sandbox now that the browser works): beats-best, does-not-beat, first-win cases; desktop + mobile pass.
+
 ## Iteration: three more 2-move missions
 
 - Mined (seed 21, 60 games, 2-move budget) and added `flank` (burn), `run-the-gauntlet` (extract, with a defender) and `level-at-two`

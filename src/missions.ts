@@ -201,9 +201,40 @@ const GOAL_TEXT: Record<Goal, string> = {
   burn: 'Burn a Teal agent',
 };
 
+/** Result-card line for a won mission: Red moves used against the budget. */
+export const solvedText = (used: number, budget: number): string =>
+  `Solved in ${used} of ${budget} ${budget === 1 ? 'move' : 'moves'}.`;
+
+/** A win that strictly beats the stored best is a "New best!". A first win is not (there is nothing to beat yet). */
+export const isNewBest = (used: number, prevBest: number | undefined): boolean =>
+  prevBest !== undefined && used < prevBest;
+
+/** Mission-list line for a completed mission: the fewest Red moves it has been solved in. */
+export const bestText = (best: number, budget: number): string =>
+  `Best: ${best} of ${budget} ${budget === 1 ? 'move' : 'moves'}`;
+
 /** In-play pill: goal and Red moves remaining. */
 export const pillText = (m: Pick<Mission, 'goal'>, left: number): string =>
   `${GOAL_TEXT[m.goal]} · ${left} move${left === 1 ? '' : 's'} left`;
+
+/** Fresh-profile hint pointing at the first mission; empty once any mission is complete (hidden). */
+export function firstHintText(
+  done: number,
+  first: Pick<Mission, 'title' | 'goal' | 'moves'> | undefined,
+): string {
+  return done === 0 && first ? `Start with mission 1: ${first.title}. ${goalText(first)}.` : '';
+}
+
+/** Shown on the card of a player's first ever mission win: where to go next. */
+export const firstWinText =
+  'Your first win. Tap Next for the next mission, or pick any mission from the list.';
+
+/** Mission list progress line; the full set gets a clear finish note. */
+export function progressText(done: number, total: number): string {
+  return done >= total && total > 0
+    ? `All ${total} missions complete. Nice work.`
+    : `${done} of ${total} complete`;
+}
 
 export function goalText(m: Pick<Mission, 'goal' | 'moves'>): string {
   return `${GOAL_TEXT[m.goal]} in ${m.moves} move${m.moves > 1 ? 's' : ''}`;

@@ -1,12 +1,74 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { Solver, goalMet } from './ai/solve';
 import { applyTrusted, legalActions } from './engine/engine';
 import { decode, encode } from './engine/serialize';
-import { MISSIONS, goalText, missionById, pillText } from './missions';
+import {
+  firstWinText,
+  MISSIONS,
+  bestText,
+  firstHintText,
+  progressText,
+  goalText,
+  isNewBest,
+  missionById,
+  pillText,
+  solvedText,
+} from './missions';
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
+describe('isNewBest (strictly better than a stored best)', () => {
+  it('is true only when the win beats an existing best', () => {
+    expect(isNewBest(2, 3)).toBe(true);
+    expect(isNewBest(2, 2)).toBe(false);
+    expect(isNewBest(3, 2)).toBe(false);
+  });
+  it('is false for a first win (nothing to beat yet)', () => {
+    expect(isNewBest(1, undefined)).toBe(false);
+  });
+});
+
+describe('bestText (the mission-list line for a completed mission)', () => {
+  it('shows the fewest moves against the budget', () => {
+    expect(bestText(1, 1)).toBe('Best: 1 of 1 move');
+    expect(bestText(2, 3)).toBe('Best: 2 of 3 moves');
+  });
+});
+
+describe('solvedText (the result card line for a won mission)', () => {
+  it('says how many of the budgeted Red moves were used', () => {
+    expect(solvedText(1, 1)).toBe('Solved in 1 of 1 move.');
+    expect(solvedText(1, 2)).toBe('Solved in 1 of 2 moves.');
+    expect(solvedText(3, 3)).toBe('Solved in 3 of 3 moves.');
+  });
+});
+
+describe('firstWinText (first ever win card line)', () => {
+  it('says the first win and where to go next', () => {
+    expect(firstWinText).toContain('Your first win.');
+    expect(firstWinText).toContain('Next');
+    expect(firstWinText).toContain('list');
+  });
+});
+
+describe('firstHintText (fresh-profile pointer to mission 1)', () => {
+  const first = MISSIONS[0]!;
+  it('points at mission 1 only while nothing is complete', () => {
+    expect(firstHintText(0, first)).toBe(
+      `Start with mission 1: ${first.title}. ${goalText(first)}.`,
+    );
+    expect(firstHintText(1, first)).toBe('');
+    expect(firstHintText(0, undefined)).toBe('');
+  });
+});
+
 describe('missions', () => {
+  it('README advertises the real mission count', () => {
+    const readme = readFileSync('README.md', 'utf8');
+    expect(readme).toContain(`**Missions:** ${MISSIONS.length} tactical puzzles`);
+  });
+
   it('have unique kebab-case ids and are ordered easy → hard (move budget never drops)', () => {
     const ids = MISSIONS.map((m) => m.id);
     expect(new Set(ids).size).toBe(ids.length);
@@ -133,5 +195,14 @@ describe('solver', () => {
     expect(goalMet(s, s, 'burn', 0)).toBe(false);
     const burned = { ...s, spies: s.spies.map((x) => (x.id === 'p1a' ? { ...x, pos: null } : x)) };
     expect(goalMet(s, burned, 'burn', 0)).toBe(true);
+  });
+});
+
+describe('progressText', () => {
+  it('counts up while missions remain and names the finish when all are done', () => {
+    expect(progressText(0, 18)).toBe('0 of 18 complete');
+    expect(progressText(17, 18)).toBe('17 of 18 complete');
+    expect(progressText(18, 18)).toBe('All 18 missions complete. Nice work.');
+    expect(progressText(0, 0)).toBe('0 of 0 complete');
   });
 });

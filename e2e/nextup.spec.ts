@@ -28,6 +28,20 @@ test('a fresh list highlights nothing special: no "Next up" tag, first mission i
   await expect(page.locator('.mission-btn.next')).toHaveAttribute('data-mission', MISSIONS[0]!.id);
 });
 
+test('a fresh profile is pointed at mission 1 at 360px', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await openList(page);
+  const hint = page.locator('[data-testid="first-hint"]');
+  await expect(hint).toContainText(`Start with mission 1: ${MISSIONS[0]!.title}`);
+  await expect(hint).toBeInViewport();
+});
+
+test('the first-mission hint is gone once any mission is complete', async ({ page }) => {
+  await seed(page, [MISSIONS[0]!.id]);
+  await openList(page);
+  await expect(page.locator('[data-testid="first-hint"]')).toHaveCount(0);
+});
+
 test('with progress, the list opens at the next mission, which is tagged and on screen', async ({
   page,
 }, info) => {
@@ -75,6 +89,58 @@ test('when every mission is done nothing is tagged', async ({ page }) => {
   await expect(page.locator('.mission-btn.next')).toHaveCount(0);
   await expect(page.locator('.next-tag')).toHaveCount(0);
   await expect(page.locator('[data-testid="missions-progress"]')).toHaveText(
-    `${MISSIONS.length} of ${MISSIONS.length} complete`,
+    `All ${MISSIONS.length} missions complete. Nice work.`,
   );
+});
+
+test('winning the last mission says the whole set is complete, on the result card at 360px', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const errors = trackErrors(page);
+  const last = MISSIONS[MISSIONS.length - 1]!;
+  await seed(
+    page,
+    MISSIONS.slice(0, -1).map((m) => m.id),
+  );
+  await openMission(page, last);
+  await solve(page, info, last);
+  const card = page.locator('#mission-result');
+  await expect(card).toBeVisible();
+  await expect(card.locator('p.sub:not(.share-note)')).toContainText(
+    `All ${MISSIONS.length} missions complete. Nice work.`,
+  );
+  await expect(card.locator('p.sub:not(.share-note)')).toBeInViewport();
+  expect(errors).toEqual([]);
+});
+
+test('winning the second-to-last mission (16 of 18 done) does not claim the set is complete', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const second = MISSIONS[MISSIONS.length - 2]!;
+  await seed(
+    page,
+    MISSIONS.filter((m) => m.id !== second.id && m.id !== MISSIONS.at(-1)!.id).map((m) => m.id),
+  );
+  await openMission(page, second);
+  await solve(page, info, second);
+  const card = page.locator('#mission-result');
+  await expect(card).toBeVisible();
+  await expect(card.locator('p.sub:not(.share-note)')).not.toContainText('missions complete');
+});
+
+test('the first ever win says where to go next, on the result card at 360px', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const errors = trackErrors(page);
+  const first = MISSIONS[0]!;
+  await openMission(page, first);
+  await solve(page, info, first);
+  const card = page.locator('#mission-result');
+  await expect(card).toBeVisible();
+  await expect(card.locator('p.sub:not(.share-note)')).toContainText('Your first win.');
+  await expect(card.locator('p.sub:not(.share-note)')).toBeInViewport();
+  expect(errors).toEqual([]);
 });

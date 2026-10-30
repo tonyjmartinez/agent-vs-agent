@@ -14,15 +14,27 @@ import { Hud } from './ui/hud';
 import { Sound } from './ui/sound';
 import { showMenu, showPause } from './ui/menu';
 import {
+  completedMissions,
   markCompleted,
+  bestMoves,
+  recordBest,
+  completedDays,
   markDayDone,
   missionPill,
   showBriefing,
   showMissionResult,
   showMissions,
 } from './ui/missions';
-import { dailyMission, dayKey } from './daily';
-import { MISSIONS, missionById, pillText, type Mission } from './missions';
+import { dailyMissedText, dailyMission, dailyStreakText, dayKey, streak } from './daily';
+import {
+  MISSIONS,
+  firstWinText,
+  isNewBest,
+  missionById,
+  pillText,
+  progressText,
+  type Mission,
+} from './missions';
 import type { GameState } from './engine/types';
 import { humanResult, recordLine, recordResult, resultShareText } from './ui/record';
 import { load, save } from './ui/storage';
@@ -96,18 +108,42 @@ function judgeMission(c: Controller, s: GameState): void {
   if (!success && !failed) return;
   c.stop();
   endMission();
+  let prevBest: number | undefined;
+  let extra = '';
+  let finish = '';
   if (success && !r.demo) {
-    if (r.m.daily) markDayDone(r.m.id.slice('daily-'.length));
-    else markCompleted(r.m.id);
-  }
+    if (r.m.daily) {
+      const day = r.m.id.slice('daily-'.length);
+      markDayDone(day);
+      extra = dailyStreakText(streak(completedDays(), day));
+    } else {
+      const firstWin = completedMissions().size === 0;
+      markCompleted(r.m.id);
+      prevBest = bestMoves()[r.m.id];
+      recordBest(r.m.id, redMovesMade(c));
+      // The win that completes the whole set says so on the card, not only on the list.
+      const done = completedMissions();
+      const finished = MISSIONS.filter((m) => done.has(m.id)).length;
+      if (finished >= MISSIONS.length) finish = progressText(finished, MISSIONS.length);
+      else if (firstWin) finish = firstWinText;
+    }
+  } else if (failed && r.m.daily && !r.demo) extra = dailyMissedText();
   // The daily mission isn't part of the list, so it has no "next".
   const nextM = r.m.daily ? undefined : MISSIONS[MISSIONS.indexOf(r.m) + 1];
-  showMissionResult(overlayRoot, r.m, success ? (r.demo ? 'solution' : 'complete') : 'failed', {
-    next: nextM ? () => startMission(nextM) : undefined,
-    retry: () => startMission(r.m),
-    solution: () => startMission(r.m, true),
-    list: () => openMissions(),
-  });
+  showMissionResult(
+    overlayRoot,
+    r.m,
+    success ? (r.demo ? 'solution' : 'complete') : 'failed',
+    {
+      next: nextM ? () => startMission(nextM) : undefined,
+      retry: () => startMission(r.m),
+      solution: () => startMission(r.m, true),
+      list: () => openMissions(),
+    },
+    success ? redMovesMade(c) : undefined,
+    success && !r.demo && !r.m.daily && isNewBest(redMovesMade(c), prevBest),
+    r.m.daily ? (!r.demo ? extra : '') : finish,
+  );
 }
 
 /** The date the daily mission is for: the clock (UTC), or `?day=` in tests. */

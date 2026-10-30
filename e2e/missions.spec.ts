@@ -21,7 +21,7 @@ test('every mission can be completed through real input against the defender', a
   await page.evaluate(() => (window as any).__AVA__.ready);
   await page.click('#btn-missions');
   await expect(page.locator('[data-testid="missions-progress"]')).toHaveText(
-    `${MISSIONS.length} of ${MISSIONS.length} complete`,
+    `All ${MISSIONS.length} missions complete. Nice work.`,
   );
   await expect(page.locator('.mission-btn.done')).toHaveCount(MISSIONS.length);
   expect(errors).toEqual([]);
@@ -100,6 +100,8 @@ test('a wrong move is refuted: mission failed, Retry resets the position', async
   const any = legalActions(s).find((a) => a.kind === 'move')!;
   await play(page, info, s, any);
   await expect(page.locator('#mission-result .stamp')).toHaveText('MISSION FAILED');
+  // The failed card points at the next step: retry, then the goal pill hints.
+  await expect(page.locator('#mission-result p.sub:not(.share-note)')).toContainText('tap the goal pill for a hint');
   await expect(page.locator('#btn-mission-next')).toHaveCount(0);
   // A decided mission shows no active turn behind the card.
   await expect(page.locator('.panel.active')).toHaveCount(0);
