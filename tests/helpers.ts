@@ -24,8 +24,9 @@ export async function tapCell(page: Page, touch: boolean, [r, c]: Cell): Promise
   else await page.mouse.click(x, y);
 }
 
+/** Wait until at least `ply` plies were played (a bot reply may add one more straight away). */
 export async function waitPly(page: Page, ply: number): Promise<void> {
-  await page.waitForFunction((p) => window.__AVA__!.getState().ply === p, ply);
+  await page.waitForFunction((p) => window.__AVA__!.getState().ply >= p, ply);
 }
 
 /** Select a spy and commit a move/deploy target the way a human would on this device. */

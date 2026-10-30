@@ -5,20 +5,24 @@ export const PLAYER_NAMES = ['Red', 'Teal', 'Plum', 'Olive'];
 export interface HudHandlers {
   onReserve(player: PlayerId): void;
   onUndo(): void;
+  onMenu(): void;
 }
 
 export interface HudOptions {
   canUndo: boolean;
   /** Reserve token highlighted (a deploy is being picked). */
   reserveSelected: boolean;
-  /** False while animating. */
+  /** False while animating or while a bot is on move. */
   interactive: boolean;
+  /** Which seats are bots (named "Agent <colour>"). */
+  bots: boolean[];
 }
 
 /** Two docked panels (top = player 1, bottom = player 0): name, score, turn marker, reserve tray. */
 export class Hud {
   private panels: HTMLElement[] = [];
   private undo: HTMLButtonElement;
+  private menu: HTMLButtonElement;
 
   constructor(
     top: HTMLElement,
@@ -33,7 +37,7 @@ export class Hud {
       panel.dataset.player = String(player);
       panel.innerHTML = `
         <span class="swatch p${player}" aria-hidden="true"></span>
-        <span class="name">${PLAYER_NAMES[player]}</span>
+        <span class="name"></span>
         <span class="score" data-testid="score-${player}"></span>
         <span class="tray" data-testid="tray-${player}"></span>
         <span class="turn" data-testid="turn-${player}"></span>`;
@@ -46,7 +50,16 @@ export class Hud {
     this.undo.textContent = 'Undo';
     this.undo.dataset.testid = 'undo';
     this.undo.addEventListener('click', () => this.handlers.onUndo());
-    bottom.appendChild(this.undo);
+    this.menu = document.createElement('button');
+    this.menu.className = 'btn';
+    this.menu.type = 'button';
+    this.menu.textContent = 'Menu';
+    this.menu.dataset.testid = 'menu-btn';
+    this.menu.addEventListener('click', () => this.handlers.onMenu());
+    const controls = document.createElement('span');
+    controls.className = 'controls';
+    controls.append(this.undo, this.menu);
+    bottom.appendChild(controls);
   }
 
   render(s: GameState, o: HudOptions): void {
@@ -55,9 +68,18 @@ export class Hud {
       if (!panel) return;
       const active = s.winner === null && s.current === p;
       panel.classList.toggle('active', active);
+      panel.querySelector('.name')!.textContent = o.bots[p]
+        ? `Agent ${PLAYER_NAMES[p]}`
+        : PLAYER_NAMES[p]!;
       panel.querySelector('.score')!.textContent = `Score ${s.scores[p]}/${s.rules.intelToWin}`;
       panel.querySelector('.turn')!.textContent =
-        s.winner === p ? 'Winner!' : active ? 'Your turn' : '';
+        s.winner === p
+          ? 'Winner!'
+          : active
+            ? o.bots[p]
+              ? `Agent ${PLAYER_NAMES[p]} is thinking…`
+              : 'Your turn'
+            : '';
       const tray = panel.querySelector('.tray')!;
       tray.innerHTML = '';
       const reserve = s.spies.filter((x) => x.owner === p && !x.pos);

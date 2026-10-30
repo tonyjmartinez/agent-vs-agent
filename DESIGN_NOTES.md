@@ -4,6 +4,8 @@
 - Phase 0 (scaffold and walking skeleton): done (PR #1).
 - Phase 1 (rules engine): done (stacked on Phase 0).
 - Phase 2 (playable hotseat, plain shapes): done (stacked on Phase 1).
+- Phase 3 (bots + sim + bot seats): done (stacked on Phase 2).
+- Phase 4 (menus and onboarding): done (stacked on Phase 3).
 
 ## Decisions
 - Phaser 4.2.1 renders WebGL in headless Chromium once launched with `--use-angle=swiftshader --enable-unsafe-swiftshader`
@@ -36,5 +38,35 @@
 - Previews: ghost spy, ink arrows on bumped spies, red tint + X + arrow on burns, folder icon on drops.
 - E2E: scripted 40-ply game through real taps compared move-for-move with the engine; `?state=` sets up win, deploy and burn cases.
 - Not done yet from the plan's polish: bump-wave ripple, confetti, win stamp, selected-spy pulse, reduced-motion beyond 60ms tweens.
+
+## Phase 3 results (sim, seed 1, `--swap`, 2 random opening plies)
+| Matchup | Games | A win rate (95% CI) | Draws | Notes |
+|---|---|---|---|---|
+| easy vs random | 400 | 88.8% [85.3, 91.5] | 8.5% | easy: eps 0.2, softmax T 25 |
+| medium vs easy | 200 | 99.0% [96.4, 99.7] | 1.0% | medium: depth 2 |
+| hard vs medium | 200 | 84.0% [78.3, 88.4] | 16.0% | 0 losses; hard: depth<=6, 30k nodes, 400ms |
+| hard vs hard (5000 nodes) | 400 | seat 0: 26.0%, seat 1: 20.8% | 53.3% | median 120 plies (hits maxPlies) |
+
+Hard move time (Node, 200-game run): mean 120ms, p95 230ms (max 459ms in one outlier while two sims shared the CPU).
+
+Diagnosis log:
+- First eval (PLAN 4.4 weights only) gave 82% draws for hard vs medium: bots had no incentive to approach intel and
+  fell into a 2-move cycle (each steals the intel back). Fixes: `W.seek` (-15 per cell to nearest intel for empty-handed
+  spies) and a **repetition penalty** (`REPEAT_PENALTY` 60 per earlier occurrence of the position a root move creates).
+- Easy's softmax temperature must be small relative to eval deltas (T 150 was near-uniform and lost to random).
+- `Bot.reset()` clears repetition memory and re-seeds (called on undo/rematch).
+
+**Phase 5 flags (balance, not bot bugs):** at equal strength games are drawish and long: hard vs hard draws 53% and the
+median game is the 120-ply cap (target: draws < 8%, median 24-60 plies); drops per game are ~36 (constant stealing).
+Seat 0 beats seat 1 about 26% to 21%. Knobs to try first per PLAN 9: lower `intelToWin`, raise `intelOnBoard`,
+`firstMoveNoBump`; also consider a rule that stops the immediate steal-back loop.
+
+## Phase 4 decisions
+- Menu choices navigate (`location.search = ...`) instead of re-mounting in place: a clean Phaser boot and no teardown bugs.
+  Test/tuning params (`test, speed, seed, confirm, coach`) are carried across menu and game URLs.
+- Coach marks rewrite their DOM only when the stage changes: hover-driven refreshes were swallowing clicks on the Dismiss button (found by e2e).
+- Undo/Rematch while a bot is thinking bump a generation counter so the bot's stale move is discarded.
+- Rules card is a scrolling dialog with a sticky "Got it"; diagrams are inline SVG generated in `ui/diagrams.ts`.
+- Still plain (Phase 6): art, sound, "Quit to menu" confirmation, game-over "Menu" button.
 
 ## Later

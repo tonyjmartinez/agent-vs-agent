@@ -138,7 +138,8 @@ body {
   background: var(--mustard);
 }
 
-#gameover {
+/* Overlays: menu, pause, rules, game over. */
+.overlay {
   position: fixed;
   inset: 0;
   display: flex;
@@ -146,8 +147,17 @@ body {
   justify-content: center;
   background: rgba(43, 42, 51, 0.55);
   z-index: 10;
+  overflow: auto;
+  padding: 16px;
 }
-#gameover .card {
+#pause,
+#menu {
+  z-index: 20;
+}
+#rules {
+  z-index: 30;
+}
+.overlay .card {
   background: var(--paper);
   border: 5px solid var(--ink);
   border-radius: 24px;
@@ -155,7 +165,8 @@ body {
   text-align: center;
   max-width: min(90vw, 420px);
 }
-#gameover h2 {
+#gameover h2,
+.overlay h2 {
   margin: 0 0 16px;
   font-weight: 500;
   font-size: 26px;
@@ -205,4 +216,103 @@ body {
   #board {
     width: min(100vw - 2 * 120px - 32px, 100dvh - 32px);
   }
+}
+
+.card.menu,
+.card.rules {
+  width: min(92vw, 440px);
+}
+.card h1 {
+  margin: 0;
+  font-weight: 500;
+  font-size: 34px;
+}
+.tagline {
+  margin: 4px 0 16px;
+  opacity: 0.8;
+}
+.card .wide {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+}
+.levels {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.chip[aria-pressed='true'] {
+  background: var(--mustard);
+}
+.last {
+  margin: 14px 0 0;
+  font-size: 14px;
+  opacity: 0.7;
+}
+.card.rules {
+  max-height: 92dvh;
+  overflow: auto;
+  text-align: left;
+  font-size: 15px;
+}
+.card.rules h2 {
+  text-align: center;
+}
+.card.rules p {
+  margin: 0 0 10px;
+}
+.rule {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.rule figure {
+  margin: 0;
+  flex: 0 0 96px;
+  text-align: center;
+  font-size: 12px;
+}
+.diagram {
+  width: 96px;
+  height: auto;
+  display: block;
+}
+
+.controls {
+  display: inline-flex;
+  gap: 8px;
+}
+.controls .btn {
+  padding: 0 12px;
+}
+
+.coach {
+  position: fixed;
+  left: 50%;
+  top: calc(var(--hud) + 6px + env(safe-area-inset-top));
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 999px;
+  padding: 6px 8px 6px 18px;
+  font-size: 16px;
+  max-width: 94vw;
+  pointer-events: none;
+}
+.coach .btn {
+  white-space: nowrap;
+  pointer-events: auto;
+  min-height: 44px;
+  background: var(--mustard);
+}
+
+.card.rules > .btn {
+  position: sticky;
+  bottom: 0;
 }
