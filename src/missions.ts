@@ -201,6 +201,10 @@ export function firstHintText(
 }
 
 /** Mission list progress line; the full set gets a clear finish note. */
+/** Shown on the card of a player's first ever mission win: where to go next. */
+export const firstWinText =
+  'Your first win. Tap Next for the next mission, or pick any mission from the list.';
+
 export function progressText(done: number, total: number): string {
   return done >= total && total > 0
     ? `All ${total} missions complete. Nice work.`
