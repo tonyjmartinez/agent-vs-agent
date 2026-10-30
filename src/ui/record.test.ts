@@ -2,7 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Seat } from '../app/config';
 import { decode } from '../engine/serialize';
 import type { GameState } from '../engine/types';
-import { humanResult, loadRecords, recordLine, recordResult, resultShareText } from './record';
+import {
+  humanResult,
+  isFirstAgentWin,
+  loadRecords,
+  recordLine,
+  recordResult,
+  resultShareText,
+} from './record';
 
 function fakeStorage(initial: Record<string, string> = {}) {
   const data = new Map(Object.entries(initial));
@@ -131,5 +138,24 @@ describe('resultShareText', () => {
     const t = resultShareText(at(0, [3, 0], 10), [human, bot('hard')], base)!;
     expect(t).not.toContain('v1.');
     expect(t).not.toContain('mission');
+  });
+});
+
+describe('isFirstAgentWin', () => {
+  it('is true only for a win when no agent level has a win yet', () => {
+    expect(isFirstAgentWin({}, 'win')).toBe(true);
+    expect(isFirstAgentWin({ hard: { w: 0, l: 3, d: 1 } }, 'win')).toBe(true);
+    expect(isFirstAgentWin({}, 'loss')).toBe(false);
+    expect(isFirstAgentWin({}, 'draw')).toBe(false);
+    expect(isFirstAgentWin({ easy: { w: 1, l: 0, d: 0 } }, 'win')).toBe(false);
+    expect(isFirstAgentWin({ easy: { w: 0, l: 1, d: 0 }, hard: { w: 2, l: 0, d: 0 } }, 'win')).toBe(
+      false,
+    );
+  });
+  it('shows the note on the record line only when asked', () => {
+    expect(recordLine('hard', { w: 1, l: 0, d: 0 }, true)).toBe(
+      'First agent win! Record vs Hard: 1 win · 0 losses',
+    );
+    expect(recordLine('hard', { w: 1, l: 0, d: 0 })).toBe('Record vs Hard: 1 win · 0 losses');
   });
 });

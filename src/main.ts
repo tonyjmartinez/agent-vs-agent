@@ -36,7 +36,14 @@ import {
   type Mission,
 } from './missions';
 import type { GameState } from './engine/types';
-import { humanResult, recordLine, recordResult, resultShareText } from './ui/record';
+import {
+  humanResult,
+  isFirstAgentWin,
+  loadRecords,
+  recordLine,
+  recordResult,
+  resultShareText,
+} from './ui/record';
 import { load, save } from './ui/storage';
 import { PhaserBoardView } from './view/PhaserBoardView';
 
@@ -244,8 +251,15 @@ async function boot(): Promise<void> {
     onGameOver: (s) => {
       document.getElementById('coach')?.remove();
       // Only real games count toward the record: not missions, not hot-seat, not bot-vs-bot.
+      const before = loadRecords();
       const res = run ? null : humanResult(s, controller!.seats);
-      const record = res ? recordLine(res.level, recordResult(res.level, res.outcome)) : undefined;
+      const record = res
+        ? recordLine(
+            res.level,
+            recordResult(res.level, res.outcome),
+            isFirstAgentWin(before, res.outcome),
+          )
+        : undefined;
       showGameOver(
         overlayRoot,
         s,

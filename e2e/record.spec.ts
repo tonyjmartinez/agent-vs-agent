@@ -29,7 +29,7 @@ test('a win against a bot is counted, shown on the card, and stacks across games
   await winAGame(page, info, 'bot:hard');
   await expect(page.locator('#game-over .stamp')).toHaveText('MISSION COMPLETE');
   await expect(page.locator('[data-testid="record"]')).toHaveText(
-    'Record vs Hard: 1 win · 0 losses',
+    'First agent win! Record vs Hard: 1 win · 0 losses',
   );
   await shot(page, info, 'game-over-record');
   expect(await page.evaluate((k) => localStorage.getItem(k), KEY)).toBe(
@@ -99,7 +99,7 @@ test('a broken stored record is ignored and replaced', async ({ page }, info) =>
   }, KEY);
   await winAGame(page, info, 'bot:medium');
   await expect(page.locator('[data-testid="record"]')).toHaveText(
-    'Record vs Medium: 1 win · 0 losses',
+    'First agent win! Record vs Medium: 1 win · 0 losses',
   );
 });
 
@@ -155,4 +155,28 @@ test('the game-over card can share the result: text, link, and only for games ag
   await move(page, info, [4, 1], [5, 1]);
   await expect(page.locator('#game-over')).toBeVisible();
   await expect(page.locator('[data-testid="share-result-btn"]')).toHaveCount(0);
+});
+
+test.describe('first agent win note at 360x640', () => {
+  test.use({ viewport: { width: 360, height: 640 } });
+  test('the first win against an agent is called out once, and the card still fits', async ({
+    page,
+  }, info) => {
+    const errors = trackErrors(page);
+    await winAGame(page, info, 'bot:easy');
+    const record = page.locator('[data-testid="record"]');
+    await expect(record).toHaveText('First agent win! Record vs Easy: 1 win · 0 losses');
+    // The card (buttons included) fits the phone screen without scrolling.
+    const box = await page.locator('#game-over .card').boundingBox();
+    expect(box && box.y >= 0 && box.y + box.height <= 640).toBe(true);
+    // The shortest portrait phone too: the note wraps but the card still fits.
+    await page.setViewportSize({ width: 320, height: 568 });
+    const small = await page.locator('#game-over .card').boundingBox();
+    expect(small && small.y >= 0 && small.y + small.height <= 568).toBe(true);
+    // Later wins are plain records.
+    await page.setViewportSize({ width: 360, height: 640 });
+    await winAGame(page, info, 'bot:easy');
+    await expect(record).toHaveText('Record vs Easy: 2 wins · 0 losses');
+    expect(errors).toEqual([]);
+  });
 });
