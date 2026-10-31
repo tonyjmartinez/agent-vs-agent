@@ -121,7 +121,7 @@ export class Hud {
             ? `Agent ${playerNames[p]} is thinking…`
             : `Agent ${playerNames[p]}'s move`
           : humans === 1
-            ? 'Your move'
+            ? `Your move · first to ${s.rules.intelToWin} intel`
             : `${playerNames[p]}'s move`;
     }
     const tray = el('div', 'tray');

@@ -445,3 +445,9 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
   so they cover the new ones automatically. 21 missions now.
 - Mining throughput note: 60 games of 2-move mining took ~2 minutes and produced ~176 candidates, many near-duplicates (same
   skirmish, different ply); curating by variety (goal, defender present, score state) matters more than volume.
+
+## Iteration: bot-game goal line (L12)
+
+- Problem: the first bot game's coach (goal line) is one-shot; after it a player only sees "Your move" and the 3 pips.
+- Change: the human's turn line in a bot game reads "Your move · first to 3 intel" (`src/ui/hud.ts`). Hot-seat and bot-turn lines are unchanged.
+- Test: `e2e/botstatus.spec.ts` checks the text and one line at 320x568.
