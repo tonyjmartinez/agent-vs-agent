@@ -60,3 +60,38 @@ test('last-move trail shows where the bot just moved', async ({ page }, info) =>
   expect(after.len).toBe(after.hist);
   expect(errors).toEqual([]);
 });
+
+// Colour-blind check across states (ROADMAP 3): selected, previewed move, extraction at both small sizes.
+for (const [w, h] of [
+  [320, 568],
+  [844, 390],
+] as const) {
+  test(`greyscale states at ${w}x${h}`, async ({ page }, info) => {
+    const errors = trackErrors(page);
+    await page.setViewportSize({ width: w, height: h });
+    await open(page, 'p0=human&p1=human&state=v1.0.0.0-0.32*,54,01,04.22');
+    await page.addStyleTag({ content: 'html { filter: grayscale(1) }' });
+    const sel = () => page.evaluate(() => (window as any).__AVA__.controller().sel);
+    await tapCell(page, info, 3, 2);
+    expect((await sel()).selected).toBe('p0a');
+    await shot(page, info, `grey-selected-${w}`);
+    // Preview one step: touch taps the dot once, a mouse hovers it.
+    if (info.project.use.hasTouch) await tapCell(page, info, 4, 2);
+    else {
+      const { x, y } = await page.evaluate(() => (window as any).__AVA__.cellClient(4, 2));
+      await page.mouse.move(x, y);
+    }
+    expect((await sel()).pending).toBeTruthy();
+    await shot(page, info, `grey-preview-${w}`);
+    // Commit a dash home: extraction.
+    await page.keyboard.press('Escape');
+    await open(page, 'p0=human&p1=human&state=v1.0.0.0-0.32*,54,01,04.22');
+    await tapCell(page, info, 3, 2);
+    await tapCell(page, info, 5, 2);
+    if (info.project.use.hasTouch) await tapCell(page, info, 5, 2);
+    await page.evaluate(() => (window as any).__AVA__.idle());
+    await expect(page.locator('[data-testid="score-0"]')).toHaveAttribute('data-score', '1');
+    await shot(page, info, `grey-extract-${w}`);
+    expect(errors).toEqual([]);
+  });
+}
