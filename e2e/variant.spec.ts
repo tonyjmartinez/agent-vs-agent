@@ -70,7 +70,13 @@ for (const [w, h] of [
     const errors = trackErrors(page);
     await page.setViewportSize({ width: w, height: h });
     await open(page, 'p0=human&p1=human&state=v1.0.0.0-0.32*,54,01,04.22');
-    await page.addStyleTag({ content: 'html { filter: grayscale(1) }' });
+    const grey = async () => {
+      await page.addStyleTag({ content: 'html { filter: grayscale(1) }' });
+      expect(await page.evaluate(() => getComputedStyle(document.documentElement).filter)).toBe(
+        'grayscale(1)',
+      );
+    };
+    await grey();
     const sel = () => page.evaluate(() => (window as any).__AVA__.controller().sel);
     await tapCell(page, info, 3, 2);
     expect((await sel()).selected).toBe('p0a');
@@ -86,6 +92,7 @@ for (const [w, h] of [
     // Commit a dash home: extraction.
     await page.keyboard.press('Escape');
     await open(page, 'p0=human&p1=human&state=v1.0.0.0-0.32*,54,01,04.22');
+    await grey(); // reload dropped the style
     await tapCell(page, info, 3, 2);
     await tapCell(page, info, 5, 2);
     if (info.project.use.hasTouch) await tapCell(page, info, 5, 2);
