@@ -122,7 +122,7 @@ export class Hud {
             : `Agent ${playerNames[p]}'s move`
           : humans === 1
             ? `Your move · first to ${s.rules.intelToWin} intel`
-            : `${playerNames[p]}'s move`;
+            : `${playerNames[p]}'s move · first to ${s.rules.intelToWin} intel`;
     }
     const tray = el('div', 'tray');
     const reserve = s.spies.filter((x) => x.owner === p && !x.pos);

@@ -15,3 +15,13 @@ test('bot game: "Your move" line states the goal, on one line at 320x568', async
   await shot(page, info, 'botstatus-320');
   expect(errors).toEqual([]);
 });
+
+test('hot-seat: turn line states the goal, on one line at 320x568', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await open(page, 'p0=human&p1=human');
+  const status = page.locator('.panel.active .status');
+  await expect(status).toHaveText(/'s move · first to 3 intel$/);
+  const box = (await status.boundingBox())!;
+  const lh = await status.evaluate((el) => parseFloat(getComputedStyle(el).fontSize) * 1.3);
+  expect(box.height).toBeLessThan(lh * 1.6);
+});
