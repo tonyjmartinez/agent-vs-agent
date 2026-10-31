@@ -273,8 +273,10 @@ body {
 .btn.primary {
   background: var(--mustard);
 }
+button:focus-visible,
 .btn:focus-visible,
-.reserve-spy:focus-visible {
+.reserve-spy:focus-visible,
+.mission-pill:focus-visible {
   outline: 3px solid var(--plum);
   outline-offset: 2px;
 }
