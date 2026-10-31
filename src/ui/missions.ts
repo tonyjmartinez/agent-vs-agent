@@ -14,10 +14,14 @@ import { load, save } from './storage';
 
 const KEY = 'ava.missions.v1';
 
+/** A stored value as a list of the strings that pass `keep`; anything that is not an array gives []. */
+function storedStrings(v: unknown, keep: (s: string) => boolean = () => true): string[] {
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && keep(x)) : [];
+}
+
 /** Ids of completed missions (localStorage, never throws). */
 export function completedMissions(): Set<string> {
-  const v = load<unknown>(KEY, []);
-  return new Set(Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
+  return new Set(storedStrings(load<unknown>(KEY, [])));
 }
 
 export function markCompleted(id: string): void {
@@ -53,8 +57,7 @@ const KEEP_DAYS = 120;
 
 /** Dates (UTC `YYYY-MM-DD`) on which the daily mission was solved for real, oldest first. */
 export function completedDays(): string[] {
-  const v = load<unknown>(DAILY_KEY, []);
-  return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && isDayKey(x)) : [];
+  return storedStrings(load<unknown>(DAILY_KEY, []), isDayKey);
 }
 
 export function markDayDone(day: string): void {
