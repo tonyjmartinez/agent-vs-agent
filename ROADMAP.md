@@ -8,7 +8,7 @@ So the milestone is: close the remaining v1 verification gaps, then deepen what 
 
 Each item fits one loop iteration. Order is by user value. Tag: **[design]** = design-polish loop, **[product]** = product loop.
 
-1. **[product] Long-task check in e2e.** Add a `PerformanceObserver` (`longtask`) spec that plays an auto game at speed 1 and
+1. **[product] Long-task check in e2e. (DONE: e2e/longtask.spec.ts)** Add a `PerformanceObserver` (`longtask`) spec that plays an auto game at speed 1 and
    asserts no task over 50 ms during animations. Why: PLAN §7 Phase 6 "Done when" requires it and no spec has it yet
    (`grep longtask e2e src` is empty); the hard bot already runs in a worker (`src/ai/ai.worker.ts`), so this should pass.
 2. **[design] Reduced-motion e2e + screenshot.** Emulate `prefers-reduced-motion: reduce`, play an extraction and a burn, and
