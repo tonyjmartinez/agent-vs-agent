@@ -25,6 +25,7 @@ describe('addAction', () => {
         carry: 0,
         longestCarry: 0,
         extractions: 0,
+        closeCalls: 0,
       },
       {
         turns: 0,
@@ -36,6 +37,7 @@ describe('addAction', () => {
         carry: 0,
         longestCarry: 0,
         extractions: 0,
+        closeCalls: 0,
       },
     ]);
     const { s, events } = play('v1.0.0.0-0.22,54,02,04.33', 'p0a', 1, 2);
@@ -58,6 +60,7 @@ describe('addAction', () => {
       carry: 0,
       longestCarry: 0,
       extractions: 0,
+      closeCalls: 0,
     });
     expect(st[1]).toEqual({
       turns: 0,
@@ -69,6 +72,7 @@ describe('addAction', () => {
       carry: 0,
       longestCarry: 0,
       extractions: 0,
+      closeCalls: 0,
     });
   });
 
@@ -101,6 +105,26 @@ describe('addAction', () => {
     const own = play('v1.0.0.0-0.31,33*,02,04.22', 'p0a', 3, 2);
     expect(own.events.some((e) => e.t === 'dropped')).toBe(true);
     expect(addAction(emptyStats(2), own.s, own.events)[0]!.steals).toBe(0);
+  });
+
+  it('counts a close call when a carrier is stopped while its team is one intel from winning', () => {
+    const run = (scores: number[], code: string) => {
+      const s = decode(code);
+      s.scores = scores;
+      const { events } = applyAction(s, { kind: 'move', spyId: 'p0a', to: { r: 3, c: 2 } });
+      expect(events.some((e) => e.t === 'dropped')).toBe(true);
+      return addAction(emptyStats(2), s, events);
+    };
+    // Same steal as below: Teal's carrier drops its intel. Teal on 2 of 3 is denied a win; on 1 of 3 it is not.
+    const code = 'v1.0.0.0-0.31,54,33*,04.22';
+    expect(run([0, 2], code)[1]!.closeCalls).toBe(1);
+    expect(run([0, 2], code)[0]!.closeCalls).toBe(0);
+    expect(run([0, 1], code)[1]!.closeCalls).toBe(0);
+    // Stopping your own carrier is not a denial.
+    const own = decode('v1.0.0.0-0.31,33*,02,04.22');
+    own.scores = [2, 0];
+    const { events } = applyAction(own, { kind: 'move', spyId: 'p0a', to: { r: 3, c: 2 } });
+    expect(addAction(emptyStats(2), own, events)[0]!.closeCalls).toBe(0);
   });
 
   it('counts a shove for each enemy spy bumped, not for your own or a blocked bump', () => {

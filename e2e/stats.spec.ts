@@ -48,6 +48,7 @@ test('the game-over card shows exact match stats from a burn then a winning bank
     shoves: [0, 0],
     dashes: [0, 0],
     longestCarry: [2, 0], // Red held its folder for the burn turn and the banking turn
+    closeCalls: [0, 0],
     extractions: [1, 0],
   } as const;
   for (const [key, vals] of Object.entries(want)) {
@@ -71,6 +72,7 @@ test('the game-over card shows exact match stats from a burn then a winning bank
       carry: 2,
       longestCarry: 2,
       extractions: 1,
+      closeCalls: 0,
     },
     {
       turns: 1,
@@ -82,6 +84,7 @@ test('the game-over card shows exact match stats from a burn then a winning bank
       carry: 0,
       longestCarry: 0,
       extractions: 0,
+      closeCalls: 0,
     },
   ]);
   expect(errors).toEqual([]);
@@ -156,6 +159,8 @@ test('vs the agent: stats stay consistent with the final score over a whole bot 
     ['dashes', 1],
     ['longestCarry', 0],
     ['longestCarry', 1],
+    ['closeCalls', 0],
+    ['closeCalls', 1],
     ['extractions', 0],
     ['extractions', 1],
   ] as const) {

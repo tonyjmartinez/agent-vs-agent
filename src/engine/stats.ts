@@ -20,6 +20,8 @@ export interface PlayerStats {
   longestCarry: number;
   /** Intel banked. */
   extractions: number;
+  /** Times an opponent stopped this player's carrier (burn or steal) while one intel from winning. */
+  closeCalls: number;
 }
 
 export type MatchStats = PlayerStats[];
@@ -35,6 +37,7 @@ export const emptyStats = (players: number): MatchStats =>
     carry: 0,
     longestCarry: 0,
     extractions: 0,
+    closeCalls: 0,
   }));
 
 /**
@@ -52,10 +55,20 @@ export function addAction(stats: MatchStats, before: GameState, events: GameEven
     me.carry++;
     me.longestCarry = Math.max(me.longestCarry, me.carry);
   } else me.carry = 0;
+  const denied = new Set<PlayerId>();
+  // The victim's carrier was stopped by an opponent while the victim was one intel short of winning.
+  const deny = (spyId: string) => {
+    const victim = ownerOf(spyId);
+    const spy = before.spies.find((x) => x.id === spyId)!;
+    if (victim !== mover && spy.carrying && before.scores[victim] === before.rules.intelToWin - 1) {
+      denied.add(victim);
+    }
+  };
   for (const e of events) {
     switch (e.t) {
       case 'burned': {
         const victim = ownerOf(e.spyId);
+        deny(e.spyId);
         next[victim]!.burned++;
         if (victim !== mover) next[mover]!.burns++; // bumping your own spy off is not a burn
         break;
@@ -69,6 +82,7 @@ export function addAction(stats: MatchStats, before: GameState, events: GameEven
         if (ownerOf(e.spyId) !== mover) next[mover]!.shoves++;
         break;
       case 'dropped':
+        deny(e.spyId);
         if (ownerOf(e.spyId) !== mover) next[mover]!.steals++;
         break;
       case 'extracted':
@@ -78,5 +92,6 @@ export function addAction(stats: MatchStats, before: GameState, events: GameEven
         break;
     }
   }
+  for (const v of denied) next[v]!.closeCalls++;
   return next;
 }
