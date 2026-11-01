@@ -11,7 +11,7 @@ Each item fits one loop iteration. Order is by user value. Tag: **[design]** = d
 1. **[product] Long-task check in e2e. (DONE: e2e/longtask.spec.ts)** Add a `PerformanceObserver` (`longtask`) spec that plays an auto game at speed 1 and
    asserts no task over 50 ms during animations. Why: PLAN §7 Phase 6 "Done when" requires it and no spec has it yet
    (`grep longtask e2e src` is empty); the hard bot already runs in a worker (`src/ai/ai.worker.ts`), so this should pass.
-2. **[design] Reduced-motion e2e + screenshot.** Emulate `prefers-reduced-motion: reduce`, play an extraction and a burn, and
+2. **[design] Reduced-motion e2e + screenshot. (DONE: e2e/reducedmotion.spec.ts)** Emulate `prefers-reduced-motion: reduce`, play an extraction and a burn, and
    assert no camera shake or particle objects and that the HUD pip pop is off. Why: CSS covers it (`styles.css` has a
    reduce block) but the Phaser side (shake, particles, tweens) has no test.
 3. **[design] Greyscale team-readability across all states.** Extend the greyscale check in `e2e/variant.spec.ts` to menu-less
