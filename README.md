@@ -2,6 +2,11 @@
 
 A small bump-and-run spy board game for phone and desktop browsers. Two agents per side on a 6×6 board: move one square, and everything next to where you land gets **bumped** one square away. Bump spies off the edge to **burn** them, grab **intel** from the middle, and carry 3 home to win.
 
+<p align="center">
+  <img src="artifacts/screens/desktop-after-burn.png" alt="Desktop: a 6×6 board with a red and a teal spy, intel folders in the middle and each side's HQ at its end" width="560">
+  <img src="artifacts/screens/iphone-after-burn.png" alt="Phone: the same board in portrait" width="150">
+</p>
+
 - **Play:** Cloudflare `agent-vs-agent` Worker, once connected (see Deploy below)
 - **Rules:** tap **How to play** in the game, or see `PLAN.md` §2.
 - **Missions:** 21 tactical puzzles (start menu → **Missions**, or `?mission=first-contact`). Each one is proven solvable by `src/missions.test.ts`.

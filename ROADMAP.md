@@ -25,7 +25,7 @@ Each item fits one loop iteration. Order is by user value. Tag: **[design]** = d
    the "Later" list in DESIGN_NOTES.md flags positional superko as a maybe; a number settles it.
 6. **[product] 3-move daily-pool entries.** Mine with `npx tsx scripts/missions.ts --moves 3 --games 120` and add proven
    entries to the daily pool. Why: CLAUDE.md next ideas; a 2-move-only pool gets repetitive for daily players.
-7. **[design] README screenshots.** Add one desktop and one phone screenshot from `artifacts/screens/` to the README top.
+7. **[design] README screenshots. (DONE: README top)** Add one desktop and one phone screenshot from `artifacts/screens/` to the README top.
    Why: README explains the game in text only; a visitor from a share link has no picture. Uses repo-owned images only.
 8. **[design] Focus-visible audit of menu and overlay buttons.** Check every `button`/`a` in `src/ui/styles.css` has a visible
    `:focus-visible` style matching the mission-pill ring (#51). Why: keyboard play shipped, but only the pill is known to
