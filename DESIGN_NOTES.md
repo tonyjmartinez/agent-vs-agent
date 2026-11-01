@@ -457,3 +457,22 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 "Close calls" (`closeCalls` in `src/engine/stats.ts`): times an opponent burned or bumped-to-drop this player's carrier while
 that player's score was `intelToWin - 1`. Computed from the before-state only (score and carrying flag), so no after-state
 was needed. At most one per action per player. Own-bump never counts.
+
+## Iteration: steal-loop / superko measurement (ROADMAP item 5)
+
+`scripts/sim.ts` now prints `gamesWithRepeatedPosition` and `repeatedPositionsTotal` (positions whose hash already occurred in
+that game). Draws = the 120-ply cap. Shipped rules, seed 1, same level both seats. The bots receive `history` and already avoid
+repeats where they can.
+
+| level  | games | draws (cap) | median plies | games with a repeated position |
+|--------|-------|-------------|--------------|--------------------------------|
+| easy   | 400   | 28 (7%)     | 76           | 183 (46%), 306 repeats total   |
+| medium | 400   | 2 (0.5%)    | 21           | 7 (1.8%), 13 repeats total     |
+| hard   | 20    | 20 (100%)   | 120          | 0                              |
+
+(Hard needs ~12 s per game, so only 20 games were run.)
+
+**Decision: no superko rule.** Repeats are rare except for easy bots, which are random-ish and do not stall. Hard vs hard hits
+the cap every time with zero repeated positions, so the stalemate is not an exact-position loop and a no-repeat rule would not
+fix it. Open question for later: why hard vs hard never converts (a defensive standoff); check `DESIGN_NOTES.md` balance tables
+before changing anything. Humans were not measured.
