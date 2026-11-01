@@ -51,6 +51,8 @@ const msPerMove: number[] = [];
 const depths: number[] = [];
 let comebacks = 0;
 let passes = 0;
+let repeatGames = 0;
+let repeatPositions = 0;
 
 const t0 = performance.now();
 for (let g = 0; g < games; g++) {
@@ -84,6 +86,11 @@ for (let g = 0; g < games; g++) {
     }
     s = res.state;
     for (let p = 0; p < 2; p++) if (s.scores[p]! < s.scores[1 - p]!) wasBehind[p] = true;
+  }
+  {
+    const dup = history.length - new Set(history).size;
+    if (dup > 0) repeatGames++;
+    repeatPositions += dup;
   }
   plies.push(s.ply);
   burns.push(nb);
@@ -129,6 +136,8 @@ const result = {
   msPerMoveP95: +pct(msPerMove, 0.95).toFixed(2),
   hardDepthMedian: depths.length ? median(depths) : null,
   forcedPasses: passes,
+  gamesWithRepeatedPosition: repeatGames,
+  repeatedPositionsTotal: repeatPositions,
   seconds: +elapsed.toFixed(1),
 };
 

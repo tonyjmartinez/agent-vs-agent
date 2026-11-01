@@ -20,7 +20,7 @@ Each item fits one loop iteration. Order is by user value. Tag: **[design]** = d
 4. **[product] "Closest call" debrief stat. (DONE: "Close calls" row)** Show the turn where a side was one intel from winning and was denied. Why:
    CLAUDE.md "Next ideas" lists it; the debrief (`DESIGN_NOTES.md` "Match stats debrief") already has the stat plumbing.
    Needs after-state in `addAction`; keep the engine pure.
-5. **[product] Measure steal loops, decide on superko.** Run `npm run sim` with 400 games per bot level and count games ending
+5. **[product] Measure steal loops, decide on superko. (DONE: no superko, see DESIGN_NOTES)** Run `npm run sim` with 400 games per bot level and count games ending
    by turn cap or repeated positions; log in DESIGN_NOTES.md. Add the no-repeat rule only if the number is material. Why:
    the "Later" list in DESIGN_NOTES.md flags positional superko as a maybe; a number settles it.
 6. **[product] 3-move daily-pool entries.** Mine with `npx tsx scripts/missions.ts --moves 3 --games 120` and add proven
