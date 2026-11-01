@@ -451,3 +451,9 @@ A hard-vs-hard trace showed the real stall. Games aren't dead; both sides usuall
 - Problem: the first bot game's coach (goal line) is one-shot; after it a player only sees "Your move" and the 3 pips.
 - Change: the human's turn line in a bot game reads "Your move · first to 3 intel" (`src/ui/hud.ts`). Hot-seat and bot-turn lines are unchanged.
 - Test: `e2e/botstatus.spec.ts` checks the text and one line at 320x568.
+
+## Iteration: Close calls stat
+
+"Close calls" (`closeCalls` in `src/engine/stats.ts`): times an opponent burned or bumped-to-drop this player's carrier while
+that player's score was `intelToWin - 1`. Computed from the before-state only (score and carrying flag), so no after-state
+was needed. At most one per action per player. Own-bump never counts.

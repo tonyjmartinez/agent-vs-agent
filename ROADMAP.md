@@ -17,7 +17,7 @@ Each item fits one loop iteration. Order is by user value. Tag: **[design]** = d
 3. **[design] Greyscale team-readability across all states.** Extend the greyscale check in `e2e/variant.spec.ts` to menu-less
    states: selected, preview-burn, extraction-moment at 320x568 and 844x390, and look at the PNGs. Why: PLAN §7 Phase 6
    review step 2 asks for it for every state; only one exists.
-4. **[product] "Closest call" debrief stat.** Show the turn where a side was one intel from winning and was denied. Why:
+4. **[product] "Closest call" debrief stat. (DONE: "Close calls" row)** Show the turn where a side was one intel from winning and was denied. Why:
    CLAUDE.md "Next ideas" lists it; the debrief (`DESIGN_NOTES.md` "Match stats debrief") already has the stat plumbing.
    Needs after-state in `addAction`; keep the engine pure.
 5. **[product] Measure steal loops, decide on superko.** Run `npm run sim` with 400 games per bot level and count games ending
