@@ -1,5 +1,5 @@
 /**
- * Generate the daily-mission pool: `npx tsx scripts/dailyPool.ts [--games 700] [--seed 3]`.
+ * Generate the daily-mission pool: `npx tsx scripts/dailyPool.ts [--games 700] [--games3 150] [--seed 3]`.
  * Deterministic for given arguments. Writes src/dailyPool.ts (commit the result; src/daily.test.ts proves
  * every entry). Selection: mined candidates that are not already hand-curated missions, per goal/move-budget
  * quotas, one entry per position, fewest working first moves first, at most three entries per forcing move so the pool isn't one idea.
@@ -12,6 +12,7 @@ const args = process.argv.slice(2);
 const opt = (k: string, d: number) => (args.includes(k) ? Number(args[args.indexOf(k) + 1]) : d);
 const games = opt('--games', 700);
 const seed = opt('--seed', 3);
+const games3 = opt('--games3', 150); // 3-move mining is slow, so it gets its own, smaller run
 
 const QUOTA: Record<string, number> = {
   burn2: 16,
@@ -20,12 +21,15 @@ const QUOTA: Record<string, number> = {
   burn1: 6,
   extract1: 4,
   win1: 4,
+  burn3: 4,
+  extract3: 4,
+  win3: 2,
 };
 
 const curated = new Set(MISSIONS.map((m) => m.state));
 const buckets = new Map<string, Candidate[]>();
 const seen = new Set<string>();
-for (const c of mine(games, seed)) {
+for (const c of [...mine(games, seed), ...mine(games3, seed, [3])]) {
   const key = `${c.goal}${c.moves}`;
   const id = `${key}|${c.state}`;
   if (curated.has(c.state) || seen.has(id) || !(key in QUOTA)) continue;
