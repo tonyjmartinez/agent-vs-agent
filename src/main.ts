@@ -105,6 +105,33 @@ function endMission(): void {
   missionPill(null);
 }
 
+/** What the result card says about a finished attempt, and the best move count before this one. */
+interface MissionCredit {
+  prevBest?: number;
+  extra: string;
+  finish: string;
+}
+
+/** Save a solved (non-demo) mission: its day or its best, and the card text it earns. */
+function creditMission(c: Controller, m: Mission): MissionCredit {
+  if (m.daily) {
+    const day = m.id.slice('daily-'.length);
+    markDayDone(day);
+    return { extra: dailyStreakText(streak(completedDays(), day)), finish: '' };
+  }
+  const firstWin = completedMissions().size === 0;
+  markCompleted(m.id);
+  const prevBest = bestMoves()[m.id];
+  recordBest(m.id, redMovesMade(c));
+  // The win that completes the whole set says so on the card, not only on the list.
+  const done = completedMissions();
+  const finished = MISSIONS.filter((x) => done.has(x.id)).length;
+  let finish = '';
+  if (finished >= MISSIONS.length) finish = progressText(finished, MISSIONS.length);
+  else if (firstWin) finish = firstWinText;
+  return { prevBest, extra: '', finish };
+}
+
 /** Judge the mission after every action: success right after a Red move, else out of moves. */
 function judgeMission(c: Controller, s: GameState): void {
   if (!run) return;
@@ -115,26 +142,11 @@ function judgeMission(c: Controller, s: GameState): void {
   if (!success && !failed) return;
   c.stop();
   endMission();
-  let prevBest: number | undefined;
-  let extra = '';
-  let finish = '';
-  if (success && !r.demo) {
-    if (r.m.daily) {
-      const day = r.m.id.slice('daily-'.length);
-      markDayDone(day);
-      extra = dailyStreakText(streak(completedDays(), day));
-    } else {
-      const firstWin = completedMissions().size === 0;
-      markCompleted(r.m.id);
-      prevBest = bestMoves()[r.m.id];
-      recordBest(r.m.id, redMovesMade(c));
-      // The win that completes the whole set says so on the card, not only on the list.
-      const done = completedMissions();
-      const finished = MISSIONS.filter((m) => done.has(m.id)).length;
-      if (finished >= MISSIONS.length) finish = progressText(finished, MISSIONS.length);
-      else if (firstWin) finish = firstWinText;
-    }
-  } else if (failed && r.m.daily && !r.demo) extra = dailyMissedText();
+  let credit: MissionCredit = { prevBest: undefined, extra: '', finish: '' };
+  if (success && !r.demo) credit = creditMission(c, r.m);
+  else if (failed && r.m.daily && !r.demo)
+    credit = { prevBest: undefined, extra: dailyMissedText(), finish: '' };
+  const { prevBest, extra, finish } = credit;
   // The daily mission isn't part of the list, so it has no "next".
   const nextM = r.m.daily ? undefined : MISSIONS[MISSIONS.indexOf(r.m) + 1];
   showMissionResult(
